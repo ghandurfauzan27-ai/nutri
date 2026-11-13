@@ -1,0 +1,240 @@
+[
+  {
+    "id": "RCP-JTM-004",
+    "nama": "Sup Bola Daging Sapi Madura & Tahu Sutra Kediri Kuah Labu Madu",
+    "kategori": "Paket A (Gizi Seimbang Reguler)",
+    "targetStatus": [
+      "Hijau",
+      "Normal"
+    ],
+    "warnaLabel": "#10B981",
+    "komoditasUtama": "Daging Sapi Madura & Tahu Kediri",
+    "sentraPemasok": "Sentra Peternak Madura & Gapoktan Kediri",
+    "energiKkal": 320,
+    "proteinGram": 15,
+    "lemakGram": 9,
+    "karboGram": 42,
+    "tekstur": "Kuah Bening Segar (12-59 Bulan)",
+    "gramasiBahan": [
+      {
+        "bahan": "Beras Putih Lokal",
+        "gram": 50,
+        "satuan": "gram",
+        "pemasok": "Gapoktan Lumbung Padi Jatim"
+      },
+      {
+        "bahan": "Daging Sapi Giling Madura",
+        "gram": 35,
+        "satuan": "gram",
+        "pemasok": "Peternak Sapi Rakyat Bangkalan/Sampang"
+      },
+      {
+        "bahan": "Tahu Sutra Kediri",
+        "gram": 25,
+        "satuan": "gram",
+        "pemasok": "Perajin Tahu Kediri"
+      },
+      {
+        "bahan": "Labu Madu Manis & Wortel",
+        "gram": 25,
+        "satuan": "gram",
+        "pemasok": "Petani Sayur Batu"
+      }
+    ],
+    "keunggulanKlinis": "Pilihan menu reguler bergizi tinggi variasi protein hewani lokal daging sapi khas Madura.",
+    "langkahMasak": [
+      "Bulatkan daging sapi giling dengan sedikit tepung pati tapioka alami.",
+      "Didihkan kuah kaldu tulang sapi bersama potongan labu madu manis.",
+      "Masukkan tahu sutra Kediri lembut dan bola daging hingga terapung matang sempurna.",
+      "Kemas dalam porsi makan sehat anak."
+    ],
+    "createdAt": "2026-11-13T16:05:08.472Z",
+    "updatedAt": "2026-11-13T16:05:08.472Z"
+  },
+  {
+    "id": "RCP-JTM-003",
+    "nama": "Nasi Tim Beras Lokal Jatim + Kuah Sayur Bayam/Kelor + Tempe Mendoan + Suwir Ayam Ras",
+    "kategori": "Paket A (Gizi Seimbang Reguler)",
+    "targetStatus": [
+      "Hijau",
+      "Normal"
+    ],
+    "warnaLabel": "#10B981",
+    "komoditasUtama": "Ayam Ras Jatim, Tempe Kediri & Sayur Bayam/Kelor",
+    "sentraPemasok": "Gapoktan Kediri & Sentra Unggas Jatim",
+    "energiKkal": 315,
+    "proteinGram": 14.5,
+    "lemakGram": 9.5,
+    "karboGram": 43,
+    "tekstur": "Nasi Lembek / Nasi Biasa (24-59 Bulan)",
+    "gramasiBahan": [
+      {
+        "bahan": "Beras Lokal Jatim",
+        "gram": 50,
+        "satuan": "gram",
+        "pemasok": "Gapoktan Lumbung Padi Jatim"
+      },
+      {
+        "bahan": "Daging Ayam Ras Suwir",
+        "gram": 40,
+        "satuan": "gram",
+        "pemasok": "Peternak Unggas Blitar & Jombang"
+      },
+      {
+        "bahan": "Tempe Mendoan Kediri",
+        "gram": 25,
+        "satuan": "gram",
+        "pemasok": "Sentra Perajin Tempe Sejahtera Kediri"
+      },
+      {
+        "bahan": "Sayur Bayam Hijau / Daun Kelor",
+        "gram": 25,
+        "satuan": "gram",
+        "pemasok": "Petani Sayur Malang & Lumajang"
+      },
+      {
+        "bahan": "Bumbu Alami Rempah Jatim",
+        "gram": 5,
+        "satuan": "gram",
+        "pemasok": "Pasar Tradisional Jatim"
+      }
+    ],
+    "keunggulanKlinis": "Pola gizi seimbang harian untuk menjaga balita tetap berada di zona hijau kurva pertumbuhan KIA.",
+    "langkahMasak": [
+      "Rebus dada ayam ras dengan daun salam hingga empuk lalu suwir halus.",
+      "Kukus tempe mendoan Kediri dengan baluran bumbu bawang putih dan ketumbar gurih.",
+      "Rebus sayur bayam/daun kelor dalam kuah bening segar sesaat sebelum disajikan.",
+      "Sajikan bersama nasi tim beras lokal hangat bertekstur pulen."
+    ],
+    "createdAt": "2026-11-13T16:05:08.468Z",
+    "updatedAt": "2026-11-13T16:05:08.468Z"
+  },
+  {
+    "id": "RCP-JTM-002",
+    "nama": "Puree Lembut Ikan Kembung Tulungagung & Telur Kukus Blitar Sayur Kelor",
+    "kategori": "Paket B (Intervensi Protein Hewani Ganda)",
+    "targetStatus": [
+      "Kuning",
+      "Merah",
+      "Waspada",
+      "Growth Faltering",
+      "Stunting"
+    ],
+    "warnaLabel": "#F59E0B",
+    "komoditasUtama": "Ikan Kembung Tulungagung & Telur Blitar",
+    "sentraPemasok": "TPI Pacitan / Nelayan Tulungagung & Koperasi Blitar",
+    "energiKkal": 350,
+    "proteinGram": 18,
+    "lemakGram": 12.2,
+    "karboGram": 41,
+    "tekstur": "Bubur Halus Bergizi (MPASI 6-11 Bulan / 12-24 Bulan)",
+    "gramasiBahan": [
+      {
+        "bahan": "Ikan Kembung Segar Tulungagung",
+        "gram": 40,
+        "satuan": "gram",
+        "pemasok": "Kelompok Nelayan Samudera Makmur Tulungagung"
+      },
+      {
+        "bahan": "Telur Ayam Ras Blitar",
+        "gram": 55,
+        "satuan": "gram / 1 butir",
+        "pemasok": "Koperasi Peternak Unggas Blitar Jaya"
+      },
+      {
+        "bahan": "Daun Kelor & Labu Kuning",
+        "gram": 20,
+        "satuan": "gram",
+        "pemasok": "Petani Sayur Organik Batu Malang"
+      },
+      {
+        "bahan": "Beras Putih Lokal Jatim",
+        "gram": 40,
+        "satuan": "gram",
+        "pemasok": "Gapoktan Lumbung Padi Jatim"
+      },
+      {
+        "bahan": "Minyak Nabati Tambahan Lemak",
+        "gram": 5,
+        "satuan": "gram",
+        "pemasok": "Pasar Lokal Jatim"
+      }
+    ],
+    "keunggulanKlinis": "Ikan kembung mengandung DHA dan EPA omega-3 yang sangat tinggi dengan biaya ekonomis, dipadukan mikronutrien kelor.",
+    "langkahMasak": [
+      "Fillet ikan kembung segar, pastikan bebas duri, kukus bersama jahe dan daun kunyit.",
+      "Kukus telur Blitar hingga matang lembut.",
+      "Haluskan bersama kaldu ikan dan daun kelor organik menjadi puree kaya lemak sehat.",
+      "Porsikan hangat untuk baduta zona kuning dan merah."
+    ],
+    "createdAt": "2026-11-13T16:05:08.464Z",
+    "updatedAt": "2026-11-13T16:05:08.464Z"
+  },
+  {
+    "id": "RCP-JTM-001",
+    "nama": "Nasi Tim Hati Ayam & Lele Asap Lamongan + Porsi Dobel Telur Blitar",
+    "kategori": "Paket B (Intervensi Protein Hewani Ganda)",
+    "targetStatus": [
+      "Kuning",
+      "Merah",
+      "Waspada",
+      "Growth Faltering",
+      "Stunting"
+    ],
+    "warnaLabel": "#EF4444",
+    "komoditasUtama": "Telur Blitar, Lele Lamongan & Hati Ayam Jombang",
+    "sentraPemasok": "Sentra Telur Blitar & Mina Makmur Lamongan",
+    "energiKkal": 365,
+    "proteinGram": 19.4,
+    "lemakGram": 13.8,
+    "karboGram": 38.5,
+    "tekstur": "Lembek Cincang Halus (MPASI 12-24 Bulan)",
+    "gramasiBahan": [
+      {
+        "bahan": "Telur Ayam Ras Blitar (Dobel)",
+        "gram": 55,
+        "satuan": "gram / 1 butir utuh",
+        "pemasok": "Koperasi Peternak Unggas Blitar Jaya"
+      },
+      {
+        "bahan": "Fillet Daging Lele Lamongan",
+        "gram": 35,
+        "satuan": "gram",
+        "pemasok": "Gapoktan Mina Makmur Lamongan"
+      },
+      {
+        "bahan": "Hati Ayam Kampung Segar",
+        "gram": 25,
+        "satuan": "gram",
+        "pemasok": "Sentra Unggas Pedesaan Jombang"
+      },
+      {
+        "bahan": "Beras Putih Pulen Lokal Jatim",
+        "gram": 45,
+        "satuan": "gram",
+        "pemasok": "Gapoktan Lumbung Padi Jatim"
+      },
+      {
+        "bahan": "Daun Kelor Organik Cincang",
+        "gram": 15,
+        "satuan": "gram",
+        "pemasok": "Kelompok Tani Organik Sumber Makmur Batu"
+      },
+      {
+        "bahan": "Minyak Kelapa Sehat",
+        "gram": 5,
+        "satuan": "gram",
+        "pemasok": "Perkebunan Rakyat Jatim"
+      }
+    ],
+    "keunggulanKlinis": "Kombinasi asam amino lengkap telur Blitar + omega-3 hewani lele Lamongan + zat besi heme hati ayam mempercepat kejar tumbuh BB baduta faltering.",
+    "langkahMasak": [
+      "Kukus fillet lele asap Lamongan dan hati ayam dengan serai dan daun salam hingga harum empuk.",
+      "Kukus telur ayam ras Blitar secara terpisah hingga lembut agar nutrisi protein tidak terdenaturasi berlebih.",
+      "Masak beras lokal menjadi nasi tim lembut dengan kaldu alami dan cincangan daun kelor segar.",
+      "Campurkan porsi protein hewani ganda ke dalam wadah hangat bersertifikasi food grade."
+    ],
+    "createdAt": "2026-11-13T16:05:08.461Z",
+    "updatedAt": "2026-11-13T16:05:08.461Z"
+  }
+]

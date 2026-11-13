@@ -1,0 +1,70 @@
+[
+  {
+    "id": "USR-005",
+    "email": "orangtua.ahmad@gmail.com",
+    "password": "$2b$10$EVFe.29YyQU77gUgQ.n6gu81x22DEzd3inU/IOV4eHR0GUPNCz3yi",
+    "namaLengkap": "Ibu Siti Rahayu",
+    "role": "orangtua",
+    "roleLabel": "Ibu Balita Ahmad Fauzi",
+    "kabupaten": "Kab. Bangkalan",
+    "kecamatan": "Socah",
+    "desa": "Desa Bilaporah",
+    "noHp": "081234567895",
+    "createdAt": "2026-11-13T16:05:08.460Z",
+    "updatedAt": "2026-11-13T16:05:08.460Z"
+  },
+  {
+    "id": "USR-004",
+    "email": "dinkes.jatim@jatimprov.go.id",
+    "password": "$2b$10$EVFe.29YyQU77gUgQ.n6gu81x22DEzd3inU/IOV4eHR0GUPNCz3yi",
+    "namaLengkap": "Dr. dr. Hendro Wahyono, M.Kes",
+    "role": "dinkes",
+    "roleLabel": "Kepala Bidang Kesmas Dinkes Prov. Jatim & TPID",
+    "kabupaten": "Provinsi Jawa Timur",
+    "noHp": "081234567894",
+    "createdAt": "2026-11-13T16:05:08.455Z",
+    "updatedAt": "2026-11-13T16:05:08.455Z"
+  },
+  {
+    "id": "USR-003",
+    "email": "gizi.puskesmas@jatim.go.id",
+    "password": "$2b$10$EVFe.29YyQU77gUgQ.n6gu81x22DEzd3inU/IOV4eHR0GUPNCz3yi",
+    "namaLengkap": "dr. Nurul Hidayati, M.Gizi",
+    "role": "puskesmas",
+    "roleLabel": "Nutrisionis Puskesmas Socah",
+    "kabupaten": "Kab. Bangkalan",
+    "kecamatan": "Socah",
+    "noHp": "081234567893",
+    "createdAt": "2026-11-13T16:05:08.447Z",
+    "updatedAt": "2026-11-13T16:05:08.447Z"
+  },
+  {
+    "id": "USR-002",
+    "email": "dapur.sppg@jatim.go.id",
+    "password": "$2b$10$EVFe.29YyQU77gUgQ.n6gu81x22DEzd3inU/IOV4eHR0GUPNCz3yi",
+    "namaLengkap": "Bambang Supriyanto",
+    "role": "dapur",
+    "roleLabel": "Kepala Dapur Pelayanan MBG (SPPG) Socah",
+    "kabupaten": "Kab. Bangkalan",
+    "kecamatan": "Socah",
+    "desa": "Desa Bilaporah",
+    "noHp": "081234567892",
+    "createdAt": "2026-11-13T16:05:08.444Z",
+    "updatedAt": "2026-11-13T16:05:08.444Z"
+  },
+  {
+    "id": "USR-001",
+    "email": "kader.socah@jatim.go.id",
+    "password": "$2b$10$EVFe.29YyQU77gUgQ.n6gu81x22DEzd3inU/IOV4eHR0GUPNCz3yi",
+    "namaLengkap": "Siti Rahmawati, S.Pd",
+    "role": "kader",
+    "roleLabel": "Kader Posyandu Mawar 01",
+    "kabupaten": "Kab. Bangkalan",
+    "kecamatan": "Socah",
+    "desa": "Desa Bilaporah",
+    "posyandu": "Posyandu Mawar 01",
+    "noHp": "081234567891",
+    "createdAt": "2026-11-13T16:05:08.441Z",
+    "updatedAt": "2026-11-13T16:05:08.441Z"
+  }
+]

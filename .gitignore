@@ -1,5 +1,5 @@
 # Dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.js
 
@@ -12,6 +12,7 @@ next-env.d.ts
 # Environment variables
 .env
 .env*.local
+!backend/.env.example
 
 # Logs
 npm-debug.log*

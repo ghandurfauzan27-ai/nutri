@@ -1,0 +1,32 @@
+{
+  "name": "nutritrack-jatim-backend",
+  "version": "1.0.0",
+  "description": "Backend API Presisi Intervensi Stunting & Pemantauan MBG Berbasis Komoditas Lokal Jawa Timur (SKPL v1.0)",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/database/seed.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "stunting",
+    "jawa-timur",
+    "mbg",
+    "kms-digital",
+    "posyandu",
+    "who-zscore"
+  ],
+  "author": "NutriTrack Jatim Team",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "uuid": "^10.0.0"
+  }
+}

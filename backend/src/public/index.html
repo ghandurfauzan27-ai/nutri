@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriTrack Jatim Backend API · Sistem Presisi Intervensi Stunting & MBG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0C0A09;
+      --card-bg: #1C1917;
+      --card-border: #292524;
+      --accent-yellow: #FACC15;
+      --accent-cyan: #38E8F5;
+      --accent-purple: #7866FF;
+      --accent-green: #10B981;
+      --accent-red: #EF4444;
+      --text-main: #FAFAFA;
+      --text-muted: #A1A1AA;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding-bottom: 80px;
+    }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .badge-yellow { background: #422006; color: var(--accent-yellow); border: 1px solid #713F12; }
+    .badge-green { background: #064E3B; color: #6EE7B7; border: 1px solid #047857; }
+    .badge-cyan { background: #083344; color: var(--accent-cyan); border: 1px solid #0E7490; }
+    .badge-red { background: #450A0A; color: #FCA5A5; border: 1px solid #991B1B; }
+
+    header {
+      background: linear-gradient(180deg, #18140B 0%, #0C0A09 100%);
+      border-bottom: 1px solid var(--card-border);
+      padding: 40px 0 30px;
+    }
+    h1 { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em; margin: 12px 0 6px; }
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; max-width: 750px; }
+    
+    .grid { display: grid; gap: 20px; }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-top: 24px; }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); margin-top: 24px; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: #44403C; }
+    .card-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .card-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+
+    /* Interactive Calculator */
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 0.8rem; font-weight: 700; color: #D4D4D8; margin-bottom: 4px; }
+    input, select {
+      width: 100%;
+      background: #0C0A09;
+      border: 1px solid #44403C;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent-yellow); }
+    .btn {
+      background: var(--accent-yellow);
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-secondary {
+      background: #27272A;
+      color: #FAFAFA;
+      border: 1px solid #3F3F46;
+    }
+    .btn-secondary:hover { background: #3F3F46; }
+
+    .result-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 14px;
+      background: #141210;
+      border: 1px dashed #44403C;
+      font-size: 0.85rem;
+    }
+
+    .api-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: #141210;
+      border: 1px solid #292524;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    .method-get { color: #6EE7B7; font-weight: 800; }
+    .method-post { color: #FCD34D; font-weight: 800; }
+    .endpoint-path { color: #E4E4E7; flex: 1; margin: 0 12px; word-break: break-all; }
+    .btn-test {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #27272A;
+      border: 1px solid #52525B;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn-test:hover { background: #3F3F46; }
+
+    pre#jsonOutput {
+      background: #09090B;
+      border: 1px solid #27272A;
+      border-radius: 12px;
+      padding: 16px;
+      max-height: 380px;
+      overflow-y: auto;
+      font-size: 0.75rem;
+      color: #A1A1AA;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <span class="badge badge-yellow">★ NutriTrack Jatim v1.0</span>
+        <span class="badge badge-cyan">Keputusan Gizi Presisi</span>
+        <span class="badge badge-green">● Server Online Port 5000</span>
+      </div>
+      <h1>Backend API & Engine Intervensi Stunting Jatim</h1>
+      <p class="subtitle">
+        RESTful Backend Engine berbasis standar antropometri Kemenkes RI (Permenkes 2/2020) & kurva resmi Buku KIA Dinas Kesehatan Provinsi Jawa Timur, terintegrasi preskripsi Makan Bergizi Gratis (MBG) komoditas lokal Jawa Timur.
+      </p>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 3 Fitur Inti Jawa Timur -->
+    <div class="grid grid-3">
+      <!-- Fitur 1: Smart KMS Digital Jatim -->
+      <div class="card">
+        <div class="card-title">
+          <span>1. Smart KMS Digital</span>
+          <span class="badge badge-green">KIA Jatim</span>
+        </div>
+        <p class="card-desc">
+          Filter kantong stunting (Bangkalan, Sampang, Jember, Bondowoso, Probolinggo) & deteksi dini Growth Faltering kurva Buku KIA Dinkes Jatim.
+        </p>
+        
+        <form id="kmsCalcForm">
+          <div class="form-group">
+            <label>Kabupaten Prioritas Jatim</label>
+            <select id="calcKab">
+              <option value="Kab. Bangkalan">Kab. Bangkalan (Madura)</option>
+              <option value="Kab. Sampang">Kab. Sampang (Madura)</option>
+              <option value="Kab. Jember">Kab. Jember</option>
+              <option value="Kab. Bondowoso">Kab. Bondowoso</option>
+              <option value="Kab. Probolinggo">Kab. Probolinggo</option>
+            </select>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="form-group">
+              <label>Usia (Bulan)</label>
+              <input type="number" id="calcAge" value="14" min="0" max="60">
+            </div>
+            <div class="form-group">
+              <label>Jenis Kelamin</label>
+              <select id="calcSex">
+                <option value="L">Laki-laki (L)</option>
+                <option value="P">Perempuan (P)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="form-group">
+              <label>Berat Badan (kg)</label>
+              <input type="number" id="calcWeight" value="8.4" step="0.1">
+            </div>
+            <div class="form-group">
+              <label>Tinggi Badan (cm)</label>
+              <input type="number" id="calcHeight" value="72.8" step="0.1">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Berat Bulan Lalu (Deteksi Faltering)</label>
+            <input type="number" id="calcPrevWeight" value="8.5" step="0.1">
+          </div>
+          <button type="button" class="btn" style="width: 100%;" onclick="runKmsCalculation()">
+            Uji Hitung Z-Score & Preskripsi
+          </button>
+        </form>
+
+        <div id="kmsResult" class="result-box" style="display: none;"></div>
+      </div>
+
+      <!-- Fitur 2: Rekomendasi Menu MBG Komoditas Jatim -->
+      <div class="card">
+        <div class="card-title">
+          <span>2. Menu Pangan Lokal</span>
+          <span class="badge badge-yellow">Sentra Jatim</span>
+        </div>
+        <p class="card-desc">
+          Pemanfaatan sentra protein hewani melimpah Jawa Timur: Telur Blitar, Lele Lamongan, Ikan Kembung Tulungagung, dan Kelor Batu.
+        </p>
+
+        <div style="margin-bottom: 12px; padding: 12px; background: #141210; border-radius: 12px; border-left: 4px solid #10B981;">
+          <div style="font-size: 0.8rem; font-weight: 800; color: #10B981;">Kategori Hijau (Gizi Reguler):</div>
+          <div style="font-size: 0.78rem; color: #D4D4D8; margin-top: 4px;">
+            Nasi tim beras lokal Jatim + kuah sayur bayam/kelor + tempe mendoan Kediri + suwir ayam ras.
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px; padding: 12px; background: #141210; border-radius: 12px; border-left: 4px solid #EF4444;">
+          <div style="font-size: 0.8rem; font-weight: 800; color: #EF4444;">Kategori Kuning/Merah (Intervensi Ganda):</div>
+          <div style="font-size: 0.78rem; color: #D4D4D8; margin-top: 4px;">
+            <b>• Porsi Dobel Telur Blitar:</b> Sentra telur terbesar Jatim.<br>
+            <b>• Lele/Kembung Lamongan/Tulungagung:</b> Protein & omega-3 murah.<br>
+            <b>• Hati Ayam & Daun Kelor:</b> Booster percepatan kenaikan BB.
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="fetchApi('/api/recipes')">
+          Buka Katalog Resep Lengkap
+        </button>
+      </div>
+
+      <!-- Fitur 3: Kalkulator Belanja Bahan Lokal -->
+      <div class="card">
+        <div class="card-title">
+          <span>3. Kalkulator Belanja Lokal</span>
+          <span class="badge badge-cyan">100% Peternak Jatim</span>
+        </div>
+        <p class="card-desc">
+          Dasbor dapur otomatis menghitung kebutuhan bahan yang diserap langsung dari peternak lokal Jawa Timur.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="form-group">
+            <label>Porsi Paket A (Reguler)</label>
+            <input type="number" id="calcPortionA" value="85" onchange="runProcurementCalc()">
+          </div>
+          <div class="form-group">
+            <label>Porsi Paket B (Intervensi)</label>
+            <input type="number" id="calcPortionB" value="35" onchange="runProcurementCalc()">
+          </div>
+        </div>
+
+        <div id="procurementResult" class="result-box">
+          <div style="font-weight: 800; color: var(--accent-cyan); margin-bottom: 6px;">Kebutuhan Belanja Hari Ini:</div>
+          <ul style="list-style: none; font-size: 0.8rem; space-y: 4px;">
+            <li>🥚 <b>Telur Ayam Blitar:</b> <span id="resTelur">1.9 kg (35 butir)</span></li>
+            <li>🐟 <b>Lele Fillet Lamongan:</b> <span id="resLele">1.2 kg</span></li>
+            <li>🍗 <b>Hati Ayam Kampung:</b> <span id="resHati">0.9 kg</span></li>
+            <li>🌿 <b>Daun Kelor Batu:</b> <span id="resKelor">1.4 kg (6 ikat)</span></li>
+            <li>🌾 <b>Beras Pulen Jatim:</b> <span id="resBeras">5.8 kg</span></li>
+          </ul>
+          <div style="margin-top: 10px; font-size: 0.75rem; color: #6EE7B7; border-top: 1px solid #27272A; padding-top: 6px;">
+            💵 <b>Est. Serapan Ekonomi Jatim:</b> <span id="resTotalRp">Rp 376.000</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 12px;" onclick="fetchApi('/api/kitchen/summary')">
+          Lihat Ringkasan Dapur SPPG
+        </button>
+      </div>
+    </div>
+
+    <!-- Live API Explorer -->
+    <div class="grid grid-2" style="margin-top: 36px;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 900; margin-bottom: 6px;">Interactive API Explorer</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+          Klik tombol <b>Tes Endpoint</b> di bawah ini untuk melihat respon JSON riil dari backend:
+        </p>
+
+        <div class="api-row">
+          <span class="method-get">GET</span>
+          <span class="endpoint-path">/api/children</span>
+          <button class="btn-test" onclick="fetchApi('/api/children')">Tes Endpoint</button>
+        </div>
+        <div class="api-row">
+          <span class="method-get">GET</span>
+          <span class="endpoint-path">/api/recipes</span>
+          <button class="btn-test" onclick="fetchApi('/api/recipes')">Tes Endpoint</button>
+        </div>
+        <div class="api-row">
+          <span class="method-get">GET</span>
+          <span class="endpoint-path">/api/kitchen/summary</span>
+          <button class="btn-test" onclick="fetchApi('/api/kitchen/summary')">Tes Endpoint</button>
+        </div>
+        <div class="api-row">
+          <span class="method-get">GET</span>
+          <span class="endpoint-path">/api/kitchen/supply-logs</span>
+          <button class="btn-test" onclick="fetchApi('/api/kitchen/supply-logs')">Tes Endpoint</button>
+        </div>
+        <div class="api-row">
+          <span class="method-get">GET</span>
+          <span class="endpoint-path">/api/distributions</span>
+          <button class="btn-test" onclick="fetchApi('/api/distributions')">Tes Endpoint</button>
+        </div>
+        <div class="api-row">
+          <span class="method-get">GET</span>
+          <span class="endpoint-path">/api/analytics/regions</span>
+          <button class="btn-test" onclick="fetchApi('/api/analytics/regions')">Tes Endpoint</button>
+        </div>
+        <div class="api-row">
+          <span class="method-get">GET</span>
+          <span class="endpoint-path">/api/analytics/ron-cohort</span>
+          <button class="btn-test" onclick="fetchApi('/api/analytics/ron-cohort')">Tes Endpoint</button>
+        </div>
+        <div class="api-row">
+          <span class="method-get">GET</span>
+          <span class="endpoint-path">/api/analytics/kpis</span>
+          <button class="btn-test" onclick="fetchApi('/api/analytics/kpis')">Tes Endpoint</button>
+        </div>
+        <div class="api-row">
+          <span class="method-get">GET</span>
+          <span class="endpoint-path">/api/auth/demo-accounts</span>
+          <button class="btn-test" onclick="fetchApi('/api/auth/demo-accounts')">Tes Endpoint</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="font-size: 1.1rem; font-weight: 800;">Live JSON Output Preview</h3>
+          <span id="outputUrl" style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent-yellow);">/api/analytics/kpis</span>
+        </div>
+        <pre id="jsonOutput">Memuat data awal...</pre>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    async function fetchApi(endpoint) {
+      document.getElementById('outputUrl').innerText = endpoint;
+      document.getElementById('jsonOutput').innerText = 'Memanggil API...';
+      try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        document.getElementById('jsonOutput').innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('jsonOutput').innerText = 'Error: ' + err.message;
+      }
+    }
+
+    async function runKmsCalculation() {
+      const age = parseInt(document.getElementById('calcAge').value);
+      const sex = document.getElementById('calcSex').value;
+      const weight = parseFloat(document.getElementById('calcWeight').value);
+      const height = parseFloat(document.getElementById('calcHeight').value);
+      const prevWeight = parseFloat(document.getElementById('calcPrevWeight').value);
+
+      try {
+        const res = await fetch('/api/growth-records/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ageMonths: age,
+            gender: sex,
+            weightKg: weight,
+            heightCm: height,
+            previousWeightKg: prevWeight
+          })
+        });
+        const data = await res.json();
+        const d = data.data;
+
+        const box = document.getElementById('kmsResult');
+        box.style.display = 'block';
+        box.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <b style="color: ${d.kurvaKIA.hex};">${d.kurvaKIA.label}</b>
+            <span class="badge" style="background: ${d.kurvaKIA.hex}22; color: ${d.kurvaKIA.hex}; border: 1px solid ${d.kurvaKIA.hex}">
+              ${d.preskripsiMBG.alokasiKategori}
+            </span>
+          </div>
+          <div style="font-size: 0.8rem; margin-bottom: 6px;">
+            <b>Z-Score WHO:</b> TB/U: <b>${d.zScores.zTBU} SD</b> · BB/U: <b>${d.zScores.zBBU} SD</b>
+          </div>
+          <div style="font-size: 0.78rem; color: #D4D4D8; margin-bottom: 6px;">
+            <b>Status Pertumbuhan:</b> ${d.status.statusNutrisi} ${d.status.isFaltering ? '⚠️ (Growth Faltering Aktif)' : ''}
+          </div>
+          <div style="font-size: 0.76rem; background: #000; padding: 8px; border-radius: 8px; border-left: 3px solid ${d.kurvaKIA.hex};">
+            <b>Rekomendasi Menu Jatim:</b> ${d.preskripsiMBG.rekomendasiMenu}
+          </div>
+        `;
+        document.getElementById('jsonOutput').innerText = JSON.stringify(data, null, 2);
+        document.getElementById('outputUrl').innerText = '/api/growth-records/calculate (POST)';
+      } catch (err) {
+        alert('Gagal: ' + err.message);
+      }
+    }
+
+    async function runProcurementCalc() {
+      const a = parseInt(document.getElementById('calcPortionA').value) || 0;
+      const b = parseInt(document.getElementById('calcPortionB').value) || 0;
+
+      try {
+        const res = await fetch('/api/kitchen/procurement-calculator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ portionA: a, portionB: b })
+        });
+        const json = await res.json();
+        const d = json.data;
+        const belanja = d.daftarBelanja;
+
+        const telur = belanja.find(x => x.bahan.includes('Telur'));
+        const lele = belanja.find(x => x.bahan.includes('Lele'));
+        const hati = belanja.find(x => x.bahan.includes('Hati'));
+        const kelor = belanja.find(x => x.bahan.includes('Kelor'));
+        const beras = belanja.find(x => x.bahan.includes('Beras'));
+
+        if (telur) document.getElementById('resTelur').innerText = telur.keterangan;
+        if (lele) document.getElementById('resLele').innerText = lele.keterangan;
+        if (hati) document.getElementById('resHati').innerText = hati.keterangan;
+        if (kelor) document.getElementById('resKelor').innerText = kelor.keterangan;
+        if (beras) document.getElementById('resBeras').innerText = beras.keterangan;
+
+        document.getElementById('resTotalRp').innerText = 'Rp ' + d.ringkasanEkonomiLokal.totalAnggaranBelanjaRp.toLocaleString('id-ID');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Load initial preview
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchApi('/api/analytics/kpis');
+    });
+  </script>
+</body>
+</html>

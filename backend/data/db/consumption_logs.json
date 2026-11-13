@@ -1,0 +1,46 @@
+[
+  {
+    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-PRO-005-FB3A4F",
+    "childId": "CHD-PRO-005",
+    "namaAnak": "Zahra Cantika",
+    "dayaTerima": "Habis (100%)",
+    "verifiedAt": "2026-11-13T08:35:00+07:00",
+    "verifiedBy": "Kader Fitria (Posyandu Teratai 01)",
+    "catatan": "Asupan terpantau baik di tingkat posyandu.",
+    "createdAt": "2026-11-13T16:05:08.622Z",
+    "updatedAt": "2026-11-13T16:05:08.622Z"
+  },
+  {
+    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-SMP-003-FFFA3C",
+    "childId": "CHD-SMP-003",
+    "namaAnak": "Budi Santoso",
+    "dayaTerima": "Tersisa Sebagian (50%)",
+    "verifiedAt": "2026-11-13T08:40:00+07:00",
+    "verifiedBy": "Kader Dewi (Posyandu Melati 03)",
+    "catatan": "Asupan terpantau baik di tingkat posyandu.",
+    "createdAt": "2026-11-13T16:05:08.609Z",
+    "updatedAt": "2026-11-13T16:05:08.609Z"
+  },
+  {
+    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-A-CHD-BKL-002-1C8F0C",
+    "childId": "CHD-BKL-002",
+    "namaAnak": "Siti Nur Aisyah",
+    "dayaTerima": "Habis (100%)",
+    "verifiedAt": "2026-11-13T08:22:00+07:00",
+    "verifiedBy": "Ibu Nurul Chotimah (Orang Tua)",
+    "catatan": "Asupan terpantau baik di tingkat posyandu.",
+    "createdAt": "2026-11-13T16:05:08.600Z",
+    "updatedAt": "2026-11-13T16:05:08.600Z"
+  },
+  {
+    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-BKL-001-34BEBE",
+    "childId": "CHD-BKL-001",
+    "namaAnak": "Ahmad Fauzi",
+    "dayaTerima": "Habis (100%)",
+    "verifiedAt": "2026-11-13T08:15:00+07:00",
+    "verifiedBy": "Kader Siti (Posyandu Mawar 01)",
+    "catatan": "Asupan terpantau baik di tingkat posyandu.",
+    "createdAt": "2026-11-13T16:05:08.594Z",
+    "updatedAt": "2026-11-13T16:05:08.594Z"
+  }
+]

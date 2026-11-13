@@ -1,0 +1,67 @@
+[
+  {
+    "id": "SP-005",
+    "tanggal": "2026-11-12",
+    "pemasok": "Kelompok Nelayan Samudera Makmur",
+    "lokasi": "Kab. Tulungagung, Jawa Timur",
+    "komoditas": "Ikan Kembung Segar Omega-3",
+    "volumeKg": 150,
+    "hargaTotalRp": 5250000,
+    "statusMutu": "Tersertifikasi Segar",
+    "catatan": "Kandungan DHA setara salmon dengan harga lokal terjangkau.",
+    "createdAt": "2026-11-13T16:05:08.641Z",
+    "updatedAt": "2026-11-13T16:05:08.641Z"
+  },
+  {
+    "id": "SP-004",
+    "tanggal": "2026-11-12",
+    "pemasok": "Sentra Perajin Tempe Sejahtera Kediri",
+    "lokasi": "Kab. Kediri, Jawa Timur",
+    "komoditas": "Tempe Tradisional Kedelai Lokal Non-GMO",
+    "volumeKg": 180,
+    "hargaTotalRp": 2700000,
+    "statusMutu": "Tersertifikasi Segar",
+    "catatan": "Protein nabati probiotik alami untuk kesehatan usus anak.",
+    "createdAt": "2026-11-13T16:05:08.638Z",
+    "updatedAt": "2026-11-13T16:05:08.638Z"
+  },
+  {
+    "id": "SP-003",
+    "tanggal": "2026-11-11",
+    "pemasok": "Kelompok Tani Organik Sumber Makmur",
+    "lokasi": "Kota Batu & Malang, Jawa Timur",
+    "komoditas": "Daun Kelor Organik & Labu Madu",
+    "volumeKg": 120,
+    "hargaTotalRp": 2160000,
+    "statusMutu": "Lolos Uji BPOM/Dinkes",
+    "catatan": "Superfood kaya zat besi dan beta-karoten.",
+    "createdAt": "2026-11-13T16:05:08.635Z",
+    "updatedAt": "2026-11-13T16:05:08.635Z"
+  },
+  {
+    "id": "SP-002",
+    "tanggal": "2026-11-10",
+    "pemasok": "Gapoktan Mina Makmur Lamongan",
+    "lokasi": "Kab. Lamongan, Jawa Timur",
+    "komoditas": "Ikan Lele Segar Fillet Bersih",
+    "volumeKg": 220,
+    "hargaTotalRp": 6160000,
+    "statusMutu": "Tersertifikasi Segar",
+    "catatan": "Pasokan protein hewani lokal kaya kalsium dan fosfor.",
+    "createdAt": "2026-11-13T16:05:08.632Z",
+    "updatedAt": "2026-11-13T16:05:08.632Z"
+  },
+  {
+    "id": "SP-001",
+    "tanggal": "2026-11-10",
+    "pemasok": "Koperasi Peternak Unggas Blitar Jaya",
+    "lokasi": "Kab. Blitar, Jawa Timur",
+    "komoditas": "Telur Ayam Ras Segar Grade A Omega-3",
+    "volumeKg": 350,
+    "hargaTotalRp": 9450000,
+    "statusMutu": "Tersertifikasi Segar",
+    "catatan": "Pengiriman langsung ke Dapur SPPG Socah & Kedungdung.",
+    "createdAt": "2026-11-13T16:05:08.627Z",
+    "updatedAt": "2026-11-13T16:05:08.627Z"
+  }
+]
