@@ -119,9 +119,21 @@ export default function RegisterForm({ delay }: { delay: number }) {
               <>
                 <SelectField id="reg-region" label="Kabupaten / Kota" value={region} onChange={setRegion} options={jatimRegions} error={errors.region} />
                 <FloatingField id="reg-unit" label={info.unitLabel} value={unit} onChange={setUnit} error={errors.unit} />
-                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3.5 font-mono text-[11px] leading-relaxed text-zinc-600">
-                  Akses data dibatasi per peran dan wilayah kerja. Akun baru diverifikasi Admin Sistem sebelum diaktifkan.
-                </div>
+                
+                {role === "kader" ? (
+                  <div className="rounded-2xl border border-sky-200 bg-sky-50/80 p-3.5 font-mono text-[11px] leading-relaxed text-sky-950">
+                    <p className="font-bold flex items-center gap-1.5 text-sky-900 mb-1">
+                      <span>🏥</span>
+                      <span>Konfirmasi Puskesmas Diperlukan</span>
+                    </p>
+                    Sebagai Kader Posyandu, permohonan pendaftaran Anda akan diverifikasi dan disetujui oleh Tenaga Gizi Puskesmas Pembina di wilayah {region || "Jawa Timur"} agar validasi data balita terjaga.
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3.5 font-mono text-[11px] leading-relaxed text-zinc-600">
+                    Akses data dibatasi per peran dan wilayah kerja. Akun baru diverifikasi Admin Sistem sebelum diaktifkan.
+                  </div>
+                )}
+
                 <Checkbox id="reg-consent" checked={consent} onChange={setConsent} error={errors.consent}>
                   Saya menyetujui pengolahan data sesuai UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi. Data balita hanya dipakai untuk intervensi gizi.
                 </Checkbox>
@@ -144,13 +156,22 @@ export default function RegisterForm({ delay }: { delay: number }) {
                   <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 font-mono text-[11px] leading-relaxed text-emerald-950">
                     <div className="flex items-center gap-2 font-bold text-emerald-800">
                       <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-white text-[9px]">✓</span>
-                      <span>Akun resmi berhasil didaftarkan!</span>
+                      <span>
+                        {role === "kader"
+                          ? "Permohonan Akun Kader Berhasil Terkirim ke Puskesmas!"
+                          : "Akun resmi berhasil didaftarkan!"}
+                      </span>
                     </div>
+                    {role === "kader" && (
+                      <p className="text-zinc-600">
+                        Status akun: <span className="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">Menunggu Verifikasi Tenaga Gizi Puskesmas</span>. Untuk keperluan presentasi & evaluasi sistem saat ini, Anda dapat langsung menjelajahi dasbor operasional Kader.
+                      </p>
+                    )}
                     <Link
                       href={`/app?role=${role}`}
                       className="inline-flex items-center justify-center gap-2 rounded-full bg-[#18140B] px-6 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all w-full"
                     >
-                      <span>Masuk ke Dasbor Operasional ({info.name})</span>
+                      <span>Buka Dasbor ({info.name})</span>
                       <span className="text-[#FFCA38]">→</span>
                     </Link>
                   </div>

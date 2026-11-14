@@ -11,20 +11,47 @@ import ModulAKmsTab from "./ModulAKmsTab";
 import ModulBDapurTab from "./ModulBDapurTab";
 import ModulCKonsumsiTab from "./ModulCKonsumsiTab";
 import ModulDAnalitikTab from "./ModulDAnalitikTab";
+import PuskesmasTab from "./PuskesmasTab";
+import CaraKerjaRoleTab from "./CaraKerjaRoleTab";
 
-export type DashboardTab = "ringkasan" | "kms" | "dapur" | "konsumsi" | "analitik";
+export type DashboardTab =
+  | "ringkasan"
+  | "kms"
+  | "dapur"
+  | "konsumsi"
+  | "analitik"
+  | "puskesmas"
+  | "carakerja";
 
 export default function AppShell() {
   const searchParams = useSearchParams();
   const initialRoleParam = searchParams.get("role") as AuthRole | null;
 
-  const [activeRole, setActiveRole] = useState<AuthRole>(
+  const [activeRole] = useState<AuthRole>(
     initialRoleParam && authRoles.some((r) => r.key === initialRoleParam)
       ? initialRoleParam
       : "kader"
   );
 
-  const [activeTab, setActiveTab] = useState<DashboardTab>("ringkasan");
+  // Inisialisasi tab bawaan sesuai peran
+  const getDefaultTabForRole = (role: AuthRole): DashboardTab => {
+    switch (role) {
+      case "kader":
+        return "kms";
+      case "dapur":
+        return "dapur";
+      case "puskesmas":
+        return "puskesmas";
+      case "dinkes":
+        return "ringkasan";
+      case "orangtua":
+        return "konsumsi";
+      default:
+        return "kms";
+    }
+  };
+
+  const [activeTab, setActiveTab] = useState<DashboardTab>(getDefaultTabForRole(activeRole));
   const [selectedRegion, setSelectedRegion] = useState<string>("Kab. Bangkalan");
   const [currentTime, setCurrentTime] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -47,83 +74,111 @@ export default function AppShell() {
     return () => clearInterval(interval);
   }, []);
 
-  // Sinkronkan tab relevan saat peran berganti
-  const handleRoleChange = (newRole: AuthRole) => {
-    setActiveRole(newRole);
-    if (newRole === "kader") setActiveTab("kms");
-    else if (newRole === "dapur") setActiveTab("dapur");
-    else if (newRole === "orangtua") setActiveTab("konsumsi");
-    else if (newRole === "dinkes" || newRole === "puskesmas") setActiveTab("analitik");
-    setMobileMenuOpen(false);
+  const currentRoleInfo = authRoles.find((r) => r.key === activeRole) || authRoles[0];
+
+  // Modul yang dikhususkan sesuai peran akun yang login (RBAC Terkunci)
+  const getNavItemsForRole = (role: AuthRole) => {
+    const allItems = [
+      {
+        key: "ringkasan" as DashboardTab,
+        label: "Ringkasan Eksekutif",
+        desc: "Dasbor Utama & KPI Jatim",
+        roles: ["dinkes"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1" />
+            <rect width="7" height="5" x="14" y="3" rx="1" />
+            <rect width="7" height="9" x="14" y="12" rx="1" />
+            <rect width="7" height="5" x="3" y="16" rx="1" />
+          </svg>
+        ),
+        badge: "Eksekutif",
+      },
+      {
+        key: "kms" as DashboardTab,
+        label: "Smart KMS & Balita",
+        desc: "Input Balita & Timbang Cepat",
+        roles: ["kader"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1" />
+            <path d="M18 8h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4" />
+            <circle cx="8" cy="12" r="2" />
+          </svg>
+        ),
+        badge: "Tugas Utama",
+      },
+      {
+        key: "konsumsi" as DashboardTab,
+        label: role === "kader" ? "Verifikasi MBG Posyandu" : "Menu & Konsumsi MBG",
+        desc: role === "kader" ? "Presensi & Daya Terima Baduta" : "Jadwal & Riwayat Makan Balita",
+        roles: ["kader", "orangtua"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="M7 7h.01M7 17h.01M17 7h.01M12 12h.01" />
+          </svg>
+        ),
+        badge: role === "kader" ? "Lapangan" : "Balita",
+      },
+      {
+        key: "dapur" as DashboardTab,
+        label: "Dapur MBG & Kuota",
+        desc: "Resep Paket A/B & Belanja Peternak",
+        roles: ["dapur"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
+            <line x1="6" y1="17" x2="18" y2="17" />
+          </svg>
+        ),
+        badge: "Operasional",
+      },
+      {
+        key: "puskesmas" as DashboardTab,
+        label: "Verifikasi Kader & Rujukan",
+        desc: "Konfirmasi Akun & Pantau Zona Merah",
+        roles: ["puskesmas"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+        ),
+        badge: "Puskesmas",
+      },
+      {
+        key: "analitik" as DashboardTab,
+        label: role === "puskesmas" ? "Peta Pantau Wilayah" : "Heatmap Jatim & RoN",
+        desc: role === "puskesmas" ? "Sebaran Baduta se-Kecamatan" : "Audit 38 Kab/Kota & BPKP",
+        roles: ["puskesmas", "dinkes"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3v18h18" />
+            <path d="m19 9-5 5-4-4-3 3" />
+          </svg>
+        ),
+        badge: "Pengawasan",
+      },
+      {
+        key: "carakerja" as DashboardTab,
+        label: `Cara Kerja ${currentRoleInfo.name}`,
+        desc: "Panduan SOP & Langkah Praktis",
+        roles: ["kader", "dapur", "puskesmas", "dinkes", "orangtua"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        ),
+        badge: "Panduan",
+      },
+    ];
+
+    return allItems.filter((item) => item.roles.includes(role));
   };
 
-  const currentRoleInfo = authRoles.find((r) => r.key === activeRole)!;
-
-  const NAV_ITEMS = [
-    {
-      key: "ringkasan" as DashboardTab,
-      label: "Ringkasan Eksekutif",
-      desc: "Dasbor Utama & KPI",
-      icon: (
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect width="7" height="9" x="3" y="3" rx="1" />
-          <rect width="7" height="5" x="14" y="3" rx="1" />
-          <rect width="7" height="9" x="14" y="12" rx="1" />
-          <rect width="7" height="5" x="3" y="16" rx="1" />
-        </svg>
-      ),
-      badge: "Semua",
-    },
-    {
-      key: "kms" as DashboardTab,
-      label: "Modul A: Smart KMS",
-      desc: "Input Cepat & Z-Score WHO",
-      icon: (
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1" />
-          <path d="M18 8h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4" />
-          <circle cx="8" cy="12" r="2" />
-        </svg>
-      ),
-      badge: "Kader",
-    },
-    {
-      key: "dapur" as DashboardTab,
-      label: "Modul B: Dapur MBG",
-      desc: "Kuota Paket A/B & Resep",
-      icon: (
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
-          <line x1="6" y1="17" x2="18" y2="17" />
-        </svg>
-      ),
-      badge: "Dapur",
-    },
-    {
-      key: "konsumsi" as DashboardTab,
-      label: "Modul C: Scan & Konsumsi",
-      desc: "Verifikasi QR & Daya Terima",
-      icon: (
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect width="18" height="18" x="3" y="3" rx="2" />
-          <path d="M7 7h.01M7 17h.01M17 7h.01M12 12h.01" />
-        </svg>
-      ),
-      badge: "Ortu/Kader",
-    },
-    {
-      key: "analitik" as DashboardTab,
-      label: "Modul D: Heatmap & RoN",
-      desc: "38 Kab/Kota & Audit BPKP",
-      icon: (
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 3v18h18" />
-          <path d="m19 9-5 5-4-4-3 3" />
-        </svg>
-      ),
-      badge: "Dinkes",
-    },
-  ];
+  const navItems = getNavItemsForRole(activeRole);
 
   const sidebarContent = (
     <div className="flex flex-col min-h-full justify-between gap-6 pb-6" data-lenis-prevent="true">
@@ -176,47 +231,54 @@ export default function AppShell() {
           </div>
         </div>
 
-        {/* Role Switcher: Vertical Buttons going downwards */}
+        {/* Role Identity Card (RBAC Terkunci - Tidak Bisa Berganti Role Sembarangan) */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-              Pilih Peran Akun
+              Peran Terotentikasi (RBAC)
             </span>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="flex items-center gap-1 font-mono text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Aktif
+            </span>
           </div>
 
-          <div className="space-y-1 rounded-2xl border border-zinc-200/80 bg-zinc-50/70 p-1.5">
-            {authRoles.map((r) => {
-              const active = activeRole === r.key;
-              return (
-                <button
-                  key={r.key}
-                  type="button"
-                  onClick={() => handleRoleChange(r.key)}
-                  className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-left transition-all ${
-                    active
-                      ? "bg-[#18140B] text-white shadow-sm font-black"
-                      : "text-zinc-600 hover:text-zinc-950 hover:bg-white/80 font-bold"
-                  }`}
-                >
-                  <span className="font-sans text-xs">{r.name}</span>
-                  {active && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#38E8F5]" />
-                  )}
-                </button>
-              );
-            })}
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50/90 p-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#18140B] text-[#38E8F5] font-mono text-sm font-black shadow-sm">
+                {activeRole.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h5 className="font-sans text-xs font-black text-zinc-950 truncate">
+                  {currentRoleInfo.name}
+                </h5>
+                <p className="font-mono text-[10px] text-zinc-500 truncate">
+                  {currentRoleInfo.unitLabel}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 pt-2.5 border-t border-zinc-200/70 flex items-center justify-between">
+              <span className="font-mono text-[9px] text-zinc-400">Mode Akses Terbatas</span>
+              <Link
+                href="/login"
+                className="font-mono text-[10px] font-bold text-[#032D30] hover:text-[#38E8F5] transition-colors"
+                title="Ganti akun petugas resmi"
+              >
+                Ganti Akun ↗
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Navigation Modul: Vertical Stack going downwards */}
+        {/* Navigation Modul: Vertical Stack sesuai Peran Terkunci */}
         <div>
           <span className="block font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
-            Navigasi Modul Fungsional (FR)
+            Menu Operasional ({navItems.length} Modul)
           </span>
 
           <nav className="space-y-1.5">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = activeTab === item.key;
               return (
                 <button
@@ -393,7 +455,7 @@ export default function AppShell() {
               <span>NutriTrack</span>
               <span>/</span>
               <span className="font-bold text-zinc-900">
-                {NAV_ITEMS.find((n) => n.key === activeTab)?.label}
+                {navItems.find((n) => n.key === activeTab)?.label || "Dasbor"}
               </span>
               <span>/</span>
               <span className="rounded-md bg-zinc-200 px-2 py-0.5 text-[10px] font-bold text-zinc-700">
@@ -468,6 +530,33 @@ export default function AppShell() {
                 transition={{ duration: 0.22 }}
               >
                 <ModulDAnalitikTab />
+              </motion.div>
+            )}
+
+            {activeTab === "puskesmas" && (
+              <motion.div
+                key="puskesmas"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+              >
+                <PuskesmasTab />
+              </motion.div>
+            )}
+
+            {activeTab === "carakerja" && (
+              <motion.div
+                key="carakerja"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+              >
+                <CaraKerjaRoleTab
+                  role={activeRole}
+                  onNavigateTab={(tab) => setActiveTab(tab as DashboardTab)}
+                />
               </motion.div>
             )}
           </AnimatePresence>
