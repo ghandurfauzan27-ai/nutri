@@ -136,8 +136,8 @@ export default function AppShell() {
       },
       {
         key: "puskesmas" as DashboardTab,
-        label: "Verifikasi Kader & Rujukan",
-        desc: "Konfirmasi Akun & Pantau Zona Merah",
+        label: "Wilayah Binaan & Posyandu",
+        desc: "Pantau 8 Desa & Verifikasi Akun",
         roles: ["puskesmas"],
         icon: (
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -148,9 +148,9 @@ export default function AppShell() {
       },
       {
         key: "analitik" as DashboardTab,
-        label: role === "puskesmas" ? "Peta Pantau Wilayah" : "Heatmap Jatim & RoN",
-        desc: role === "puskesmas" ? "Sebaran Baduta se-Kecamatan" : "Audit 38 Kab/Kota & BPKP",
-        roles: ["puskesmas", "dinkes"],
+        label: "Heatmap Jatim & RoN",
+        desc: "Audit 38 Kab/Kota & BPKP",
+        roles: ["dinkes"],
         icon: (
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 3v18h18" />

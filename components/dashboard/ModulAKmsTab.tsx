@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BALITA_MOCK, type BalitaRecord } from "@/lib/app-data";
 import ClayCard from "@/components/auth/ClayCard";
@@ -14,6 +14,25 @@ export default function ModulAKmsTab() {
   const [syncedBannerText, setSyncedBannerText] = useState(
     "Data penimbangan berhasil disinkronkan ke Cloud Server & Antrean Dapur SPPG!"
   );
+
+  // Muat data balita baru hasil ketikan manual kader dari localStorage
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("nt_custom_balita");
+        if (raw) {
+          const customList = JSON.parse(raw);
+          if (Array.isArray(customList) && customList.length > 0) {
+            setBalitaList((prev) => {
+              const existingIds = new Set(prev.map((b) => b.id));
+              const fresh = customList.filter((item: any) => !existingIds.has(item.id));
+              return [...fresh, ...prev];
+            });
+          }
+        }
+      }
+    } catch (e) {}
+  }, []);
 
   // Mode Input: Timbang Rutin vs Pendaftaran Balita Baru Manual
   const [inputMode, setInputMode] = useState<"timbang" | "daftar_baru">("timbang");
@@ -151,6 +170,15 @@ export default function ModulAKmsTab() {
     setInputSex(newSex);
     setInputHeadCircumference(newLk);
     setMeasuringMethod(ageMonths < 24 ? "panjang" : "tinggi");
+
+    // Simpan ke localStorage agar permanen & otomatis tersinkron ke Puskesmas
+    try {
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("nt_custom_balita");
+        const arr = raw ? JSON.parse(raw) : [];
+        localStorage.setItem("nt_custom_balita", JSON.stringify([newRecord, ...arr]));
+      }
+    } catch (e) {}
 
     // Simpan juga ke database backend jika terhubung
     try {

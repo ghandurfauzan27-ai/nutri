@@ -1,5 +1,22 @@
 [
   {
+    "childId": "CHD-JTM-E2B7D8",
+    "recordDate": "2026-11-14",
+    "ageMonths": 14,
+    "weightKg": 8.5,
+    "heightCm": 73,
+    "headCircumferenceCm": 45,
+    "zBBU": -1.47,
+    "zTBU": -1.82,
+    "zBBTB": -0.79,
+    "kurvaKIA": "kuning",
+    "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
+    "isFaltering": false,
+    "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
+    "createdAt": "2026-11-14T02:35:22.656Z",
+    "updatedAt": "2026-11-14T02:35:22.656Z"
+  },
+  {
     "childId": "CHD-BLT-006",
     "recordDate": "2026-10-18",
     "ageMonths": 20,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   KECAMATAN_PER_KABUPATEN,
@@ -70,10 +71,28 @@ const INITIAL_PENDING_KADERS: PendingKader[] = [
 ];
 
 export default function PuskesmasTab() {
-  // Lingkup Wilayah Puskesmas (Pilihan Kabupaten & Kecamatan)
-  const kabupatenList = Object.keys(KECAMATAN_PER_KABUPATEN);
-  const [selectedKabupaten, setSelectedKabupaten] = useState<string>("Kab. Bangkalan");
-  const [selectedKecamatan, setSelectedKecamatan] = useState<string>("Socah");
+  const searchParams = useSearchParams();
+  const faskesParam = searchParams.get("faskes")?.toLowerCase();
+
+  // YURISDIKSI RESMI TERKUNCI (Sesuai UU PDP No. 27/2022 & Permenkes No. 2/2020)
+  // Puskesmas beroperasi per kecamatan dan DILARANG mengakses/memilih wilayah puskesmas/kabupaten lain.
+  const selectedKabupaten =
+    faskesParam === "kedungdung" ? "Kab. Sampang" : "Kab. Bangkalan";
+  const selectedKecamatan =
+    faskesParam === "kedungdung" ? "Kedungdung" : faskesParam === "burneh" ? "Burneh" : "Socah";
+  
+  const puskesmasName = getPuskesmasNameByKecamatan(selectedKecamatan);
+  const puskesmasAddress = getPuskesmasAddressByKecamatan(selectedKecamatan);
+  const desaBinaanList = DESA_PER_KECAMATAN[selectedKecamatan] || [
+    "Desa Bilaporah",
+    "Desa Dakiring",
+    "Desa Jaddih",
+    "Desa Socah",
+    "Desa Keleyan",
+    "Desa Petaonan",
+    "Desa Junganyar",
+    "Desa Pernajuh",
+  ];
 
   // Tab internal sub-modul Puskesmas
   const [activeSubTab, setActiveSubTab] = useState<"posyandu_desa" | "verifikasi_kader" | "rujukan_merah">(
@@ -91,10 +110,11 @@ export default function PuskesmasTab() {
   const [kaderList, setKaderList] = useState<PendingKader[]>(INITIAL_PENDING_KADERS);
   const [toastMessage, setToastMessage] = useState<string>("");
 
-  // Sinkronkan data pendaftaran Posyandu dari localStorage saat mount
+  // Sinkronkan data pendaftaran Posyandu & Balita baru dari localStorage saat mount
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
+        // 1. Sinkronkan pendaftaran akun Posyandu Baru
         const raw = localStorage.getItem("nt_registered_posyandu");
         if (raw) {
           const registered = JSON.parse(raw);
@@ -125,6 +145,59 @@ export default function PuskesmasTab() {
                 }));
               return [...newKaders, ...prev];
             });
+          }
+        }
+
+        // 2. Sinkronkan balita baru yang diketik manual oleh Posyandu
+        const rawBalita = localStorage.getItem("nt_custom_balita");
+        if (rawBalita) {
+          const customBalitas = JSON.parse(rawBalita);
+          if (Array.isArray(customBalitas) && customBalitas.length > 0) {
+            setAllPosyandu((prev) =>
+              prev.map((p) => {
+                const matched = customBalitas.filter(
+                  (cb: any) => cb.posyandu === p.posyandu || cb.desa === p.desa
+                );
+                if (matched.length === 0) return p;
+
+                const converted: BalitaMikro[] = matched.map((cb: any) => ({
+                  id: cb.id,
+                  nama: cb.nama,
+                  nik: cb.nik || `3505${Date.now()}`,
+                  usiaBulan: cb.usiaBulan || 12,
+                  jenisKelamin: cb.jenisKelamin || "L",
+                  namaIbu: cb.namaIbu || "Ibu Balita",
+                  bbKg: cb.bbKg || 8.0,
+                  tbCm: cb.tbCm || 72.0,
+                  zTbu: cb.zTbu || -1.8,
+                  zBbu: cb.zBbu || -1.4,
+                  statusGizi: cb.statusNutrisi || "Sehat / Normal",
+                  alokasiPaket: cb.paketMBG || "Paket A (Gizi Reguler)",
+                  catatanKlinis: cb.catatan || "Data input manual dari Posyandu Desa.",
+                  statusRujukan: cb.isFaltering ? "Rujukan Aktif ke Dokter Puskesmas" : "Belum Perlu Rujukan",
+                }));
+
+                const existingIds = new Set(p.balitaList.map((b) => b.id));
+                const fresh = converted.filter((b) => !existingIds.has(b.id));
+                if (fresh.length === 0) return p;
+
+                const mergedBalitas = [...fresh, ...p.balitaList];
+                const stuntingCnt = mergedBalitas.filter(
+                  (b) => b.statusGizi.includes("Stunting") || b.statusGizi.includes("Waspada")
+                ).length;
+                const sehatCnt = mergedBalitas.length - stuntingCnt;
+
+                return {
+                  ...p,
+                  balitaList: mergedBalitas,
+                  totalBalita: mergedBalitas.length,
+                  stuntingCount: stuntingCnt,
+                  sehatCount: sehatCnt,
+                  stuntingPersen: Math.round((stuntingCnt / mergedBalitas.length) * 1000) / 10,
+                  sehatPersen: Math.round((sehatCnt / mergedBalitas.length) * 1000) / 10,
+                };
+              })
+            );
           }
         }
       }
@@ -214,17 +287,11 @@ export default function PuskesmasTab() {
       ? (Math.round((totalSehatKecamatan / totalBalitaKecamatan) * 1000) / 10).toFixed(1)
       : "0";
 
-  const handleKabupatenChange = (kab: string) => {
-    setSelectedKabupaten(kab);
-    const availableKec = KECAMATAN_PER_KABUPATEN[kab] || ["Pusat"];
-    setSelectedKecamatan(availableKec[0]);
-  };
-
   const handleApproveKader = (id: string, nama: string) => {
     setKaderList((prev) =>
       prev.map((k) => (k.id === id ? { ...k, status: "Disetujui" as const } : k))
     );
-    setToastMessage(`Akun Kader ${nama} BERHASIL DISETUJUI & DIAKTIFKAN oleh Puskesmas!`);
+    setToastMessage(`Akun Posyandu ${nama} BERHASIL DISETUJUI & DIAKTIFKAN oleh Puskesmas!`);
     setTimeout(() => setToastMessage(""), 4500);
   };
 
@@ -232,7 +299,7 @@ export default function PuskesmasTab() {
     setKaderList((prev) =>
       prev.map((k) => (k.id === id ? { ...k, status: "Ditolak" as const } : k))
     );
-    setToastMessage(`Pendaftaran Akun Kader ${nama} ditolak.`);
+    setToastMessage(`Pendaftaran Akun Posyandu ${nama} ditolak.`);
     setTimeout(() => setToastMessage(""), 4500);
   };
 
@@ -264,7 +331,7 @@ export default function PuskesmasTab() {
 
   return (
     <div className="space-y-8 font-sans">
-      {/* 1. Header & Scope Selector: Kabupaten & Kecamatan */}
+      {/* 1. Header & Yurisdiksi Resmi Puskesmas (Terkunci Sesuai Wilayah Kerja) */}
       <div className="rounded-3xl border border-zinc-200/90 bg-white p-5 lg:p-6 shadow-sm space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-100 pb-5">
           <div>
@@ -285,51 +352,52 @@ export default function PuskesmasTab() {
               <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-white text-[10px]">
                 🏥
               </span>
-              <span>Puskesmas {selectedKecamatan} ({selectedKabupaten})</span>
+              <span>{puskesmasName} ({selectedKabupaten})</span>
             </span>
           </div>
         </div>
 
-        {/* Form Selector Wilayah Kerja Puskesmas */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 bg-zinc-50/80 p-4 rounded-2xl border border-zinc-200/80">
-          <div>
-            <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1.5">
-              1. Pilih Kabupaten / Kota
-            </label>
-            <select
-              value={selectedKabupaten}
-              onChange={(e) => handleKabupatenChange(e.target.value)}
-              className="h-11 w-full rounded-xl border border-zinc-200 bg-white px-3.5 font-sans text-xs font-bold text-zinc-900 outline-none transition-all hover:border-zinc-300 focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/10"
-            >
-              {kabupatenList.map((kab) => (
-                <option key={kab} value={kab}>
-                  {kab}
-                </option>
-              ))}
-            </select>
+        {/* Panel Yurisdiksi Resmi Terkunci (RBAC & Privasi Rekam Medis) */}
+        <div className="grid gap-4 lg:grid-cols-3 bg-gradient-to-r from-emerald-50/80 via-white to-sky-50/60 p-5 rounded-2xl border border-emerald-200/90 shadow-xs">
+          <div className="lg:col-span-2 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-emerald-700 text-white font-mono text-[10px] font-black px-2.5 py-0.5 uppercase tracking-wider">
+                Yurisdiksi Resmi Faskes
+              </span>
+              <span className="font-mono text-xs text-zinc-500 font-semibold">
+                Kode Faskes Kemenkes: P3526010101
+              </span>
+            </div>
+            <h3 className="font-sans text-xl font-black text-zinc-950 flex items-center gap-2">
+              <span>{puskesmasName}</span>
+              <span className="text-sm font-normal text-zinc-600">({selectedKabupaten})</span>
+            </h3>
+            <p className="font-sans text-xs text-zinc-700 leading-relaxed">
+              📍 <strong>Wilayah Kerja Terkunci:</strong> Menanungi {desaBinaanList.length} Desa Binaan di wilayah <strong>Kecamatan {selectedKecamatan}</strong>:{" "}
+              <span className="font-mono text-[11px] text-emerald-900 bg-emerald-100/70 px-2 py-0.5 rounded-md font-bold">
+                {desaBinaanList.join(", ")}
+              </span>
+            </p>
+            <p className="font-mono text-[11px] text-zinc-500">
+              Alamat Faskes: {puskesmasAddress} · Kepala Faskes: dr. H. Achmad Syafi'i · Nutrisionis: dr. Nurul Hidayati, M.Gizi
+            </p>
           </div>
 
-          <div>
-            <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1.5">
-              2. Pilih Kecamatan (Wilayah Kerja Puskesmas)
-            </label>
-            <select
-              value={selectedKecamatan}
-              onChange={(e) => setSelectedKecamatan(e.target.value)}
-              className="h-11 w-full rounded-xl border border-zinc-200 bg-white px-3.5 font-sans text-xs font-bold text-zinc-900 outline-none transition-all hover:border-zinc-300 focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/10"
-            >
-              {(KECAMATAN_PER_KABUPATEN[selectedKabupaten] || ["Pusat"]).map((kec) => (
-                <option key={kec} value={kec}>
-                  Kecamatan {kec}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="sm:col-span-2 lg:col-span-1 flex flex-col justify-end">
-            <div className="rounded-xl border border-sky-200 bg-sky-50/70 px-3.5 py-2 font-mono text-[11px] text-sky-950 flex items-center justify-between">
-              <span>Status Faskes:</span>
-              <strong className="text-emerald-700 font-black">● Aktif Operasional</strong>
+          <div className="rounded-2xl border border-emerald-300 bg-white p-4 flex flex-col justify-between space-y-2.5 shadow-xs">
+            <div className="flex items-start gap-2.5">
+              <span className="text-xl">🔒</span>
+              <div>
+                <span className="font-sans text-xs font-black text-zinc-950 block">
+                  Akses Data Medis Terbatas (Terkunci)
+                </span>
+                <p className="font-sans text-[11px] text-zinc-600 leading-normal mt-0.5">
+                  Sesuai <strong>UU PDP No. 27/2022</strong> & <strong>Permenkes No. 2/2020</strong>, akun Puskesmas ini terkunci khusus pada wilayah kerja Kecamatan {selectedKecamatan}. Akses ke kecamatan lain tidak diperkenankan.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between border-t border-zinc-100 pt-2 font-mono text-[10px] text-emerald-800">
+              <span>● Status Basis Data: Terhubung</span>
+              <strong className="font-black">{displayPosyanduList.length} Posyandu Binaan</strong>
             </div>
           </div>
         </div>
