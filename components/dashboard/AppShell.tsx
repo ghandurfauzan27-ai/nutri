@@ -243,23 +243,46 @@ export default function AppShell() {
             </span>
           </div>
 
-          <div className="rounded-2xl border border-zinc-200 bg-zinc-50/90 p-3 shadow-xs">
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50/90 p-3.5 shadow-xs space-y-2">
             <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#18140B] text-[#38E8F5] font-mono text-sm font-black shadow-sm">
-                {activeRole.slice(0, 2).toUpperCase()}
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#18140B] text-[#38E8F5] font-mono text-xs font-black shadow-sm">
+                {activeRole === "kader" ? "POS" : activeRole.slice(0, 3).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <h5 className="font-sans text-xs font-black text-zinc-950 truncate">
-                  {currentRoleInfo.name}
+                  {activeRole === "kader"
+                    ? "Posyandu Mawar 01"
+                    : activeRole === "puskesmas"
+                    ? "Puskesmas Pembina Socah"
+                    : currentRoleInfo.name}
                 </h5>
                 <p className="font-mono text-[10px] text-zinc-500 truncate">
-                  {currentRoleInfo.unitLabel}
+                  {activeRole === "kader"
+                    ? "Desa Bilaporah, Kec. Socah"
+                    : activeRole === "puskesmas"
+                    ? "Kec. Socah, Kab. Bangkalan"
+                    : currentRoleInfo.unitLabel}
                 </p>
               </div>
             </div>
 
-            <div className="mt-3 pt-2.5 border-t border-zinc-200/70 flex items-center justify-between">
-              <span className="font-mono text-[9px] text-zinc-400">Mode Akses Terbatas</span>
+            {/* Informasi Naungan & Alamat Lengkap */}
+            {activeRole === "kader" && (
+              <div className="rounded-xl border border-zinc-200/80 bg-white p-2 text-[10px] font-mono space-y-0.5 text-zinc-600">
+                <div className="text-zinc-500 truncate">📍 Balai RW 01, Dusun Krajan</div>
+                <div className="text-emerald-800 font-bold truncate">🏥 Naungan: Puskesmas Socah</div>
+              </div>
+            )}
+
+            {activeRole === "puskesmas" && (
+              <div className="rounded-xl border border-zinc-200/80 bg-white p-2 text-[10px] font-mono space-y-0.5 text-zinc-600">
+                <div className="text-zinc-500 truncate">📍 Jl. Raya Socah No. 45</div>
+                <div className="text-emerald-800 font-bold truncate">Binaan: 8 Desa & 14 Posyandu</div>
+              </div>
+            )}
+
+            <div className="pt-2 border-t border-zinc-200/70 flex items-center justify-between">
+              <span className="font-mono text-[9px] text-zinc-400">Akun Resmi Jatim</span>
               <Link
                 href="/login"
                 className="font-mono text-[10px] font-bold text-[#032D30] hover:text-[#38E8F5] transition-colors"

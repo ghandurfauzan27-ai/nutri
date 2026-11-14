@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   KECAMATAN_PER_KABUPATEN,
+  DESA_PER_KECAMATAN,
+  MASTER_PUSKESMAS_INFO,
   POSYANDU_MIKRO_DATA,
+  getPuskesmasNameByKecamatan,
+  getPuskesmasAddressByKecamatan,
   type PosyanduMikro,
   type BalitaMikro,
 } from "@/lib/puskesmas-data";
@@ -15,6 +19,7 @@ interface PendingKader {
   email: string;
   posyandu: string;
   desa: string;
+  alamatPosyandu?: string;
   kecamatan: string;
   kabupaten: string;
   noHp: string;
@@ -26,9 +31,10 @@ const INITIAL_PENDING_KADERS: PendingKader[] = [
   {
     id: "KDR-REG-01",
     nama: "Dewi Lestari, S.Pd",
-    email: "dewi.lestari@posyandu.id",
+    email: "posyandu.mawar02@jatim.go.id",
     posyandu: "Posyandu Mawar 02",
     desa: "Desa Bilaporah",
+    alamatPosyandu: "Balai Dusun Jedingan RT 03 / RW 04",
     kecamatan: "Socah",
     kabupaten: "Kab. Bangkalan",
     noHp: "081234567801",
@@ -38,9 +44,10 @@ const INITIAL_PENDING_KADERS: PendingKader[] = [
   {
     id: "KDR-REG-02",
     nama: "Nur Aini",
-    email: "nur.aini@posyandu.id",
-    posyandu: "Posyandu Melati 03",
+    email: "posyandu.dakiring@jatim.go.id",
+    posyandu: "Posyandu Melati 01",
     desa: "Desa Dakiring",
+    alamatPosyandu: "Balai Desa Dakiring Timur RT 01 / RW 01",
     kecamatan: "Socah",
     kabupaten: "Kab. Bangkalan",
     noHp: "081234567802",
@@ -50,9 +57,10 @@ const INITIAL_PENDING_KADERS: PendingKader[] = [
   {
     id: "KDR-REG-03",
     nama: "Siti Rahmawati, S.Pd",
-    email: "kader.socah@jatim.go.id",
+    email: "posyandu.mawar01@jatim.go.id",
     posyandu: "Posyandu Mawar 01",
     desa: "Desa Bilaporah",
+    alamatPosyandu: "Balai RW 01, Dusun Krajan Barat",
     kecamatan: "Socah",
     kabupaten: "Kab. Bangkalan",
     noHp: "081234567891",
@@ -78,74 +86,119 @@ export default function PuskesmasTab() {
     "semua"
   );
 
-  // State Verifikasi Akun Kader
+  // Master Data Posyandu Mikro yang Tersinkronisasi Otomatis
+  const [allPosyandu, setAllPosyandu] = useState<PosyanduMikro[]>(POSYANDU_MIKRO_DATA);
   const [kaderList, setKaderList] = useState<PendingKader[]>(INITIAL_PENDING_KADERS);
   const [toastMessage, setToastMessage] = useState<string>("");
 
+  // Sinkronkan data pendaftaran Posyandu dari localStorage saat mount
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("nt_registered_posyandu");
+        if (raw) {
+          const registered = JSON.parse(raw);
+          if (Array.isArray(registered) && registered.length > 0) {
+            setAllPosyandu((prev) => {
+              const existingIds = new Set(prev.map((p) => p.id));
+              const newItems = registered.filter((r: any) => !existingIds.has(r.id));
+              return [...newItems, ...prev];
+            });
+
+            // Tambahkan juga ke daftar verifikasi jika belum ada
+            setKaderList((prev) => {
+              const existingKaderIds = new Set(prev.map((k) => k.id));
+              const newKaders: PendingKader[] = registered
+                .filter((r: any) => !existingKaderIds.has(r.id))
+                .map((r: any) => ({
+                  id: r.id,
+                  nama: r.kaderPenanggungJawab || "Kader Posyandu",
+                  email: r.emailAkun || "posyandu@jatim.go.id",
+                  posyandu: r.posyandu,
+                  desa: r.desa,
+                  alamatPosyandu: r.alamatPosyandu,
+                  kecamatan: r.kecamatan,
+                  kabupaten: r.kabupaten,
+                  noHp: r.noHpKader || "-",
+                  tglDaftar: r.tglDaftar || "Baru Daftar",
+                  status: (r.statusAkun as any) || "Menunggu Verifikasi",
+                }));
+              return [...newKaders, ...prev];
+            });
+          }
+        }
+      }
+    } catch (e) {}
+  }, []);
+
   // Filter posyandu sesuai Kabupaten dan Kecamatan pilihan
-  const filteredPosyandu = POSYANDU_MIKRO_DATA.filter(
+  const filteredPosyandu = allPosyandu.filter(
     (p) => p.kabupaten === selectedKabupaten && p.kecamatan === selectedKecamatan
   );
 
-  // Jika kecamatan yang dipilih tidak memiliki data mock langsung, gunakan fallback posyandu Socah dengan nama kecamatan disesuaikan
+  // Jika kecamatan yang dipilih belum ada mock langsung, generate posyandu desa resmi untuk kecamatan tersebut
   const displayPosyanduList: PosyanduMikro[] =
     filteredPosyandu.length > 0
       ? filteredPosyandu
-      : [
-          {
-            id: `POS-${selectedKecamatan.toUpperCase()}-01`,
-            posyandu: `Posyandu Melati 01`,
-            desa: `Desa ${selectedKecamatan} Krajan`,
-            kecamatan: selectedKecamatan,
-            kabupaten: selectedKabupaten,
-            puskesmas: `Puskesmas ${selectedKecamatan}`,
-            kaderPenanggungJawab: "Kader Posyandu Desa",
-            totalBalita: 45,
-            sehatCount: 34,
-            sehatPersen: 75.5,
-            stuntingCount: 9,
-            stuntingPersen: 20.0,
-            falteringCount: 2,
-            rujukanCount: 2,
-            paketA: 34,
-            paketB: 9,
-            paketC: 2,
-            balitaList: [
-              {
-                id: `BAL-${selectedKecamatan}-01`,
-                nama: "Ahmad Zainal",
-                nik: "3505011402240001",
-                usiaBulan: 15,
-                jenisKelamin: "L",
-                namaIbu: "Siti Masitoh",
-                bbKg: 8.5,
-                tbCm: 73.2,
-                zTbu: -2.35,
-                zBbu: -2.1,
-                statusGizi: "Stunting Garis Merah",
-                alokasiPaket: "Paket B (Protein Ganda Jatim)",
-                catatanKlinis: `Stunting terdeteksi pada penimbangan rutin Posyandu di Kec. ${selectedKecamatan}.`,
-                statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
-              },
-              {
-                id: `BAL-${selectedKecamatan}-02`,
-                nama: "Zaskia Nur",
-                nik: "3505014805240002",
-                usiaBulan: 18,
-                jenisKelamin: "P",
-                namaIbu: "Nurjanah",
-                bbKg: 10.4,
-                tbCm: 81.6,
-                zTbu: +0.2,
-                zBbu: +0.1,
-                statusGizi: "Sehat / Normal",
-                alokasiPaket: "Paket A (Gizi Reguler)",
-                catatanKlinis: "Tumbuh kembang optimal di kurva hijau KIA.",
-                statusRujukan: "Belum Perlu Rujukan",
-              },
-            ],
-          },
-        ];
+      : (DESA_PER_KECAMATAN[selectedKecamatan] || [`Desa ${selectedKecamatan} 01`, `Desa ${selectedKecamatan} 02`]).slice(0, 3).map((desaName, idx) => ({
+          id: `POS-${selectedKecamatan.toUpperCase()}-0${idx + 1}`,
+          posyandu: `Posyandu Melati 0${idx + 1}`,
+          desa: desaName,
+          alamatPosyandu: `Balai RW 0${idx + 1}, ${desaName}`,
+          kecamatan: selectedKecamatan,
+          kabupaten: selectedKabupaten,
+          puskesmas: getPuskesmasNameByKecamatan(selectedKecamatan),
+          alamatPuskesmas: getPuskesmasAddressByKecamatan(selectedKecamatan),
+          kaderPenanggungJawab: `Kader ${desaName}`,
+          noHpKader: `0812345670${idx + 1}`,
+          emailAkun: `posyandu.${desaName.toLowerCase().replace(/[^a-z0-9]/g, "")}@jatim.go.id`,
+          statusAkun: "Disetujui",
+          tglDaftar: "1 Okt 2026",
+          totalBalita: 42 + idx * 8,
+          sehatCount: 32 + idx * 6,
+          sehatPersen: 76.2,
+          stuntingCount: 8 + idx * 2,
+          stuntingPersen: 19.0,
+          falteringCount: 2,
+          rujukanCount: 2,
+          paketA: 32 + idx * 6,
+          paketB: 8 + idx * 2,
+          paketC: 2,
+          balitaList: [
+            {
+              id: `BAL-${selectedKecamatan}-0${idx + 1}`,
+              nama: `Ahmad Zainal (Balita ${desaName})`,
+              nik: `350501140224000${idx + 1}`,
+              usiaBulan: 15 + idx * 2,
+              jenisKelamin: "L",
+              namaIbu: "Siti Masitoh",
+              bbKg: 8.5,
+              tbCm: 73.2,
+              zTbu: -2.35,
+              zBbu: -2.1,
+              statusGizi: "Stunting Garis Merah",
+              alokasiPaket: "Paket B (Protein Ganda Jatim)",
+              catatanKlinis: `Stunting terdeteksi pada penimbangan rutin Posyandu di ${desaName}, Kec. ${selectedKecamatan}.`,
+              statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
+            },
+            {
+              id: `BAL-${selectedKecamatan}-0${idx + 2}`,
+              nama: `Zaskia Putri (Balita ${desaName})`,
+              nik: `350501480524000${idx + 2}`,
+              usiaBulan: 18,
+              jenisKelamin: "P",
+              namaIbu: "Nurjanah",
+              bbKg: 10.4,
+              tbCm: 81.6,
+              zTbu: +0.2,
+              zBbu: +0.1,
+              statusGizi: "Sehat / Normal",
+              alokasiPaket: "Paket A (Gizi Reguler)",
+              catatanKlinis: "Tumbuh kembang optimal di kurva hijau KIA Dinkes Jatim.",
+              statusRujukan: "Belum Perlu Rujukan",
+            },
+          ],
+        }));
 
   // Hitung total agregat kecamatan yang sedang dipilih
   const totalBalitaKecamatan = displayPosyanduList.reduce((acc, p) => acc + p.totalBalita, 0);

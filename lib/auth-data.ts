@@ -16,11 +16,11 @@ export interface AuthRoleInfo {
 }
 
 export const authRoles: AuthRoleInfo[] = [
-  { key: "kader", name: "Kader Posyandu", loginIdLabel: "Nomor HP atau NIK kader", contactLabel: "Nomor HP (WhatsApp)", unitLabel: "Nama Posyandu" },
-  { key: "orangtua", name: "Orang Tua", loginIdLabel: "Nomor HP terdaftar", contactLabel: "Nomor HP (WhatsApp)", unitLabel: "Posyandu tempat balita ditimbang" },
-  { key: "dapur", name: "Dapur MBG", loginIdLabel: "ID Dapur atau email resmi", contactLabel: "Email resmi dapur", unitLabel: "Nama Dapur SPPG" },
-  { key: "puskesmas", name: "Puskesmas", loginIdLabel: "NIP atau email dinas", contactLabel: "Email dinas", unitLabel: "Nama Puskesmas" },
+  { key: "kader", name: "Posyandu Desa", loginIdLabel: "Kode Posyandu, Email, atau HP Kader", contactLabel: "Nomor WhatsApp Kader / Petugas", unitLabel: "Nama Posyandu, Desa & Alamat" },
+  { key: "puskesmas", name: "Puskesmas Pembina", loginIdLabel: "NIP atau email dinas Puskesmas", contactLabel: "Email dinas / No. Telp Faskes", unitLabel: "Nama Puskesmas & Kecamatan" },
+  { key: "dapur", name: "Dapur MBG (SPPG)", loginIdLabel: "ID Dapur atau email resmi", contactLabel: "Email resmi dapur", unitLabel: "Nama Dapur SPPG & Wilayah" },
   { key: "dinkes", name: "Dinkes / TPID", loginIdLabel: "NIP atau akun eksekutif", contactLabel: "Email dinas", unitLabel: "Unit kerja", inviteOnly: true },
+  { key: "orangtua", name: "Orang Tua Balita", loginIdLabel: "Nomor HP terdaftar", contactLabel: "Nomor HP (WhatsApp)", unitLabel: "Posyandu tempat balita ditimbang" },
 ];
 
 export const jatimRegions: string[] = [

@@ -37,7 +37,14 @@ export default function LoginForm({ delay }: { delay: number }) {
   };
 
   const fillDemo = () => {
-    setId(`petugas.${role}@nutritrack.go.id`);
+    const demoEmails: Record<AuthRole, string> = {
+      kader: "posyandu.bilaporah@jatim.go.id",
+      puskesmas: "gizi.puskesmas@jatim.go.id",
+      dapur: "dapur.sppg@jatim.go.id",
+      dinkes: "dinkes.jatim@jatimprov.go.id",
+      orangtua: "orangtua.ahmad@gmail.com",
+    };
+    setId(demoEmails[role]);
     setPw("Password123!");
     setErrors({});
     setStatus("loading");

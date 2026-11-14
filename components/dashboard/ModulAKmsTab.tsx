@@ -190,7 +190,38 @@ export default function ModulAKmsTab() {
   };
 
   return (
-    <div className="space-y-8 font-sans">
+    <div className="space-y-6 font-sans">
+      {/* Banner Identitas Posyandu Desa & Naungan Puskesmas Pembina */}
+      <div className="rounded-3xl border border-sky-200 bg-gradient-to-r from-sky-50/90 via-sky-50/50 to-emerald-50/70 p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#18140B] text-[#38E8F5] font-mono text-xs font-black shadow-md">
+            POS
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-sans text-base font-black text-zinc-950">
+                Posyandu Mawar 01 — Desa Bilaporah
+              </h3>
+              <span className="rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 font-mono text-[10px] font-black text-emerald-900">
+                ● Akun Posyandu Desa Aktif
+              </span>
+            </div>
+            <p className="font-mono text-xs text-zinc-600 mt-0.5">
+              Kecamatan Socah, Kab. Bangkalan · Alamat: Balai RW 01, Dusun Krajan Barat RT 01 / RW 02
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-emerald-300 bg-white/95 px-4 py-2.5 font-mono text-xs text-emerald-950 flex items-center gap-3 shadow-xs">
+          <span className="text-xl">🏥</span>
+          <div>
+            <span className="text-zinc-400 text-[10px] block font-bold uppercase">Naungan Puskesmas Pembina:</span>
+            <strong className="text-emerald-900 font-sans font-black text-sm">Puskesmas Socah</strong>
+            <span className="text-[10px] text-zinc-500 block">Jl. Raya Socah No. 45, Bangkalan</span>
+          </div>
+        </div>
+      </div>
+
       {/* Header Info & Offline Banner (SKPL-F05) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm">
         <div>

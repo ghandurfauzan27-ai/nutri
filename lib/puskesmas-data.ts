@@ -1,5 +1,6 @@
 /**
- * Data Struktur dan Mock Wilayah Mikro Tingkat Puskesmas (Kabupaten -> Kecamatan -> Desa -> Posyandu -> Balita)
+ * Data Struktur dan Pemetaan Hierarki Wilayah Jawa Timur:
+ * Kabupaten -> Kecamatan (Puskesmas Pembina) -> Desa -> Posyandu Desa -> Balita
  * Standar Permenkes No. 2/2020 & SKPL NutriTrack Jatim.
  */
 
@@ -22,12 +23,18 @@ export interface BalitaMikro {
 
 export interface PosyanduMikro {
   id: string;
-  posyandu: string;
-  desa: string;
-  kecamatan: string;
-  kabupaten: string;
-  puskesmas: string;
+  posyandu: string; // e.g. "Posyandu Mawar 01"
+  desa: string; // e.g. "Desa Bilaporah"
+  alamatPosyandu: string; // e.g. "Balai RW 02, Dusun Krajan"
+  kecamatan: string; // e.g. "Socah"
+  kabupaten: string; // e.g. "Kab. Bangkalan"
+  puskesmas: string; // e.g. "Puskesmas Socah"
+  alamatPuskesmas: string; // e.g. "Jl. Raya Socah No. 45"
   kaderPenanggungJawab: string;
+  noHpKader: string;
+  emailAkun: string;
+  statusAkun: "Disetujui" | "Menunggu Verifikasi" | "Ditolak";
+  tglDaftar: string;
   totalBalita: number;
   sehatCount: number;
   sehatPersen: number;
@@ -41,6 +48,16 @@ export interface PosyanduMikro {
   balitaList: BalitaMikro[];
 }
 
+export interface PuskesmasInfo {
+  namaPuskesmas: string;
+  kecamatan: string;
+  kabupaten: string;
+  alamat: string;
+  kepalaPuskesmas: string;
+  nutrisionisPJ: string;
+  telepon: string;
+}
+
 export const KECAMATAN_PER_KABUPATEN: Record<string, string[]> = {
   "Kab. Bangkalan": ["Socah", "Burneh", "Bangkalan", "Blega", "Kamal", "Arosbaya"],
   "Kab. Sampang": ["Kedungdung", "Torjun", "Sampang", "Camplong", "Ketapang"],
@@ -52,16 +69,127 @@ export const KECAMATAN_PER_KABUPATEN: Record<string, string[]> = {
   "Kota Surabaya": ["Wonokromo", "Rungkut", "Tegalsari", "Tambaksari"],
 };
 
+export const DESA_PER_KECAMATAN: Record<string, string[]> = {
+  // Bangkalan
+  Socah: ["Desa Bilaporah", "Desa Dakiring", "Desa Jaddih", "Desa Socah", "Desa Keleyan", "Desa Pernajuh", "Desa Petaonan", "Desa Junganyar"],
+  Burneh: ["Desa Burneh", "Desa Langkap", "Desa Benangkah", "Desa Sobih", "Desa Pangolangan", "Desa Kapor"],
+  Bangkalan: ["Kel. Demangan", "Kel. Kraton", "Kel. Kemayoran", "Kel. Mlajah", "Desa Gebang", "Desa Ujung Piring"],
+  Blega: ["Desa Blega", "Desa Bates", "Desa Lomaer", "Desa Nyormanis", "Desa Karang Gayam"],
+  Kamal: ["Desa Kamal", "Desa Banyuajuh", "Desa Tanjung Jati", "Desa Kebun", "Desa Gili Barat"],
+  Arosbaya: ["Desa Arosbaya", "Desa Tengket", "Desa Plakaran", "Desa Pandan Lanjang", "Desa Makam Agung"],
+  // Sampang
+  Kedungdung: ["Desa Banjarsari", "Desa Moktesareh", "Desa Rabasan", "Desa Pajeruan", "Desa Rohayu"],
+  Torjun: ["Desa Torjun", "Desa Pangongsean", "Desa Dulang", "Desa Jeruk Porot"],
+  Sampang: ["Kel. Rongtengah", "Kel. Gunung Sekar", "Desa Tanggumong", "Desa Kamoning"],
+  Camplong: ["Desa Dharma Camplong", "Desa Tambaan", "Desa Sejati", "Desa Madupat"],
+  Ketapang: ["Desa Ketapang Barat", "Desa Ketapang Timur", "Desa Paopale Laok", "Desa Bira Tengah"],
+  // Jember
+  Sukowono: ["Desa Sukowono", "Desa Arjasa", "Desa Sumberwringin", "Desa Balet Baru", "Desa Mojogemi"],
+  Kalisat: ["Desa Kalisat", "Desa Glagahwero", "Desa Ajung", "Desa Sumber Jeruk"],
+  Ajung: ["Desa Ajung", "Desa Klompangan", "Desa Pancakarya", "Desa Sukamakmur"],
+  Sumbersari: ["Kel. Sumbersari", "Kel. Antirogo", "Kel. Kranjingan", "Kel. Wirolegi"],
+  Patrang: ["Kel. Patrang", "Kel. Baratan", "Kel. Gebang", "Kel. Jemberlor"],
+  // Bondowoso
+  Bondowoso: ["Kel. Dabasah", "Kel. Kotakulon", "Kel. Blindungan", "Kel. Badean"],
+  Maesan: ["Desa Maesan", "Desa Suger Lor", "Desa Pujerbaru", "Desa Gunungsari"],
+  Prajekan: ["Desa Prajekan Kidul", "Desa Prajekan Lor", "Desa Tarum", "Desa Walidono"],
+  Tamanan: ["Desa Tamanan", "Desa Kalianyar", "Desa Sukodono", "Desa Wonosuko"],
+  // Probolinggo
+  Krucil: ["Desa Bermi", "Desa Guyangan", "Desa Betek", "Desa Tambelang", "Desa Kalianan"],
+  Tiris: ["Desa Tiris", "Desa Andungsari", "Desa Ranuagung", "Desa Tegalwatu"],
+  Dringu: ["Desa Dringu", "Desa Pabean", "Desa Kalirejo", "Desa Kedungdalem"],
+  Kraksaan: ["Kel. Sidomukti", "Kel. Patokan", "Kel. Semampir", "Desa Kandangjati Wetan"],
+  // Blitar
+  Sutojayan: ["Desa Pandanarum", "Kel. Sukorejo", "Kel. Kalipang", "Desa Jingglong"],
+  Kanigoro: ["Kel. Kanigoro", "Desa Satreyan", "Desa Sawentar", "Desa Tlogo"],
+  Talun: ["Kel. Talun", "Desa Pasirharjo", "Desa Duren", "Desa Bendosewu"],
+  Wlingi: ["Kel. Wlingi", "Kel. Beru", "Kel. Babadan", "Desa Tegalasri"],
+  // Lamongan
+  Lamongan: ["Kel. Sidoharjo", "Kel. Sukorejo", "Desa Made", "Desa Tanjung"],
+  Babat: ["Kel. Babat", "Desa Bedahan", "Desa Plaosan", "Desa Gembong"],
+  Paciran: ["Desa Paciran", "Desa Tunggul", "Desa Kranji", "Desa Weru"],
+  Tikung: ["Desa Tikung", "Desa Bakalanpule", "Desa Pengumbulanadi", "Desa Jatirejo"],
+  // Surabaya
+  Wonokromo: ["Kel. Wonokromo", "Kel. Darmo", "Kel. Jagir", "Kel. Ngagel", "Kel. Sawunggaling"],
+  Rungkut: ["Kel. Rungkut Lor", "Kel. Kali Rungkut", "Kel. Kedung Baruk", "Kel. Medokan Ayu"],
+  Tegalsari: ["Kel. Tegalsari", "Kel. Dr. Soetomo", "Kel. Kedungdoro", "Kel. Keputran"],
+  Tambaksari: ["Kel. Tambaksari", "Kel. Pacarkeling", "Kel. Gading", "Kel. Ploso"],
+};
+
+export const MASTER_PUSKESMAS_INFO: Record<string, PuskesmasInfo> = {
+  Socah: {
+    namaPuskesmas: "Puskesmas Socah",
+    kecamatan: "Socah",
+    kabupaten: "Kab. Bangkalan",
+    alamat: "Jl. Raya Socah No. 45, Socah, Bangkalan 69161",
+    kepalaPuskesmas: "dr. H. Achmad Syafi'i",
+    nutrisionisPJ: "dr. Nurul Hidayati, M.Gizi",
+    telepon: "(031) 3098124",
+  },
+  Burneh: {
+    namaPuskesmas: "Puskesmas Burneh",
+    kecamatan: "Burneh",
+    kabupaten: "Kab. Bangkalan",
+    alamat: "Jl. Raya Burneh No. 12, Burneh, Bangkalan 69121",
+    kepalaPuskesmas: "dr. Hj. Ratna Indrawati",
+    nutrisionisPJ: "Siti Maryam, S.Gz",
+    telepon: "(031) 3092211",
+  },
+  Bangkalan: {
+    namaPuskesmas: "Puskesmas Bangkalan Kota",
+    kecamatan: "Bangkalan",
+    kabupaten: "Kab. Bangkalan",
+    alamat: "Jl. Pemuda Kaffa No. 8, Bangkalan 69112",
+    kepalaPuskesmas: "dr. Tri Sulistyo",
+    nutrisionisPJ: "Dewi Anggraini, S.Tr.Gz",
+    telepon: "(031) 3095030",
+  },
+  Kedungdung: {
+    namaPuskesmas: "Puskesmas Kedungdung",
+    kecamatan: "Kedungdung",
+    kabupaten: "Kab. Sampang",
+    alamat: "Jl. Raya Kedungdung No. 88, Sampang 69252",
+    kepalaPuskesmas: "dr. Mochammad Fauzan",
+    nutrisionisPJ: "Husnul Hotimah, A.Md.Gz",
+    telepon: "(0323) 321890",
+  },
+  Sukowono: {
+    namaPuskesmas: "Puskesmas Sukowono",
+    kecamatan: "Sukowono",
+    kabupaten: "Kab. Jember",
+    alamat: "Jl. PB Sudirman No. 15, Sukowono, Jember 68194",
+    kepalaPuskesmas: "dr. Andy Kurniawan",
+    nutrisionisPJ: "Rina Kusuma, S.Gz",
+    telepon: "(0331) 561234",
+  },
+  Sutojayan: {
+    namaPuskesmas: "Puskesmas Sutojayan",
+    kecamatan: "Sutojayan",
+    kabupaten: "Kab. Blitar",
+    alamat: "Jl. Raya Barat Sutojayan No. 20, Blitar 66172",
+    kepalaPuskesmas: "dr. Eko Prasetyo",
+    nutrisionisPJ: "Lestari Wulandari, S.Tr.Gz",
+    telepon: "(0342) 441029",
+  },
+};
+
+// Data Awal Posyandu Desa Terdaftar di Jawa Timur
 export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
   // --- KECAMATAN SOCAH (KAB. BANGKALAN) ---
   {
     id: "POS-SCH-01",
     posyandu: "Posyandu Mawar 01",
     desa: "Desa Bilaporah",
+    alamatPosyandu: "Balai RW 01, Dusun Krajan Barat, Desa Bilaporah",
     kecamatan: "Socah",
     kabupaten: "Kab. Bangkalan",
     puskesmas: "Puskesmas Socah",
+    alamatPuskesmas: "Jl. Raya Socah No. 45, Bangkalan",
     kaderPenanggungJawab: "Siti Rahmawati, S.Pd",
+    noHpKader: "081234567891",
+    emailAkun: "posyandu.mawar01@jatim.go.id",
+    statusAkun: "Disetujui",
+    tglDaftar: "1 Okt 2026",
     totalBalita: 48,
     sehatCount: 35,
     sehatPersen: 72.9,
@@ -87,7 +215,7 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         statusGizi: "Stunting Garis Merah",
         alokasiPaket: "Paket B (Protein Ganda Jatim)",
         catatanKlinis: "BB stagnan 2 bulan berturut-turut. TB di bawah garis merah KIA Dinkes Jatim.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
+        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
       },
       {
         id: "BAL-SCH-02",
@@ -103,7 +231,7 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         statusGizi: "Sehat / Normal",
         alokasiPaket: "Paket A (Gizi Reguler)",
         catatanKlinis: "Tumbuh kembang optimal sesuai kurva hijau KIA Dinkes Jatim.",
-        statusRujukan: "Belum Perlu Rujukan"
+        statusRujukan: "Belum Perlu Rujukan",
       },
       {
         id: "BAL-SCH-03",
@@ -119,7 +247,7 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         statusGizi: "Stunting Garis Merah",
         alokasiPaket: "Paket B (Protein Ganda Jatim)",
         catatanKlinis: "Membutuhkan intervensi telur Blitar porsi ganda + lele Lamongan harian.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
+        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
       },
       {
         id: "BAL-SCH-04",
@@ -135,7 +263,7 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         statusGizi: "Waspada (Faltering)",
         alokasiPaket: "Paket B (Protein Ganda Jatim)",
         catatanKlinis: "Growth faltering terdeteksi. Kenaikan BB bulan ini hanya 100 gram (KBM tidak tercapai).",
-        statusRujukan: "Dalam Pemantauan Kader"
+        statusRujukan: "Dalam Pemantauan Kader",
       },
       {
         id: "BAL-SCH-05",
@@ -147,11 +275,11 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         bbKg: 12.6,
         tbCm: 90.2,
         zTbu: +0.45,
-        zBbu: +0.10,
+        zBbu: +0.1,
         statusGizi: "Sehat / Normal",
         alokasiPaket: "Paket A (Gizi Reguler)",
         catatanKlinis: "Gizi baik, nafsu makan tinggi, aktif bermain.",
-        statusRujukan: "Belum Perlu Rujukan"
+        statusRujukan: "Belum Perlu Rujukan",
       },
       {
         id: "BAL-SCH-06",
@@ -163,22 +291,28 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         bbKg: 7.9,
         tbCm: 73.5,
         zTbu: -2.65,
-        zBbu: -2.40,
+        zBbu: -2.4,
         statusGizi: "Gizi Buruk / Rujukan Faskes",
         alokasiPaket: "Paket C (Terapi Medis F100)",
         catatanKlinis: "Terindikasi gizi kurang berat + riwayat batuk kronis. Wajib pemeriksaan spesialis anak di Puskesmas.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
-      }
-    ]
+        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
+      },
+    ],
   },
   {
     id: "POS-SCH-02",
     posyandu: "Posyandu Mawar 02",
     desa: "Desa Bilaporah",
+    alamatPosyandu: "Balai Dusun Jedingan RT 03 / RW 04, Desa Bilaporah",
     kecamatan: "Socah",
     kabupaten: "Kab. Bangkalan",
     puskesmas: "Puskesmas Socah",
+    alamatPuskesmas: "Jl. Raya Socah No. 45, Bangkalan",
     kaderPenanggungJawab: "Dewi Lestari, S.Pd",
+    noHpKader: "081234567801",
+    emailAkun: "posyandu.mawar02@jatim.go.id",
+    statusAkun: "Menunggu Verifikasi",
+    tglDaftar: "Hari ini, 08:30 WIB",
     totalBalita: 52,
     sehatCount: 40,
     sehatPersen: 76.9,
@@ -200,11 +334,11 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         bbKg: 8.9,
         tbCm: 77.2,
         zTbu: -2.55,
-        zBbu: -2.20,
+        zBbu: -2.2,
         statusGizi: "Stunting Garis Merah",
         alokasiPaket: "Paket B (Protein Ganda Jatim)",
         catatanKlinis: "Pendek kronis. Orang tua petani, edukasi PMT berbasis pangan hewani lokal.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
+        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
       },
       {
         id: "BAL-SCH-08",
@@ -215,39 +349,29 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         namaIbu: "Rina Marlina",
         bbKg: 9.1,
         tbCm: 75.0,
-        zTbu: +0.10,
+        zTbu: +0.1,
         zBbu: +0.05,
         statusGizi: "Sehat / Normal",
         alokasiPaket: "Paket A (Gizi Reguler)",
         catatanKlinis: "Pertumbuhan normal, imunisasi dasar lengkap.",
-        statusRujukan: "Belum Perlu Rujukan"
+        statusRujukan: "Belum Perlu Rujukan",
       },
-      {
-        id: "BAL-SCH-09",
-        nama: "Rasyid Ridho",
-        nik: "3505121809240009",
-        usiaBulan: 25,
-        jenisKelamin: "L",
-        namaIbu: "Sri Wahyuni",
-        bbKg: 9.5,
-        tbCm: 80.5,
-        zTbu: -2.70,
-        zBbu: -2.35,
-        statusGizi: "Gizi Buruk / Rujukan Faskes",
-        alokasiPaket: "Paket C (Terapi Medis F100)",
-        catatanKlinis: "Garis merah KMS KIA. Mendapat paket formula F100 dan pemantauan dokter gizi puskesmas.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
-      }
-    ]
+    ],
   },
   {
     id: "POS-SCH-03",
     posyandu: "Posyandu Melati 01",
     desa: "Desa Dakiring",
+    alamatPosyandu: "Balai Desa Dakiring Timur RT 01 / RW 01, Socah",
     kecamatan: "Socah",
     kabupaten: "Kab. Bangkalan",
     puskesmas: "Puskesmas Socah",
+    alamatPuskesmas: "Jl. Raya Socah No. 45, Bangkalan",
     kaderPenanggungJawab: "Nur Aini",
+    noHpKader: "081234567802",
+    emailAkun: "posyandu.dakiring@jatim.go.id",
+    statusAkun: "Menunggu Verifikasi",
+    tglDaftar: "Kemarin, 14:15 WIB",
     totalBalita: 42,
     sehatCount: 31,
     sehatPersen: 73.8,
@@ -268,12 +392,12 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         namaIbu: "Maryam",
         bbKg: 8.6,
         tbCm: 73.8,
-        zTbu: -2.30,
+        zTbu: -2.3,
         zBbu: -1.95,
         statusGizi: "Stunting Garis Merah",
         alokasiPaket: "Paket B (Protein Ganda Jatim)",
         catatanKlinis: "Stunting derajat sedang. Perlu pendampingan pola asuh makan.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
+        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
       },
       {
         id: "BAL-SCH-11",
@@ -285,22 +409,28 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         bbKg: 11.2,
         tbCm: 84.1,
         zTbu: +0.35,
-        zBbu: +0.20,
+        zBbu: +0.2,
         statusGizi: "Sehat / Normal",
         alokasiPaket: "Paket A (Gizi Reguler)",
         catatanKlinis: "Tumbuh kembang sangat baik di zona hijau KIA.",
-        statusRujukan: "Belum Perlu Rujukan"
-      }
-    ]
+        statusRujukan: "Belum Perlu Rujukan",
+      },
+    ],
   },
   {
     id: "POS-SCH-04",
     posyandu: "Posyandu Kamboja 02",
     desa: "Desa Jaddih",
+    alamatPosyandu: "Balai Dusun Jaddih Barat RT 02 / RW 03",
     kecamatan: "Socah",
     kabupaten: "Kab. Bangkalan",
     puskesmas: "Puskesmas Socah",
+    alamatPuskesmas: "Jl. Raya Socah No. 45, Bangkalan",
     kaderPenanggungJawab: "Musdalifah",
+    noHpKader: "081234567803",
+    emailAkun: "posyandu.jaddih02@jatim.go.id",
+    statusAkun: "Disetujui",
+    tglDaftar: "15 Okt 2026",
     totalBalita: 60,
     sehatCount: 44,
     sehatPersen: 73.3,
@@ -322,29 +452,13 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         bbKg: 9.6,
         tbCm: 80.0,
         zTbu: -2.48,
-        zBbu: -2.10,
+        zBbu: -2.1,
         statusGizi: "Stunting Garis Merah",
         alokasiPaket: "Paket B (Protein Ganda Jatim)",
         catatanKlinis: "Prioritas intervensi telur & lele dari Dapur MBG Socah.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
+        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
       },
-      {
-        id: "BAL-SCH-13",
-        nama: "Nabila Syakira",
-        nik: "3505125211240013",
-        usiaBulan: 17,
-        jenisKelamin: "P",
-        namaIbu: "Aminah",
-        bbKg: 9.8,
-        tbCm: 80.2,
-        zTbu: +0.05,
-        zBbu: -0.10,
-        statusGizi: "Sehat / Normal",
-        alokasiPaket: "Paket A (Gizi Reguler)",
-        catatanKlinis: "Balita sehat, berat badan naik rutin setiap bulan.",
-        statusRujukan: "Belum Perlu Rujukan"
-      }
-    ]
+    ],
   },
 
   // --- KECAMATAN BURNEH (KAB. BANGKALAN) ---
@@ -352,10 +466,16 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
     id: "POS-BNH-01",
     posyandu: "Posyandu Kenanga 01",
     desa: "Desa Burneh",
+    alamatPosyandu: "Balai RW 03 Dusun Burneh Tengah",
     kecamatan: "Burneh",
     kabupaten: "Kab. Bangkalan",
     puskesmas: "Puskesmas Burneh",
+    alamatPuskesmas: "Jl. Raya Burneh No. 12, Bangkalan",
     kaderPenanggungJawab: "Halimah",
+    noHpKader: "081234567804",
+    emailAkun: "posyandu.burneh01@jatim.go.id",
+    statusAkun: "Disetujui",
+    tglDaftar: "20 Okt 2026",
     totalBalita: 55,
     sehatCount: 41,
     sehatPersen: 74.5,
@@ -381,25 +501,9 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         statusGizi: "Stunting Garis Merah",
         alokasiPaket: "Paket B (Protein Ganda Jatim)",
         catatanKlinis: "Membutuhkan suplementasi gizi hewan dan edukasi sanitasi air bersih.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
+        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
       },
-      {
-        id: "BAL-BNH-02",
-        nama: "Alya Safira",
-        nik: "3505024409240002",
-        usiaBulan: 13,
-        jenisKelamin: "P",
-        namaIbu: "Kurnia",
-        bbKg: 9.2,
-        tbCm: 76.5,
-        zTbu: +0.15,
-        zBbu: +0.05,
-        statusGizi: "Sehat / Normal",
-        alokasiPaket: "Paket A (Gizi Reguler)",
-        catatanKlinis: "Sehat, kenaikan BB adekuat (hijau).",
-        statusRujukan: "Belum Perlu Rujukan"
-      }
-    ]
+    ],
   },
 
   // --- KECAMATAN KEDUNGDUNG (KAB. SAMPANG) ---
@@ -407,10 +511,16 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
     id: "POS-SMP-01",
     posyandu: "Posyandu Melati 03",
     desa: "Desa Banjarsari",
+    alamatPosyandu: "Balai Dusun Banjarsari Timur RT 02",
     kecamatan: "Kedungdung",
     kabupaten: "Kab. Sampang",
     puskesmas: "Puskesmas Kedungdung",
+    alamatPuskesmas: "Jl. Raya Kedungdung No. 88, Sampang",
     kaderPenanggungJawab: "Sri Utami",
+    noHpKader: "081234567805",
+    emailAkun: "posyandu.banjarsari@jatim.go.id",
+    statusAkun: "Disetujui",
+    tglDaftar: "12 Okt 2026",
     totalBalita: 64,
     sehatCount: 46,
     sehatPersen: 71.9,
@@ -436,79 +546,24 @@ export const POSYANDU_MIKRO_DATA: PosyanduMikro[] = [
         statusGizi: "Stunting Garis Merah",
         alokasiPaket: "Paket B (Protein Ganda Jatim)",
         catatanKlinis: "TB/U sangat rendah (-2.68 SD). Rujukan medis langsung ke dokter anak Puskesmas Kedungdung.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
+        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas",
       },
-      {
-        id: "BAL-SMP-02",
-        nama: "Anisa Rahma",
-        nik: "3505144802250004",
-        usiaBulan: 14,
-        jenisKelamin: "P",
-        namaIbu: "Husnul Hotimah",
-        bbKg: 9.4,
-        tbCm: 77.0,
-        zTbu: +0.25,
-        zBbu: +0.10,
-        statusGizi: "Sehat / Normal",
-        alokasiPaket: "Paket A (Gizi Reguler)",
-        catatanKlinis: "Balita sehat, tidak ada keluhan nafsu makan.",
-        statusRujukan: "Belum Perlu Rujukan"
-      }
-    ]
+    ],
   },
-
-  // --- KECAMATAN SUKOWONO (KAB. JEMBER) ---
-  {
-    id: "POS-JMB-01",
-    posyandu: "Posyandu Cempaka 01",
-    desa: "Desa Sukowono",
-    kecamatan: "Sukowono",
-    kabupaten: "Kab. Jember",
-    puskesmas: "Puskesmas Sukowono",
-    kaderPenanggungJawab: "Yuliani",
-    totalBalita: 58,
-    sehatCount: 43,
-    sehatPersen: 74.1,
-    stuntingCount: 12,
-    stuntingPersen: 20.7,
-    falteringCount: 3,
-    rujukanCount: 3,
-    paketA: 43,
-    paketB: 12,
-    paketC: 3,
-    balitaList: [
-      {
-        id: "BAL-JMB-01",
-        nama: "Reza Maulana",
-        nik: "3509121504240001",
-        usiaBulan: 21,
-        jenisKelamin: "L",
-        namaIbu: "Wulandari",
-        bbKg: 9.1,
-        tbCm: 78.4,
-        zTbu: -2.38,
-        zBbu: -2.12,
-        statusGizi: "Stunting Garis Merah",
-        alokasiPaket: "Paket B (Protein Ganda Jatim)",
-        catatanKlinis: "Stunting terdeteksi pada penimbangan kader Sukowono. Diberikan dobel protein telur & ikan.",
-        statusRujukan: "Rujukan Aktif ke Dokter Puskesmas"
-      },
-      {
-        id: "BAL-JMB-02",
-        nama: "Maya Puspita",
-        nik: "3509124409240002",
-        usiaBulan: 16,
-        jenisKelamin: "P",
-        namaIbu: "Hartatik",
-        bbKg: 10.0,
-        tbCm: 80.5,
-        zTbu: +0.30,
-        zBbu: +0.15,
-        statusGizi: "Sehat / Normal",
-        alokasiPaket: "Paket A (Gizi Reguler)",
-        catatanKlinis: "Tumbuh kembang optimal, BB dan TB naik sesuai kurva hijau.",
-        statusRujukan: "Belum Perlu Rujukan"
-      }
-    ]
-  }
 ];
+
+// Helper: Ambil nama Puskesmas resmi berdasarkan Kecamatan
+export function getPuskesmasNameByKecamatan(kecamatan: string): string {
+  if (MASTER_PUSKESMAS_INFO[kecamatan]) {
+    return MASTER_PUSKESMAS_INFO[kecamatan].namaPuskesmas;
+  }
+  return `Puskesmas ${kecamatan}`;
+}
+
+// Helper: Ambil alamat Puskesmas resmi berdasarkan Kecamatan
+export function getPuskesmasAddressByKecamatan(kecamatan: string): string {
+  if (MASTER_PUSKESMAS_INFO[kecamatan]) {
+    return MASTER_PUSKESMAS_INFO[kecamatan].alamat;
+  }
+  return `Jl. Raya Kecamatan ${kecamatan}, Jawa Timur`;
+}
