@@ -139,10 +139,10 @@ export default function Navbar() {
         {/* Right Action Buttons */}
         <div className="hidden items-center gap-4 md:flex">
           <Link
-            href="/app"
-            className="rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 font-mono text-xs font-bold text-zinc-800 hover:bg-zinc-100 transition-colors"
+            href="/dashboard"
+            className="rounded-xl border-2 border-zinc-900 bg-zinc-950 px-4 py-2 font-sans text-xs font-black text-white hover:bg-zinc-800 transition-all shadow-sm flex items-center gap-1.5"
           >
-            Dasbor App
+            <span>🚀 Buka Dasbor</span>
           </Link>
           <Link
             href="/login"

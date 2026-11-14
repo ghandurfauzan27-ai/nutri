@@ -28,15 +28,25 @@ export default function LoginForm({ delay }: { delay: number }) {
     if (next.id || next.pw) return;
 
     setStatus("loading");
-    // TODO(Supabase Auth): Ganti timer simulasi ini dengan `await supabase.auth.signInWithPassword({ email: id, password: pw })`
-    // Setelah berhasil login, arahkan pengguna ke dashboard sesuai role (e.g. /dashboard/{role}).
-    timer.current = setTimeout(() => setStatus("done"), 1100);
+    timer.current = setTimeout(() => {
+      setStatus("done");
+      setTimeout(() => {
+        window.location.href = `/dashboard?role=${role}`;
+      }, 500);
+    }, 800);
   };
 
   const fillDemo = () => {
     setId(`petugas.${role}@nutritrack.go.id`);
     setPw("Password123!");
     setErrors({});
+    setStatus("loading");
+    timer.current = setTimeout(() => {
+      setStatus("done");
+      setTimeout(() => {
+        window.location.href = `/dashboard?role=${role}`;
+      }, 400);
+    }, 600);
   };
 
   return (
@@ -74,8 +84,15 @@ export default function LoginForm({ delay }: { delay: number }) {
           </button>
         </motion.div>
 
-        <motion.div variants={item}>
-          <SubmitButton status={status} doneLabel="Berhasil Masuk">Masuk sebagai {info.name}</SubmitButton>
+        <motion.div variants={item} className="space-y-2">
+          <SubmitButton status={status} doneLabel="Mengalihkan ke Dasbor...">Masuk sebagai {info.name}</SubmitButton>
+          <button
+            type="button"
+            onClick={fillDemo}
+            className="w-full py-2.5 px-4 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 font-sans text-xs font-bold transition-all flex items-center justify-center gap-2"
+          >
+            <span>⚡ Masuk Cepat / Demo Akun {info.name}</span>
+          </button>
         </motion.div>
 
         {status === "done" && (

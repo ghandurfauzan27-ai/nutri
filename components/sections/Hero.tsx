@@ -46,6 +46,13 @@ export default function Hero() {
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <a
+              href="/dashboard"
+              className="rounded-xl bg-[#18140B] px-7 py-3.5 font-sans text-sm font-black text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
+            >
+              <span>🚀 Buka Dasbor Aplikasi</span>
+              <span className="text-[#38E8F5]">→</span>
+            </a>
+            <a
               href="#simulasi"
               className="rounded-xl bg-[#38E8F5] px-7 py-3.5 font-sans text-sm font-extrabold text-[#032D30] shadow-sm transition-transform hover:scale-[1.02] hover:bg-[#25d4e2]"
             >
