@@ -12,6 +12,8 @@ import {
   getPuskesmasAddressByKecamatan,
   type PosyanduMikro,
   type BalitaMikro,
+  type JadwalPertemuanStunting,
+  INITIAL_JADWAL_PERTEMUAN,
 } from "@/lib/puskesmas-data";
 
 interface PendingKader {
@@ -95,15 +97,30 @@ export default function PuskesmasTab() {
   ];
 
   // Tab internal sub-modul Puskesmas
-  const [activeSubTab, setActiveSubTab] = useState<"posyandu_desa" | "verifikasi_kader" | "rujukan_merah">(
-    "posyandu_desa"
-  );
+  const [activeSubTab, setActiveSubTab] = useState<
+    "posyandu_desa" | "jadwal_pertemuan" | "verifikasi_kader" | "rujukan_merah"
+  >("posyandu_desa");
 
   // State untuk modal drill-down rincian nama balita
   const [selectedPosyandu, setSelectedPosyandu] = useState<PosyanduMikro | null>(null);
   const [filterBalitaStatus, setFilterBalitaStatus] = useState<"semua" | "stunting" | "sehat" | "rujukan">(
     "semua"
   );
+
+  // State Jadwal Pertemuan Stunting Puskesmas -> Posyandu
+  const [jadwalList, setJadwalList] = useState<JadwalPertemuanStunting[]>(INITIAL_JADWAL_PERTEMUAN);
+  const [schedulingChild, setSchedulingChild] = useState<{
+    balita: BalitaMikro;
+    posyandu: PosyanduMikro;
+  } | null>(null);
+
+  // Form Field State untuk Buat Jadwal Pertemuan
+  const [formTgl, setFormTgl] = useState("18 Nov 2026");
+  const [formJam, setFormJam] = useState("09:00 WIB");
+  const [formLokasi, setFormLokasi] = useState("Poli Gizi Puskesmas");
+  const [formDokter, setFormDokter] = useState("dr. Nurul Hidayati, M.Gizi");
+  const [formAgenda, setFormAgenda] = useState("Pemeriksaan Antropometri Lanjutan & Preskripsi Paket B Ekstra Hewani Jatim");
+  const [formCatatan, setFormCatatan] = useState("Harap Ibu membawa Buku KIA dan catatan makan balita.");
 
   // Master Data Posyandu Mikro yang Tersinkronisasi Otomatis
   const [allPosyandu, setAllPosyandu] = useState<PosyanduMikro[]>(POSYANDU_MIKRO_DATA);
@@ -198,6 +215,18 @@ export default function PuskesmasTab() {
                 };
               })
             );
+          }
+        }
+        // 3. Sinkronkan Jadwal Pertemuan Stunting dari localStorage
+        const rawJadwal = localStorage.getItem("nt_jadwal_pertemuan_puskesmas");
+        if (rawJadwal) {
+          const parsedJadwal = JSON.parse(rawJadwal);
+          if (Array.isArray(parsedJadwal) && parsedJadwal.length > 0) {
+            setJadwalList((prev) => {
+              const ids = new Set(prev.map((j) => j.id));
+              const fresh = parsedJadwal.filter((j: any) => !ids.has(j.id));
+              return [...fresh, ...prev];
+            });
           }
         }
       }
@@ -300,6 +329,71 @@ export default function PuskesmasTab() {
       prev.map((k) => (k.id === id ? { ...k, status: "Ditolak" as const } : k))
     );
     setToastMessage(`Pendaftaran Akun Posyandu ${nama} ditolak.`);
+    setTimeout(() => setToastMessage(""), 4500);
+  };
+
+  const handleSaveJadwalPertemuan = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!schedulingChild) return;
+
+    const newJadwal: JadwalPertemuanStunting = {
+      id: `JADWAL-${Date.now()}`,
+      puskesmas: puskesmasName,
+      posyanduTarget: schedulingChild.posyandu.posyandu,
+      desa: schedulingChild.posyandu.desa,
+      namaBalita: schedulingChild.balita.nama,
+      nikBalita: schedulingChild.balita.nik,
+      tglPertemuan: formTgl,
+      waktuPertemuan: formJam,
+      lokasi: formLokasi,
+      dokterPemeriksa: formDokter,
+      agendaIntervensi: formAgenda,
+      catatanKhusus: formCatatan,
+      status: "Dijadwalkan",
+      tglDibuat: "Hari ini, " + new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB",
+    };
+
+    const updated = [newJadwal, ...jadwalList];
+    setJadwalList(updated);
+
+    try {
+      localStorage.setItem("nt_jadwal_pertemuan_puskesmas", JSON.stringify(updated));
+
+      // Kirim notifikasi langsung ke akun Posyandu
+      const rawNotif = localStorage.getItem("nt_posyandu_notif");
+      const notifs = rawNotif ? JSON.parse(rawNotif) : [];
+      notifs.unshift({
+        id: `NOTIF-${Date.now()}`,
+        puskesmas: puskesmasName,
+        posyanduTarget: schedulingChild.posyandu.posyandu,
+        desa: schedulingChild.posyandu.desa,
+        namaBalita: schedulingChild.balita.nama,
+        nikBalita: schedulingChild.balita.nik,
+        tglPertemuan: formTgl,
+        waktuPertemuan: formJam,
+        lokasi: formLokasi,
+        dokterPemeriksa: formDokter,
+        agenda: formAgenda,
+        catatan: formCatatan,
+        waktuKirim: "Baru saja",
+        dibaca: false,
+      });
+      localStorage.setItem("nt_posyandu_notif", JSON.stringify(notifs));
+    } catch (err) {}
+
+    setToastMessage(`✓ JADWAL PERTEMUAN STUNTING untuk "${schedulingChild.balita.nama}" BERHASIL DITERBITKAN! Notifikasi otomatis terkirim ke Akun ${schedulingChild.posyandu.posyandu}.`);
+    setSchedulingChild(null);
+    setActiveSubTab("jadwal_pertemuan");
+    setTimeout(() => setToastMessage(""), 5000);
+  };
+
+  const handleCompleteJadwal = (id: string, namaBalita: string) => {
+    const updated = jadwalList.map((j) => (j.id === id ? { ...j, status: "Selesai" as const } : j));
+    setJadwalList(updated);
+    try {
+      localStorage.setItem("nt_jadwal_pertemuan_puskesmas", JSON.stringify(updated));
+    } catch (e) {}
+    setToastMessage(`✓ Pertemuan klinis & intervensi stunting untuk ${namaBalita} ditandai SELESAI.`);
     setTimeout(() => setToastMessage(""), 4500);
   };
 
@@ -479,6 +573,22 @@ export default function PuskesmasTab() {
 
         <button
           type="button"
+          onClick={() => setActiveSubTab("jadwal_pertemuan")}
+          className={`rounded-2xl px-4 py-2.5 font-sans text-xs font-black transition-all flex items-center gap-2 ${
+            activeSubTab === "jadwal_pertemuan"
+              ? "bg-[#18140B] text-white shadow-md"
+              : "bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-100"
+          }`}
+        >
+          <span>📅</span>
+          <span>Jadwal Pertemuan Stunting ({jadwalList.length})</span>
+          <span className="rounded-full bg-rose-500 text-white px-2 py-0.5 font-mono text-[9px] font-black animate-pulse">
+            Notif Posyandu
+          </span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveSubTab("verifikasi_kader")}
           className={`rounded-2xl px-4 py-2.5 font-sans text-xs font-black transition-all flex items-center gap-2 ${
             activeSubTab === "verifikasi_kader"
@@ -487,7 +597,7 @@ export default function PuskesmasTab() {
           }`}
         >
           <span>🛡️</span>
-          <span>Verifikasi Pendaftaran Kader Baru</span>
+          <span>Verifikasi Pendaftaran Posyandu Baru</span>
           {pendingCount > 0 && (
             <span className="rounded-full bg-amber-400 px-2 py-0.2 font-mono text-[10px] font-black text-zinc-950">
               {pendingCount}
@@ -508,6 +618,94 @@ export default function PuskesmasTab() {
           <span>Kasus Rujukan Garis Merah</span>
         </button>
       </div>
+
+      {/* SUB-TAB BARU: JADWAL PERTEMUAN STUNTING & NOTIFIKASI OTOMATIS KE POSYANDU */}
+      {activeSubTab === "jadwal_pertemuan" && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-zinc-200 shadow-xs">
+            <div>
+              <h3 className="font-sans text-base font-black uppercase tracking-tight text-zinc-950 flex items-center gap-2">
+                <span>📅</span>
+                <span>Jadwal Pertemuan Intervensi Klinis Stunting — {puskesmasName}</span>
+              </h3>
+              <p className="font-mono text-xs text-zinc-500 mt-0.5">
+                Setiap jadwal yang dibuat dokter faskes akan **langsung terkirim sebagai notifikasi real-time ke akun Posyandu terkait**.
+              </p>
+            </div>
+            <span className="rounded-full bg-rose-50 border border-rose-200 px-3 py-1 font-mono text-xs font-bold text-rose-800">
+              ● {jadwalList.filter((j) => j.status === "Dijadwalkan").length} Pertemuan Menunggu
+            </span>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {jadwalList.map((j) => (
+              <div
+                key={j.id}
+                className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-xs space-y-3 relative hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      {j.posyanduTarget} · {j.desa}
+                    </span>
+                    <h4 className="font-sans text-lg font-black text-zinc-950 mt-1">
+                      {j.namaBalita}
+                    </h4>
+                    <p className="font-mono text-xs text-zinc-500">NIK: {j.nikBalita}</p>
+                  </div>
+                  <span
+                    className={`rounded-full px-2.5 py-1 font-mono text-[10px] font-black ${
+                      j.status === "Dijadwalkan"
+                        ? "bg-rose-100 text-rose-800 border border-rose-300"
+                        : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                    }`}
+                  >
+                    ● {j.status}
+                  </span>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-3 text-xs space-y-1.5 font-mono">
+                  <div className="flex items-center justify-between text-zinc-700">
+                    <span className="text-zinc-400">Waktu:</span>
+                    <strong>{j.tglPertemuan} pukul {j.waktuPertemuan}</strong>
+                  </div>
+                  <div className="flex items-center justify-between text-zinc-700">
+                    <span className="text-zinc-400">Lokasi:</span>
+                    <strong className="text-right">{j.lokasi}</strong>
+                  </div>
+                  <div className="flex items-center justify-between text-zinc-700">
+                    <span className="text-zinc-400">Dokter/Nakes:</span>
+                    <strong>{j.dokterPemeriksa}</strong>
+                  </div>
+                </div>
+
+                <div className="text-xs text-zinc-700 bg-sky-50/70 p-3 rounded-2xl border border-sky-200 font-sans">
+                  <div className="font-bold text-sky-950 mb-0.5">Agenda Intervensi:</div>
+                  <p>{j.agendaIntervensi}</p>
+                  {j.catatanKhusus && (
+                    <p className="mt-1 font-mono text-[11px] text-zinc-500">Catatan: {j.catatanKhusus}</p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-zinc-100 text-xs">
+                  <span className="font-mono text-[10px] text-emerald-700 font-bold">
+                    ✓ Notif Terkirim ke Posyandu
+                  </span>
+                  {j.status === "Dijadwalkan" && (
+                    <button
+                      type="button"
+                      onClick={() => handleCompleteJadwal(j.id, j.namaBalita)}
+                      className="rounded-xl bg-[#18140B] px-3 py-1.5 font-sans text-xs font-black text-white hover:bg-emerald-600 transition-colors shadow-xs"
+                    >
+                      Tandai Selesai Diperiksa
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* SUB-TAB 1: PETA PANTAU MIKRO POSYANDU & KASUS DESA (FITUR UTAMA YANG DIMINTA) */}
       {activeSubTab === "posyandu_desa" && (
@@ -974,10 +1172,16 @@ export default function PuskesmasTab() {
                             {isBalitaStunting ? (
                               <button
                                 type="button"
-                                onClick={() => handleTindakLanjutBalita(balita.nama)}
-                                className="rounded-xl bg-[#18140B] px-3 py-1.5 font-sans text-xs font-black text-white hover:bg-rose-600 transition-colors shadow-xs"
+                                onClick={() => {
+                                  if (selectedPosyandu) {
+                                    setSchedulingChild({ balita, posyandu: selectedPosyandu });
+                                    setFormLokasi(`Poli Gizi ${puskesmasName}`);
+                                  }
+                                }}
+                                className="rounded-xl bg-[#18140B] px-3.5 py-2 font-sans text-xs font-black text-white hover:bg-rose-600 transition-colors shadow-xs flex items-center gap-1.5 ml-auto"
                               >
-                                🩺 Tangani Kasus
+                                <span>📅</span>
+                                <span>Buat Jadwal Intervensi</span>
                               </button>
                             ) : (
                               <span className="font-mono text-[11px] text-emerald-700 font-bold">
@@ -1005,6 +1209,175 @@ export default function PuskesmasTab() {
                   Tutup Rincian
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 3. MODAL BUAT JADWAL PERTEMUAN STUNTING (KIRIM NOTIFIKASI REAL-TIME KE POSYANDU) */}
+      <AnimatePresence>
+        {schedulingChild && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSchedulingChild(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-lg rounded-[32px] border border-zinc-200 bg-white p-6 sm:p-8 shadow-2xl z-10 space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+                <div>
+                  <span className="rounded-md bg-rose-100 text-rose-800 font-mono text-[10px] font-black uppercase px-2 py-0.5">
+                    Intervensi Klinis Stunting
+                  </span>
+                  <h3 className="font-sans text-xl font-black text-zinc-950 mt-1">
+                    Buat Jadwal Pertemuan Dokter
+                  </h3>
+                  <p className="font-mono text-xs text-zinc-500">
+                    Otomatis mengirimkan notifikasi ke Akun {schedulingChild.posyandu.posyandu}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSchedulingChild(null)}
+                  className="grid h-9 w-9 place-items-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Rincian Balita Terpilih */}
+              <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-3.5 text-xs font-mono space-y-1">
+                <div className="font-sans font-black text-sm text-zinc-950">
+                  {schedulingChild.balita.nama} ({schedulingChild.balita.usiaBulan} Bulan)
+                </div>
+                <div className="text-zinc-600">NIK: {schedulingChild.balita.nik} · Ibu: {schedulingChild.balita.namaIbu}</div>
+                <div className="text-rose-900 font-bold">
+                  Status: {schedulingChild.balita.statusGizi} (TB/U: {schedulingChild.balita.zTbu} SD)
+                </div>
+                <div className="text-emerald-900">
+                  Posyandu: {schedulingChild.posyandu.posyandu} ({schedulingChild.posyandu.desa})
+                </div>
+              </div>
+
+              {/* Form Input Jadwal */}
+              <form onSubmit={handleSaveJadwalPertemuan} className="space-y-3.5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-mono text-[10px] font-bold uppercase text-zinc-600 mb-1">
+                      Tanggal Pertemuan *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formTgl}
+                      onChange={(e) => setFormTgl(e.target.value)}
+                      placeholder="Contoh: 18 Nov 2026"
+                      className="h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 font-sans text-xs font-bold text-zinc-900 outline-none focus:border-rose-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-mono text-[10px] font-bold uppercase text-zinc-600 mb-1">
+                      Waktu / Jam *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formJam}
+                      onChange={(e) => setFormJam(e.target.value)}
+                      placeholder="Contoh: 09:00 WIB"
+                      className="h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 font-sans text-xs font-bold text-zinc-900 outline-none focus:border-rose-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[10px] font-bold uppercase text-zinc-600 mb-1">
+                    Lokasi Pemeriksaan *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formLokasi}
+                    onChange={(e) => setFormLokasi(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 font-sans text-xs font-bold text-zinc-900 outline-none focus:border-rose-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[10px] font-bold uppercase text-zinc-600 mb-1">
+                    Dokter / Tenaga Medis Pemeriksa *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formDokter}
+                    onChange={(e) => setFormDokter(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 font-sans text-xs font-bold text-zinc-900 outline-none focus:border-rose-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[10px] font-bold uppercase text-zinc-600 mb-1">
+                    Agenda Tindakan Medis / Intervensi Gizi *
+                  </label>
+                  <select
+                    value={formAgenda}
+                    onChange={(e) => setFormAgenda(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 font-sans text-xs font-bold text-zinc-900 outline-none focus:border-rose-500"
+                  >
+                    <option value="Pemeriksaan Antropometri Lanjutan & Preskripsi Paket B Ekstra Hewani Jatim">
+                      Pemeriksaan Antropometri & Preskripsi Paket B Ekstra Hewani Jatim
+                    </option>
+                    <option value="Konsultasi Poli Gizi & Terapi F-75 / PKMK Khusus">
+                      Konsultasi Poli Gizi & Terapi F-75 / PKMK Khusus
+                    </option>
+                    <option value="Deteksi Penyakit Infeksi Penyerta (TB Balita / ISPA)">
+                      Deteksi Penyakit Infeksi Penyerta (TB Balita / ISPA)
+                    </option>
+                    <option value="Kunjungan Nakes ke Rumah Balita & Edukasi Pola Asuh">
+                      Kunjungan Nakes ke Rumah Balita & Edukasi Pola Asuh
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[10px] font-bold uppercase text-zinc-600 mb-1">
+                    Catatan Khusus untuk Posyandu & Orang Tua
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formCatatan}
+                    onChange={(e) => setFormCatatan(e.target.value)}
+                    placeholder="Contoh: Harap membawa Buku KIA..."
+                    className="w-full rounded-xl border border-zinc-200 bg-white p-3 font-sans text-xs font-medium text-zinc-900 outline-none focus:border-rose-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSchedulingChild(null)}
+                    className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 font-sans text-xs font-bold text-zinc-700 hover:bg-zinc-100"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-rose-600 px-5 py-2.5 font-sans text-xs font-black text-white hover:bg-rose-700 transition-colors shadow-sm flex items-center gap-2"
+                  >
+                    <span>🚀</span>
+                    <span>Terbitkan Jadwal & Kirim Notif ke Posyandu</span>
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

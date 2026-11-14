@@ -151,6 +151,20 @@ export default function RegisterForm({ delay }: { delay: number }) {
         };
         existing.push(newPosyanduEntry);
         localStorage.setItem("nt_registered_posyandu", JSON.stringify(existing));
+
+        // Simpan sesi login posyandu aktif
+        localStorage.setItem(
+          "nt_current_session",
+          JSON.stringify({
+            role: "posyandu",
+            name: `${name} (Petugas Posyandu)`,
+            email: newPosyanduEntry.emailAkun,
+            unit: `${posyanduName} — ${desa}`,
+            wilayah: `Kecamatan ${kecamatan}, ${region}`,
+            puskesmasPembina: puskesmasPembina,
+            alamatPosyandu: alamatPosyandu,
+          })
+        );
       }
     } catch (err) {}
 

@@ -798,3 +798,141 @@ export function getPuskesmasAddressByKecamatan(kecamatan: string): string {
   }
   return `Jl. Raya Kecamatan ${kecamatan}, Jawa Timur`;
 }
+
+// -------------------------------------------------------------
+// STRUKTUR JADWAL PERTEMUAN STUNTING (PUSKESMAS -> POSYANDU)
+// -------------------------------------------------------------
+export interface JadwalPertemuanStunting {
+  id: string;
+  puskesmas: string;
+  posyanduTarget: string;
+  desa: string;
+  namaBalita: string;
+  nikBalita: string;
+  tglPertemuan: string;
+  waktuPertemuan: string;
+  lokasi: string;
+  dokterPemeriksa: string;
+  agendaIntervensi: string;
+  catatanKhusus: string;
+  status: "Dijadwalkan" | "Selesai" | "Dibatalkan";
+  tglDibuat: string;
+}
+
+export const INITIAL_JADWAL_PERTEMUAN: JadwalPertemuanStunting[] = [
+  {
+    id: "JADWAL-SCH-01",
+    puskesmas: "Puskesmas Socah",
+    posyanduTarget: "Posyandu Mawar 01",
+    desa: "Desa Bilaporah",
+    namaBalita: "Ahmad Fauzi",
+    nikBalita: "3505126804240001",
+    tglPertemuan: "18 Nov 2026",
+    waktuPertemuan: "09:00 WIB",
+    lokasi: "Poli Gizi Puskesmas Socah",
+    dokterPemeriksa: "dr. Nurul Hidayati, M.Gizi",
+    agendaIntervensi: "Pemeriksaan Antropometri Lanjutan & Preskripsi Paket B Ekstra Hewani Jatim",
+    catatanKhusus: "Mohon Ibu balita membawa Buku KIA dan catatan makan 3 hari terakhir.",
+    status: "Dijadwalkan",
+    tglDibuat: "Hari ini, 08:30 WIB",
+  },
+  {
+    id: "JADWAL-SCH-02",
+    puskesmas: "Puskesmas Socah",
+    posyanduTarget: "Posyandu Melati 01",
+    desa: "Desa Dakiring",
+    namaBalita: "Muhammad Rizki",
+    nikBalita: "3505122104240002",
+    tglPertemuan: "19 Nov 2026",
+    waktuPertemuan: "10:30 WIB",
+    lokasi: "Poli Anak Puskesmas Socah",
+    dokterPemeriksa: "dr. H. Achmad Syafi'i",
+    agendaIntervensi: "Konsultasi Infeksi Penyerta & Evaluasi Asupan Protein Baduta Faltering",
+    catatanKhusus: "Balita terindikasi batuk berulang, perlu cek tuberkulin nakes faskes.",
+    status: "Dijadwalkan",
+    tglDibuat: "Kemarin, 14:00 WIB",
+  },
+];
+
+// -------------------------------------------------------------
+// DATA PEMETAAN DAPUR MBG (SPPG) DI JAWA TIMUR
+// Wilayah kerja spesifik agar antar dapur tidak tabrakan/tumpang tindih
+// -------------------------------------------------------------
+export interface DapurMbgWilayah {
+  id: string;
+  namaDapur: string;
+  pengelola: string;
+  noKontak: string;
+  kabupaten: string;
+  kecamatanLayanan: string[];
+  posyanduSasaran: string[];
+  kapasitasHarian: number;
+  kuotaPaketA: number; // Reguler Baduta Sehat
+  kuotaPaketB: number; // Stunting / Ekstra Protein Hewani Ganda
+  statusOperasional: "Aktif Melayani" | "Persiapan Dapur" | "Pemeliharaan";
+  suplierLokal: string; // e.g. "Peternak Telur Blitar, Pembudidaya Lele Lamongan"
+}
+
+export const MASTER_DAPUR_MBG: DapurMbgWilayah[] = [
+  {
+    id: "SPPG-BKL-01",
+    namaDapur: "SPPG Dapur Sehat Socah Mandiri",
+    pengelola: "H. Mustofa Kamal",
+    noKontak: "081234567111",
+    kabupaten: "Kab. Bangkalan",
+    kecamatanLayanan: ["Socah"],
+    posyanduSasaran: [
+      "Posyandu Mawar 01 (Desa Bilaporah)",
+      "Posyandu Mawar 02 (Desa Bilaporah)",
+      "Posyandu Melati 01 (Desa Dakiring)",
+      "Posyandu Dahlia 01 (Desa Jaddih)",
+      "Posyandu Kenanga 01 (Desa Socah)",
+      "Posyandu Anggrek 01 (Desa Keleyan)",
+      "Posyandu Bougenville 01 (Desa Petaonan)",
+      "Posyandu Cempaka 01 (Desa Junganyar)",
+      "Posyandu Teratai 01 (Desa Pernajuh)",
+    ],
+    kapasitasHarian: 450,
+    kuotaPaketA: 330,
+    kuotaPaketB: 120,
+    statusOperasional: "Aktif Melayani",
+    suplierLokal: "Koperasi Telur Barokah Blitar & Kelompok Budidaya Lele Babat",
+  },
+  {
+    id: "SPPG-BKL-02",
+    namaDapur: "SPPG Burneh Berkah Nutrisi",
+    pengelola: "Hj. Siti Aminah",
+    noKontak: "081234567222",
+    kabupaten: "Kab. Bangkalan",
+    kecamatanLayanan: ["Burneh"],
+    posyanduSasaran: [
+      "Posyandu Mawar 01 (Desa Burneh)",
+      "Posyandu Melati 02 (Desa Langkap)",
+      "Posyandu Anggrek 01 (Desa Sobih)",
+    ],
+    kapasitasHarian: 380,
+    kuotaPaketA: 280,
+    kuotaPaketB: 100,
+    statusOperasional: "Aktif Melayani",
+    suplierLokal: "Sentra Telur Unggas Bangkalan & Bandeng Segar Kamal",
+  },
+  {
+    id: "SPPG-SMP-01",
+    namaDapur: "SPPG Kedungdung Sejahtera",
+    pengelola: "H. Abdul Wahid",
+    noKontak: "081234567333",
+    kabupaten: "Kab. Sampang",
+    kecamatanLayanan: ["Kedungdung"],
+    posyanduSasaran: [
+      "Posyandu Melati 03 (Desa Banjarsari)",
+      "Posyandu Mawar 01 (Desa Moktesareh)",
+      "Posyandu Anggrek 02 (Desa Rabasan)",
+    ],
+    kapasitasHarian: 420,
+    kuotaPaketA: 300,
+    kuotaPaketB: 120,
+    statusOperasional: "Aktif Melayani",
+    suplierLokal: "Peternak Puyuh & Lele Lokal Sampang",
+  },
+];
+

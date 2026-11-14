@@ -15,10 +15,29 @@ export default function ModulAKmsTab() {
     "Data penimbangan berhasil disinkronkan ke Cloud Server & Antrean Dapur SPPG!"
   );
 
-  // Muat data balita baru hasil ketikan manual kader dari localStorage
+  // Notifikasi Jadwal Pertemuan Penanganan Stunting dari Puskesmas Pembina
+  const [notifList, setNotifList] = useState<any[]>([
+    {
+      id: "NOTIF-01",
+      puskesmas: "Puskesmas Socah",
+      posyanduTarget: "Posyandu Mawar 01",
+      namaBalita: "Ahmad Fauzi",
+      nikBalita: "3505126804240001",
+      tglPertemuan: "18 Nov 2026",
+      waktuPertemuan: "09:00 WIB",
+      lokasi: "Poli Gizi Puskesmas Socah",
+      dokterPemeriksa: "dr. Nurul Hidayati, M.Gizi",
+      agenda: "Pemeriksaan Antropometri Lanjutan & Preskripsi Paket B Ekstra Hewani Jatim",
+      catatan: "Mohon Ibu balita membawa Buku KIA dan catatan makan 3 hari terakhir.",
+      statusTerkirim: "Belum Dikonfirmasi ke Ibu Balita",
+    },
+  ]);
+
+  // Muat data balita baru & notifikasi jadwal dari Puskesmas
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
+        // 1. Muat balita baru hasil ketikan manual
         const raw = localStorage.getItem("nt_custom_balita");
         if (raw) {
           const customList = JSON.parse(raw);
@@ -30,9 +49,31 @@ export default function ModulAKmsTab() {
             });
           }
         }
+
+        // 2. Muat notifikasi jadwal pertemuan dari Puskesmas
+        const rawNotif = localStorage.getItem("nt_posyandu_notif");
+        if (rawNotif) {
+          const parsedNotif = JSON.parse(rawNotif);
+          if (Array.isArray(parsedNotif) && parsedNotif.length > 0) {
+            setNotifList((prev) => {
+              const ids = new Set(prev.map((n) => n.id));
+              const fresh = parsedNotif.filter((n: any) => !ids.has(n.id));
+              return [...fresh, ...prev];
+            });
+          }
+        }
       }
     } catch (e) {}
   }, []);
+
+  const handleAcknowledgeNotif = (id: string, namaBalita: string) => {
+    setNotifList((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, statusTerkirim: "Telah Disampaikan ke Orang Tua" } : n))
+    );
+    setSyncedBannerText(`✓ Informasi jadwal intervensi dokter untuk ${namaBalita} telah berhasil dikonfirmasi!`);
+    setSyncedBanner(true);
+    setTimeout(() => setSyncedBanner(false), 4500);
+  };
 
   // Mode Input: Timbang Rutin vs Pendaftaran Balita Baru Manual
   const [inputMode, setInputMode] = useState<"timbang" | "daftar_baru">("timbang");
@@ -249,6 +290,67 @@ export default function ModulAKmsTab() {
           </div>
         </div>
       </div>
+
+      {/* 1. NOTIFIKASI JADWAL PERTEMUAN STUNTING DARI PUSKESMAS PEMBINA */}
+      {notifList.length > 0 && (
+        <div className="rounded-3xl border border-rose-300 bg-rose-50/80 p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between border-b border-rose-200/80 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="grid h-6 w-6 place-items-center rounded-lg bg-rose-600 text-white text-xs animate-bounce">
+                🔔
+              </span>
+              <h4 className="font-sans text-sm font-black text-rose-950 uppercase tracking-tight">
+                Notifikasi Jadwal Intervensi dari Puskesmas Pembina ({notifList.length} Jadwal)
+              </h4>
+            </div>
+            <span className="rounded-full bg-rose-600 text-white font-mono text-[10px] font-black px-2.5 py-0.5">
+              Perlu Disampaikan ke Ibu Balita
+            </span>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {notifList.map((n) => (
+              <div key={n.id} className="rounded-2xl border border-rose-200 bg-white p-4 space-y-2 shadow-xs">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h5 className="font-sans text-base font-black text-zinc-950">{n.namaBalita}</h5>
+                    <p className="font-mono text-xs text-zinc-500">NIK: {n.nikBalita}</p>
+                  </div>
+                  <span className="rounded-lg bg-rose-50 border border-rose-200 text-rose-800 font-mono text-[10px] font-bold px-2 py-0.5">
+                    {n.waktuKirim || "Baru Masuk"}
+                  </span>
+                </div>
+
+                <div className="rounded-xl bg-zinc-50 p-2.5 font-mono text-xs text-zinc-700 space-y-1">
+                  <div>📅 <strong>{n.tglPertemuan}</strong> pukul <strong>{n.waktuPertemuan}</strong></div>
+                  <div>🏥 Lokasi: <strong>{n.lokasi}</strong></div>
+                  <div>👨‍⚕️ Dokter: <strong>{n.dokterPemeriksa}</strong></div>
+                </div>
+
+                <div className="text-xs text-rose-950 font-sans font-medium">
+                  <strong>Agenda:</strong> {n.agenda}
+                  {n.catatan && <p className="text-[11px] text-zinc-500 mt-0.5">Catatan: {n.catatan}</p>}
+                </div>
+
+                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
+                  <span className="font-mono text-[10px] text-zinc-500">
+                    Status: <strong className="text-rose-700">{n.statusTerkirim || "Belum Konfirmasi"}</strong>
+                  </span>
+                  {n.statusTerkirim !== "Telah Disampaikan ke Orang Tua" && (
+                    <button
+                      type="button"
+                      onClick={() => handleAcknowledgeNotif(n.id, n.namaBalita)}
+                      className="rounded-xl bg-[#18140B] text-white px-3 py-1.5 font-sans text-xs font-black hover:bg-emerald-600 transition-colors"
+                    >
+                      ✓ Tandai Telah Disampaikan
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Header Info & Offline Banner (SKPL-F05) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm">

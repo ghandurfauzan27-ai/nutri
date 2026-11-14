@@ -1,339 +1,383 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DISTRIBUTIONS_MOCK, type DistributionItem } from "@/lib/app-data";
+
+interface MbgBalitaDelivery {
+  id: string;
+  namaAnak: string;
+  nik: string;
+  usiaBulan: number;
+  namaIbu: string;
+  jenisPaket: "Paket A (Gizi Reguler)" | "Paket B (Protein Ganda Jatim)" | "Paket C (F100 Medis)";
+  menuHariIni: string;
+  statusDiterima: boolean;
+  waktuDiterima?: string;
+  dayaTerima: "Habis (100%)" | "Tersisa Sebagian (50%)" | "Tidak Habis" | "Belum Konfirmasi";
+  catatanPetugas?: string;
+}
+
+const INITIAL_MBG_BALITA_LIST: MbgBalitaDelivery[] = [
+  {
+    id: "MBG-001",
+    namaAnak: "Ahmad Fauzi",
+    nik: "3505126804240001",
+    usiaBulan: 14,
+    namaIbu: "Siti Rahayu",
+    jenisPaket: "Paket B (Protein Ganda Jatim)",
+    menuHariIni: "Nasi Tim Hati Ayam + Dobel Telur Omega Blitar + Puree Lele Lamongan",
+    statusDiterima: true,
+    waktuDiterima: "Hari ini, 11:15 WIB",
+    dayaTerima: "Habis (100%)",
+    catatanPetugas: "Diterima langsung oleh Ibu Siti di Balai RW 01.",
+  },
+  {
+    id: "MBG-002",
+    namaAnak: "Zaskia Putri",
+    nik: "3505124508240002",
+    usiaBulan: 18,
+    namaIbu: "Nurjanah",
+    jenisPaket: "Paket A (Gizi Reguler)",
+    menuHariIni: "Nasi Lembek + Sup Wortel Daging Cincang + Tempe Bacem Manis",
+    statusDiterima: true,
+    waktuDiterima: "Hari ini, 11:20 WIB",
+    dayaTerima: "Habis (100%)",
+    catatanPetugas: "Diserahkan saat penimbangan rutin posyandu.",
+  },
+  {
+    id: "MBG-003",
+    namaAnak: "Rian Pratama",
+    nik: "3505121206240003",
+    usiaBulan: 22,
+    namaIbu: "Fatimah",
+    jenisPaket: "Paket B (Protein Ganda Jatim)",
+    menuHariIni: "Nasi Tim Ikan Bandeng Presto + Telur Puyuh Rebus + Sup Labu Kuning",
+    statusDiterima: false,
+    dayaTerima: "Belum Konfirmasi",
+    catatanPetugas: "",
+  },
+  {
+    id: "MBG-004",
+    namaAnak: "Dewi Kurniasari",
+    nik: "3505125501240004",
+    usiaBulan: 16,
+    namaIbu: "Kusnul Khotimah",
+    jenisPaket: "Paket A (Gizi Reguler)",
+    menuHariIni: "Nasi Tim Ayam Suwir + Tahu Kukus Telur + Sup Brokoli Wortel",
+    statusDiterima: true,
+    waktuDiterima: "Hari ini, 11:30 WIB",
+    dayaTerima: "Tersisa Sebagian (50%)",
+    catatanPetugas: "Balita agak flu, nafsu makan agak menurun.",
+  },
+  {
+    id: "MBG-005",
+    namaAnak: "Muhammad Rizki",
+    nik: "3505122104240005",
+    usiaBulan: 11,
+    namaIbu: "Fitriyah",
+    jenisPaket: "Paket B (Protein Ganda Jatim)",
+    menuHariIni: "Bubur Halus Hati Ayam + Kuning Telur Bebek Blitar + Puree Wortel",
+    statusDiterima: false,
+    dayaTerima: "Belum Konfirmasi",
+    catatanPetugas: "",
+  },
+  {
+    id: "MBG-006",
+    namaAnak: "Anisa Rahma",
+    nik: "3505127203240006",
+    usiaBulan: 20,
+    namaIbu: "Maryam",
+    jenisPaket: "Paket A (Gizi Reguler)",
+    menuHariIni: "Nasi Lembek + Semur Daging Sapi Halus + Sayur Bayam Bening",
+    statusDiterima: true,
+    waktuDiterima: "Hari ini, 11:35 WIB",
+    dayaTerima: "Habis (100%)",
+    catatanPetugas: "Keluarga mengambil tepat waktu di pos penyerahan posyandu.",
+  },
+];
 
 export default function ModulCKonsumsiTab() {
-  const [distributions, setDistributions] = useState<DistributionItem[]>(DISTRIBUTIONS_MOCK);
-  const [manualCode, setManualCode] = useState("");
-  const [scanningActive, setScanningActive] = useState(false);
-  const [scannedItem, setScannedItem] = useState<DistributionItem | null>(DISTRIBUTIONS_MOCK[0]);
-  const [logSuccessMessage, setLogSuccessMessage] = useState("");
+  const [list, setList] = useState<MbgBalitaDelivery[]>(INITIAL_MBG_BALITA_LIST);
+  const [filterPaket, setFilterPaket] = useState<"semua" | "paket_b" | "paket_a" | "belum">("semua");
+  const [toastMessage, setToastMessage] = useState("");
+  const [currentDate] = useState(() =>
+    new Date().toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+  );
 
-  const handleSimulateScan = () => {
-    setScanningActive(true);
-    setTimeout(() => {
-      setScanningActive(false);
-      // Pick random package or target package
-      const target = distributions[0];
-      setScannedItem(target);
-    }, 1800);
-  };
+  // Sinkronkan data konfirmasi dari localStorage
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("nt_konfirmasi_mbg_posyandu");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setList(parsed);
+          }
+        }
+      }
+    } catch (e) {}
+  }, []);
 
-  const handleManualSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!manualCode.trim()) return;
-    const found = distributions.find((d) => d.qrToken.toLowerCase().includes(manualCode.toLowerCase()));
-    if (found) {
-      setScannedItem(found);
-    } else {
-      alert("Kode token QR tidak ditemukan atau belum aktif.");
-    }
-  };
-
-  const handleSetDayaTerima = (choice: "Habis (100%)" | "Tersisa Sebagian (50%)" | "Tidak Termakan (0%)") => {
-    if (!scannedItem) return;
-
-    const updated = distributions.map((d) => {
-      if (d.qrToken === scannedItem.qrToken) {
+  const handleConfirmSingle = (id: string, namaAnak: string) => {
+    const jam = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+    const updated = list.map((item) => {
+      if (item.id === id) {
         return {
-          ...d,
-          status: "Diterima" as const,
-          dayaTerima: choice,
-          verifiedAt: "Baru saja (via App)",
-          verifiedBy: "Kader Posyandu",
+          ...item,
+          statusDiterima: true,
+          waktuDiterima: `Hari ini, ${jam}`,
+          dayaTerima: "Habis (100%)" as const,
+          catatanPetugas: "Dikonfirmasi langsung oleh petugas posyandu saat penerimaan paket.",
         };
       }
-      return d;
+      return item;
     });
 
-    setDistributions(updated);
-    setScannedItem((prev) => prev ? { ...prev, status: "Diterima", dayaTerima: choice } : null);
-    setLogSuccessMessage(`Daya terima paket untuk ${scannedItem.namaAnak} berhasil disimpan: ${choice}`);
-    setTimeout(() => setLogSuccessMessage(""), 4500);
+    setList(updated);
+    try {
+      localStorage.setItem("nt_konfirmasi_mbg_posyandu", JSON.stringify(updated));
+    } catch (e) {}
+
+    setToastMessage(`✓ Paket Gizi MBG untuk "${namaAnak}" BERHASIL DIKONFIRMASI DITERIMA!`);
+    setTimeout(() => setToastMessage(""), 4500);
   };
 
+  const handleConfirmAll = () => {
+    const jam = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+    const updated = list.map((item) => ({
+      ...item,
+      statusDiterima: true,
+      waktuDiterima: item.waktuDiterima || `Hari ini, ${jam}`,
+      dayaTerima: item.dayaTerima === "Belum Konfirmasi" ? ("Habis (100%)" as const) : item.dayaTerima,
+    }));
+
+    setList(updated);
+    try {
+      localStorage.setItem("nt_konfirmasi_mbg_posyandu", JSON.stringify(updated));
+    } catch (e) {}
+
+    setToastMessage("✓ SEMUA PAKET GIZI MBG HARI INI BERHASIL DIKONFIRMASI SEKALIGUS!");
+    setTimeout(() => setToastMessage(""), 4500);
+  };
+
+  const totalPaket = list.length;
+  const sudahDiterima = list.filter((l) => l.statusDiterima).length;
+  const persenDiterima = totalPaket > 0 ? Math.round((sudahDiterima / totalPaket) * 100) : 0;
+  const totalPaketB = list.filter((l) => l.jenisPaket.includes("Paket B")).length;
+
+  const filteredList = list.filter((item) => {
+    if (filterPaket === "paket_b") return item.jenisPaket.includes("Paket B");
+    if (filterPaket === "paket_a") return item.jenisPaket.includes("Paket A");
+    if (filterPaket === "belum") return !item.statusDiterima;
+    return true;
+  });
+
   return (
-    <div className="space-y-8 font-sans">
-      {/* Header Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm">
+    <div className="space-y-6 font-sans">
+      {/* Banner Identitas Penyaluran MBG Posyandu */}
+      <div className="rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 via-sky-50/60 to-white p-5 lg:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#38E8F5] animate-pulse" />
+            <span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
             <h2 className="font-sans text-xl font-black uppercase tracking-tight text-zinc-950">
-              Modul C: Verifikasi Distribusi & Daya Terima MBG
+              Konfirmasi Penerimaan Paket Gizi MBG Harian
             </h2>
           </div>
-          <p className="mt-1 font-mono text-xs text-zinc-500">
-            Pelacakan Terpadu Wadah Makanan · Bukti Konsumsi Anak per Kotak MBG
+          <p className="font-mono text-xs text-zinc-600 mt-1">
+            Posyandu Mawar 01 — Desa Bilaporah, Kec. Socah · Suplai: SPPG Dapur Sehat Socah Mandiri
+          </p>
+          <p className="font-sans text-xs text-emerald-900 font-bold mt-1">
+            📅 Tanggal: {currentDate} (Penyaluran Siang)
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 font-mono text-xs font-bold text-emerald-800 flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span>94.8% Paket Terverifikasi Diterima Hari Ini</span>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleConfirmAll}
+            className="rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 font-sans text-xs font-black shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+          >
+            <span>✓</span>
+            <span>Konfirmasi Semua Paket Diterima</span>
+          </button>
         </div>
       </div>
 
-      {logSuccessMessage && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 font-mono text-xs font-bold text-emerald-900 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-600 text-white text-[10px]">
-              ✓
-            </span>
-            <span>{logSuccessMessage}</span>
-          </div>
-          <span className="text-[10px] opacity-70">Tercatat di Audit Log</span>
-        </motion.div>
-      )}
-
-      {/* Main Grid: QR Scanner Simulator vs Daya Terima Form */}
-      <div className="grid gap-8 lg:grid-cols-12">
-        {/* Left: QR Scanner Camera Simulator (SKPL-F10) */}
-        <div className="lg:col-span-6 space-y-6">
-          <div className="rounded-[28px] border border-zinc-200/90 bg-white p-6 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
-              <div>
-                <h3 className="font-sans text-base font-black uppercase tracking-tight text-zinc-950">
-                  Scan Terima Paket MBG
-                </h3>
-                <p className="font-mono text-[11px] text-zinc-500">SKPL-F10 · Kamera Web API / Input Manual</p>
-              </div>
-              <span className="rounded-full bg-zinc-100 px-3 py-1 font-mono text-[10px] font-bold text-zinc-700">
-                128-bit Entropi
-              </span>
-            </div>
-
-            {/* Simulated Camera Viewfinder */}
-            <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-zinc-950 flex flex-col items-center justify-center text-white p-4 shadow-inner">
-              {/* Corner Reticle Markers */}
-              <div className="absolute top-4 left-4 h-6 w-6 border-t-2 border-l-2 border-[#38E8F5]" />
-              <div className="absolute top-4 right-4 h-6 w-6 border-t-2 border-r-2 border-[#38E8F5]" />
-              <div className="absolute bottom-4 left-4 h-6 w-6 border-b-2 border-l-2 border-[#38E8F5]" />
-              <div className="absolute bottom-4 right-4 h-6 w-6 border-b-2 border-r-2 border-[#38E8F5]" />
-
-              {/* Scanning Red Laser Line */}
-              {scanningActive ? (
-                <motion.div
-                  className="absolute inset-x-8 h-0.5 bg-gradient-to-r from-transparent via-[#38E8F5] to-transparent shadow-[0_0_12px_#38E8F5]"
-                  animate={{ y: [-80, 80] }}
-                  transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-                />
-              ) : (
-                <div className="text-center space-y-2 select-none">
-                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-white backdrop-blur-md">
-                    <svg viewBox="0 0 24 24" className="h-6 w-6 text-[#38E8F5]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                      <circle cx="12" cy="13" r="3" />
-                    </svg>
-                  </div>
-                  <p className="font-mono text-xs text-white/90 font-bold">
-                    Arahkan kamera ke stiker label QR kotak makanan
-                  </p>
-                  <p className="font-mono text-[10px] text-white/60">
-                    Bisa digunakan kader saat paket tiba atau orang tua di rumah
-                  </p>
-                </div>
-              )}
-
-              {/* Live Scanner Trigger Button */}
-              <button
-                type="button"
-                onClick={handleSimulateScan}
-                disabled={scanningActive}
-                className="absolute bottom-4 rounded-full bg-[#38E8F5] px-6 py-2.5 font-sans text-xs font-black text-[#032D30] shadow-md hover:scale-105 active:scale-95 transition-all disabled:opacity-60"
-              >
-                {scanningActive ? "Sedang Memindai Kode..." : "Buka Scanner Kamera"}
-              </button>
-            </div>
-
-            {/* Fallback Manual Code Input Form */}
-            <form onSubmit={handleManualSubmit} className="pt-2">
-              <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1.5">
-                Fallback: Masukkan Kode QR Manual
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Contoh: NT-JTM-9821-B4A1"
-                  value={manualCode}
-                  onChange={(e) => setManualCode(e.target.value)}
-                  className="h-12 flex-1 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 font-mono text-xs font-bold text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
-                />
-                <button
-                  type="submit"
-                  className="rounded-2xl bg-[#18140B] px-5 font-sans text-xs font-black text-white hover:bg-black transition-colors"
-                >
-                  Verifikasi
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        {/* Right: Log Daya Terima Makanan (SKPL-F11) */}
-        <div className="lg:col-span-6 space-y-6">
-          <div className="rounded-[28px] border border-zinc-200/90 bg-white p-6 shadow-sm space-y-6">
-            <div className="border-b border-zinc-100 pb-4">
-              <h3 className="font-sans text-base font-black uppercase tracking-tight text-zinc-950">
-                Log Daya Terima Makanan (Survei 1-Klik)
-              </h3>
-              <p className="font-mono text-[11px] text-zinc-500">
-                SKPL-F11 · Evaluasi Daya Serap Gizi & Kesukaan Menu Balita
-              </p>
-            </div>
-
-            {scannedItem ? (
-              <div className="space-y-5">
-                {/* Active Scanned Package Card */}
-                <div className="rounded-2xl border-2 border-zinc-200 bg-zinc-50 p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] font-bold text-zinc-400">
-                      WADAH TERVERIFIKASI
-                    </span>
-                    <span className="rounded-md bg-[#7866FF] px-2 py-0.5 font-mono text-[9px] font-bold text-white uppercase">
-                      {scannedItem.tipePaket}
-                    </span>
-                  </div>
-                  <h4 className="font-sans text-lg font-black text-zinc-950">
-                    {scannedItem.namaAnak}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1 text-zinc-600">
-                    <div>Posyandu: <span className="font-bold text-zinc-900">{scannedItem.posyandu}</span></div>
-                    <div>Waktu: <span className="font-bold text-zinc-900">{scannedItem.waktuKirim}</span></div>
-                  </div>
-                  <div className="font-mono text-[10px] text-zinc-400 truncate">
-                    Token: {scannedItem.qrToken}
-                  </div>
-                </div>
-
-                {/* 3 Tactile Buttons: Habis / Sebagian / Tolak */}
-                <div>
-                  <span className="block font-mono text-xs font-bold uppercase text-zinc-600 mb-3">
-                    Berapa banyak makanan yang dihabiskan balita?
-                  </span>
-                  <div className="grid grid-cols-3 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleSetDayaTerima("Habis (100%)")}
-                      className={`rounded-2xl border-2 p-3.5 text-center transition-all hover:scale-105 active:scale-95 ${
-                        scannedItem.dayaTerima === "Habis (100%)"
-                          ? "border-emerald-600 bg-emerald-50 text-emerald-950 shadow-md ring-2 ring-emerald-500/20"
-                          : "border-zinc-200 bg-white hover:border-emerald-300"
-                      }`}
-                    >
-                      <span className="block text-2xl mb-1">😋</span>
-                      <span className="font-sans text-xs font-black block">Habis (100%)</span>
-                      <span className="font-mono text-[9px] text-emerald-700 block mt-0.5">Maksimal</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSetDayaTerima("Tersisa Sebagian (50%)")}
-                      className={`rounded-2xl border-2 p-3.5 text-center transition-all hover:scale-105 active:scale-95 ${
-                        scannedItem.dayaTerima === "Tersisa Sebagian (50%)"
-                          ? "border-amber-600 bg-amber-50 text-amber-950 shadow-md ring-2 ring-amber-500/20"
-                          : "border-zinc-200 bg-white hover:border-amber-300"
-                      }`}
-                    >
-                      <span className="block text-2xl mb-1">🙂</span>
-                      <span className="font-sans text-xs font-black block">Tersisa 50%</span>
-                      <span className="font-mono text-[9px] text-amber-700 block mt-0.5">Sebagian</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSetDayaTerima("Tidak Termakan (0%)")}
-                      className={`rounded-2xl border-2 p-3.5 text-center transition-all hover:scale-105 active:scale-95 ${
-                        scannedItem.dayaTerima === "Tidak Termakan (0%)"
-                          ? "border-rose-600 bg-rose-50 text-rose-950 shadow-md ring-2 ring-rose-500/20"
-                          : "border-zinc-200 bg-white hover:border-rose-300"
-                      }`}
-                    >
-                      <span className="block text-2xl mb-1">🙁</span>
-                      <span className="font-sans text-xs font-black block">Tidak Termakan</span>
-                      <span className="font-mono text-[9px] text-rose-700 block mt-0.5">Evaluasi Rasa</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-zinc-50 p-3 border border-zinc-200 font-mono text-[11px] text-zinc-500">
-                  Data daya terima langsung disinkronkan ke rekap cita rasa dapur SPPG dan laporan evaluasi Puskesmas.
-                </div>
-              </div>
-            ) : (
-              <div className="py-12 text-center text-zinc-400 font-mono text-xs">
-                Scan paket QR terlebih dahulu untuk menginput daya terima makanan.
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Tabel Log Distribusi Terkini */}
-      <div className="rounded-[28px] border border-zinc-200/90 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-4 mb-4">
-          <h3 className="font-sans text-base font-black uppercase tracking-tight text-zinc-950">
-            Daftar Paket MBG Terdistribusi Hari Ini
-          </h3>
-          <span className="font-mono text-xs text-zinc-500">
-            Total {distributions.length} sampel posyandu aktif
+      {/* Quick KPI Bar MBG Posyandu */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-xs">
+          <span className="font-mono text-[10px] uppercase text-zinc-400 font-bold block">
+            Total Sasaran Balita
           </span>
+          <div className="font-sans text-2xl font-black text-zinc-950 mt-0.5">
+            {totalPaket} <span className="text-xs font-normal text-zinc-500">anak</span>
+          </div>
         </div>
 
-        <div className="overflow-x-auto rounded-2xl border border-zinc-100">
-          <table className="w-full text-left font-sans text-xs">
-            <thead className="bg-zinc-50 border-b border-zinc-100 font-mono text-[10px] uppercase text-zinc-500">
-              <tr>
-                <th className="py-3 px-4">Token QR</th>
-                <th className="py-3 px-4">Nama Balita</th>
-                <th className="py-3 px-4">Paket</th>
-                <th className="py-3 px-4">Posyandu</th>
-                <th className="py-3 px-4">Waktu Distribusi</th>
-                <th className="py-3 px-4">Status & Daya Terima</th>
-                <th className="py-3 px-4">Verifikator</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 font-medium">
-              {distributions.map((d, i) => (
-                <tr key={i} className="hover:bg-zinc-50/50">
-                  <td className="py-3 px-4 font-mono text-[11px] font-bold text-zinc-900">{d.qrToken}</td>
-                  <td className="py-3 px-4 font-bold text-zinc-950">{d.namaAnak}</td>
-                  <td className="py-3 px-4">
-                    <span className={`rounded-md px-2 py-0.5 text-[9px] font-black ${d.tipePaket === "Paket B" ? "bg-[#7866FF] text-white" : "bg-zinc-100 text-zinc-700"}`}>
-                      {d.tipePaket}
-                    </span>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 shadow-xs">
+          <span className="font-mono text-[10px] uppercase text-emerald-700 font-bold block">
+            Paket Sudah Diterima
+          </span>
+          <div className="font-sans text-2xl font-black text-emerald-950 mt-0.5">
+            {sudahDiterima} <span className="text-xs font-normal">({persenDiterima}%)</span>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4 shadow-xs">
+          <span className="font-mono text-[10px] uppercase text-rose-700 font-bold block">
+            Paket B (Protein Ganda Jatim)
+          </span>
+          <div className="font-sans text-2xl font-black text-rose-950 mt-0.5">
+            {totalPaketB} <span className="text-xs font-normal text-rose-700">porsi stunting</span>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 shadow-xs">
+          <span className="font-mono text-[10px] uppercase text-amber-800 font-bold block">
+            Belum Konfirmasi
+          </span>
+          <div className="font-sans text-2xl font-black text-amber-950 mt-0.5">
+            {totalPaket - sudahDiterima} <span className="text-xs font-normal text-amber-700">anak</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-950 font-mono text-xs font-bold flex items-center justify-between shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-600 text-white text-[10px]">
+                ✓
+              </span>
+              <span>{toastMessage}</span>
+            </div>
+            <span className="text-[11px] opacity-75">Tersimpan di Sistem & Dilaporkan ke Dapur MBG</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Filter Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { key: "semua", label: `Semua Balita (${list.length})` },
+            { key: "paket_b", label: `Paket B Ekstra Hewani (${totalPaketB})` },
+            { key: "paket_a", label: "Paket A Reguler" },
+            { key: "belum", label: `Belum Diterima (${totalPaket - sudahDiterima})` },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setFilterPaket(tab.key as any)}
+              className={`rounded-xl px-3.5 py-2 font-sans text-xs font-bold transition-all ${
+                filterPaket === tab.key
+                  ? "bg-[#18140B] text-white shadow-xs"
+                  : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="font-mono text-xs text-zinc-400">
+          *Cukup klik konfirmasi tanpa scan QR code rumit
+        </p>
+      </div>
+
+      {/* Tabel Konfirmasi MBG Balita */}
+      <div className="overflow-x-auto rounded-3xl border border-zinc-200 bg-white shadow-sm">
+        <table className="w-full text-left font-sans text-xs">
+          <thead className="bg-zinc-50 border-b border-zinc-200 font-mono text-[10px] uppercase text-zinc-500">
+            <tr>
+              <th className="py-3.5 px-4">Nama Balita & NIK</th>
+              <th className="py-3.5 px-4">Ibu Kandung</th>
+              <th className="py-3.5 px-4">Alokasi Paket & Menu MBG Hari Ini</th>
+              <th className="py-3.5 px-4">Status Penerimaan</th>
+              <th className="py-3.5 px-4 text-right">Aksi Konfirmasi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-zinc-100 text-zinc-800">
+            {filteredList.map((item) => {
+              const isPaketB = item.jenisPaket.includes("Paket B");
+              return (
+                <tr key={item.id} className="hover:bg-zinc-50/70 transition-colors">
+                  <td className="py-3.5 px-4">
+                    <div className="font-black text-zinc-950 text-sm">{item.namaAnak}</div>
+                    <div className="font-mono text-[11px] text-zinc-400">
+                      {item.usiaBulan} Bulan · NIK: {item.nik}
+                    </div>
                   </td>
-                  <td className="py-3 px-4 text-zinc-600">{d.posyandu}</td>
-                  <td className="py-3 px-4 font-mono text-zinc-500">{d.waktuKirim}</td>
-                  <td className="py-3 px-4">
-                    {d.dayaTerima ? (
-                      <span className="rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-[10px] font-bold text-emerald-800">
-                        ✓ {d.dayaTerima}
-                      </span>
+                  <td className="py-3.5 px-4 font-medium text-zinc-700">
+                    Ibu {item.namaIbu}
+                  </td>
+                  <td className="py-3.5 px-4 max-w-xs">
+                    <span
+                      className={`inline-block font-mono text-[10px] font-black px-2 py-0.5 rounded-md ${
+                        isPaketB
+                          ? "bg-rose-100 text-rose-800 border border-rose-300"
+                          : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      }`}
+                    >
+                      {item.jenisPaket}
+                    </span>
+                    <p className="text-[11px] text-zinc-600 mt-1 leading-normal font-medium">
+                      {item.menuHariIni}
+                    </p>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    {item.statusDiterima ? (
+                      <div className="space-y-0.5">
+                        <span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                          <span>✓ Diterima</span>
+                        </span>
+                        <div className="font-mono text-[10px] text-zinc-400">
+                          {item.waktuDiterima}
+                        </div>
+                        <div className="font-sans text-[10px] text-emerald-700 font-bold">
+                          Daya Terima: {item.dayaTerima}
+                        </div>
+                      </div>
                     ) : (
-                      <span className="rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-[10px] font-bold text-amber-800">
-                        {d.status}
+                      <span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
+                        <span>⏳ Menunggu Penyerahan</span>
                       </span>
                     )}
                   </td>
-                  <td className="py-3 px-4 font-mono text-[11px] text-zinc-500">
-                    {d.verifiedBy || "Menunggu konfirmasi"}
+                  <td className="py-3.5 px-4 text-right">
+                    {item.statusDiterima ? (
+                      <span className="font-mono text-xs text-zinc-400 font-bold">
+                        ✓ Terkonfirmasi
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleConfirmSingle(item.id, item.namaAnak)}
+                        className="rounded-xl bg-[#18140B] px-4 py-2 font-sans text-xs font-black text-white hover:bg-emerald-600 transition-colors shadow-xs flex items-center gap-1.5 ml-auto"
+                      >
+                        <span>✓</span>
+                        <span>Konfirmasi Diterima</span>
+                      </button>
+                    )}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 }
-

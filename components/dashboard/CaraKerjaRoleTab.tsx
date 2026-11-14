@@ -28,349 +28,347 @@ export default function CaraKerjaRoleTab({ role, onNavigateTab }: CaraKerjaProps
       aturanKunci: string[];
     }
   > = {
-    kader: {
-      title: "Alur & Cara Kerja Kader Posyandu Desa",
-      subtitle: "Standar Operasional Pencatatan Antropometri, Deteksi Dini, & Verifikasi MBG",
-      roleBadge: "Garda Terdepan Posyandu",
+    posyandu: {
+      title: "Alur & Cara Kerja Akun Posyandu Desa",
+      subtitle: "Standar Operasional Pencatatan Balita, Notifikasi Puskesmas & Konfirmasi MBG",
+      roleBadge: "Garda Terdepan Desa",
       badgeColor: "#38E8F5",
       deskripsi:
-        "Sebagai Kader Posyandu, Anda bertugas mendeteksi dini risiko stunting dan kelemahan kenaikan berat badan (growth faltering) pada balita di tingkat dusun/balai RW, serta memverifikasi paket Makan Bergizi Gratis (MBG) yang tiba.",
+        "Sebagai Akun Resmi Posyandu di tingkat desa, Anda bertugas mendata balita secara mandiri, mencatat penimbangan rutin, menerima jadwal pertemuan dokter dari Puskesmas pembina, dan mengonfirmasi penerimaan paket MBG harian anak.",
       tanggungJawabUtama: [
-        "Mendaftarkan balita baru yang berdomisili di wilayah posyandu (cukup 1x di awal).",
-        "Menimbang berat badan (BB) dan mengukur tinggi/panjang badan (TB/PB) setiap bulan.",
-        "Melihat visual kurva KMS digital resmi Dinkes Jatim (Hijau, Kuning, atau Merah).",
-        "Memverifikasi penerimaan paket makanan MBG dengan memindai kode QR.",
-        "Mencatat survei daya terima makanan (Habis, Tersisa Sebagian, atau Ditolak)."
+        "Mendaftarkan balita baru secara manual lewat ketikan form (cukup 1x di awal).",
+        "Menimbang berat badan (BB) dan mengukur tinggi badan (TB/PB) setiap jadwal posyandu.",
+        "Melihat visual kurva pertumbuhan Z-score WHO resmi Dinkes Jatim (Hijau, Kuning, Merah).",
+        "Menerima notifikasi otomatis jadwal pertemuan dokter dari Puskesmas untuk balita stunting.",
+        "Konfirmasi penerimaan paket Makan Bergizi Gratis (MBG) harian per anak melalui tabel checklist sederhana."
       ],
       langkahKerja: [
         {
           nomor: 1,
-          judul: "Pendaftaran Balita Baru (Input Manual)",
+          judul: "Pendaftaran Balita Baru (Input Manual Form)",
           deskripsi:
-            "Jika ada balita baru lahir atau baru pindah ke desa, klik tombol '[+ Daftarkan Balita Baru]'. Masukkan Nama, NIK 16 digit, Tanggal Lahir, Nama Ibu, dan hasil timbangan pertama. Data akan tersimpan permanen di Posyandu Anda.",
-          tipsKader: "Cukup daftarkan 1 kali saja di awal. Bulan depan nama anak sudah ada di dropdown.",
+            "Klik tombol '[+ Daftarkan Balita Baru Manual]'. Masukkan Nama, NIK 16 digit, Tanggal Lahir, Nama Ibu, BB, dan TB. Data tersimpan permanen di Posyandu Anda dan otomatis terbaca oleh Puskesmas pembina.",
+          tipsKader: "Cukup daftarkan 1 kali saja. Pada bulan berikutnya, nama anak langsung ada di dropdown pilihan.",
           icon: "📝"
         },
         {
           nomor: 2,
           judul: "Penimbangan Rutin Bulanan",
           deskripsi:
-            "Setiap hari buka Posyandu, pilih nama balita dari dropdown 'PILIH BALITA TERDAFTAR'. Masukkan Berat Badan (kg) dan Panjang/Tinggi Badan (cm) saat ini.",
-          tipsKader: "Pastikan timbangan bayi diletakkan di permukaan rata dan anak memakai pakaian seringan mungkin.",
+            "Pilih nama anak dari daftar 'PILIH BALITA TERDAFTAR'. Masukkan BB (kg) dan TB (cm) terbaru untuk melihat pergerakan kurva KMS.",
+          tipsKader: "Pastikan timbangan diletakkan di permukaan rata agar akurasi gramasi presisi.",
           icon: "⚖️"
         },
         {
           nomor: 3,
-          judul: "Cek Warna Kurva KMS & Sinyal Faltering",
+          judul: "Terima Notifikasi Jadwal Dokter Puskesmas",
           deskripsi:
-            "Sistem otomatis menghitung Z-score WHO. Perhatikan warna kurva: Hijau = Normal (Paket A Reguler), Kuning = Waspada / Growth Faltering (Otomatis dapat Paket B Protein Ganda), Merah = BGM / Stunting Berat.",
-          tipsKader: "Jika berat badan tidak naik 2 bulan berurutan, sistem akan membunyikan alarm peringatan kuning/merah.",
-          icon: "📈"
+            "Jika anak terdeteksi stunting, Puskesmas pembina akan menjadwalkan jadwal intervensi poli gizi/dokter. Notifikasi jadwal langsung muncul di bagian atas halaman Posyandu dengan rincian tanggal, jam, dokter, dan catatan.",
+          tipsKader: "Kader dapat mengonfirmasi 'Tandai Telah Disampaikan' setelah memberi tahu ibu balita.",
+          icon: "🔔"
         },
         {
           nomor: 4,
-          judul: "Otomasi Pesanan ke Dapur MBG (SPPG)",
+          judul: "Konfirmasi Penerimaan Paket Gizi Harian (Checklist Cepat)",
           deskripsi:
-            "Anda tidak perlu menelepon juru masak dapur. Hasil timbangan Anda otomatis masuk ke dasbor Dapur SPPG kecamatan untuk menentukan apakah anak dimasakan Paket A atau Paket B (Telur Blitar & Lele Lamongan).",
-          tipsKader: "Data timbangan sebelum jam 09.00 WIB langsung masuk ke kuota masak hari yang sama.",
-          icon: "🍲"
-        },
-        {
-          nomor: 5,
-          judul: "Scan Verifikasi Paket MBG & Catat Daya Terima",
-          deskripsi:
-            "Saat kotak makanan tiba di Posyandu atau rumah balita, buka tab 'Scan & Konsumsi', arahkan kamera ke kode QR di kotak makan, lalu pilih status daya terima: Habis (100%), Sebagian (50%), atau Tidak Termakan (0%).",
-          tipsKader: "Laporan daya terima ini penting untuk mengevaluasi apakah balita menyukai rasa masakan dapur.",
-          icon: "📱"
+            "Buka tab 'Konfirmasi MBG'. Dapur SPPG telah mengirimkan Paket A (Reguler) atau Paket B (Protein Hewani Ganda). Cukup klik tombol '✓ Konfirmasi Diterima' per anak tanpa perlu scan kamera yang merepotkan.",
+          tipsKader: "Bisa juga menggunakan tombol 'Konfirmasi Semua Paket Diterima' jika seluruh anak hadir di balai.",
+          icon: "🍱"
         }
       ],
       aturanKunci: [
-        "Akun kader baru wajib mendapatkan persetujuan/verifikasi dari Tenaga Gizi Puskesmas Pembina sebelum aktif.",
-        "Kader hanya memiliki hak akses input timbangan & verifikasi di wilayah posyandunya sendiri.",
-        "Aplikasi mendukung mode offline di balai desa tanpa sinyal internet (tersimpan otomatis dan sinkron saat ada sinyal)."
+        "Satu Posyandu memiliki satu akun resmi yang terdaftar di bawah naungan Puskesmas kecamatan setempat.",
+        "Posyandu hanya mengakses dan mengelola balita di wilayah posyandunya sendiri.",
+        "Tidak menggunakan kamera/scan barcode; konfirmasi MBG menggunakan sistem checklist harian digital."
+      ]
+    },
+    puskesmas: {
+      title: "Alur & Cara Kerja Petugas Gizi & Dokter Puskesmas",
+      subtitle: "Pengawasan Posyandu Binaan, Penjadwalan Intervensi Stunting, & Koordinasi Faskes",
+      roleBadge: "Tenaga Kesehatan Pembina",
+      badgeColor: "#10B981",
+      deskripsi:
+        "Sebagai Puskesmas Pembina di tingkat kecamatan, Anda mengawasi seluruh posyandu dan desa di wilayah kerja Anda, memantau balita yang terdeteksi stunting, dan membuat jadwal pertemuan intervensi medis yang terhubung langsung ke akun posyandu.",
+      tanggungJawabUtama: [
+        "Memantau persentase balita sehat dan kasus stunting di setiap desa binaan.",
+        "Melihat rincian anak stunting (nama, NIK, usia, nilai Z-score, dan jenis paket MBG).",
+        "Menjadwalkan pertemuan intervensi klinis dokter/poli gizi untuk balita stunting.",
+        "Sistem langsung mengirimkan notifikasi jadwal otomatis ke akun Posyandu terkait.",
+        "Memverifikasi akun pendaftaran Posyandu baru di wilayah kerja kecamatan."
+      ],
+      langkahKerja: [
+        {
+          nomor: 1,
+          judul: "Masuk Melalui Akun Puskesmas Wilayah Sendiri",
+          deskripsi:
+            "Semua akun Puskesmas se-Jawa Timur telah terdaftar di sistem. Pilih nama Puskesmas Anda pada halaman login untuk langsung masuk ke dasbor wilayah kerja.",
+          icon: "🏥"
+        },
+        {
+          nomor: 2,
+          judul: "Pantau Rincian Desa & Posyandu Binaan",
+          deskripsi:
+            "Klik pada kartu desa binaan untuk melihat persentase stunting, nama anak yang terdampak, serta status intervensi Paket B (Protein Hewani Ganda).",
+          icon: "📊"
+        },
+        {
+          nomor: 3,
+          judul: "Buat Jadwal Intervensi Dokter untuk Anak Stunting",
+          deskripsi:
+            "Klik tombol 'Buat Jadwal Intervensi' pada baris balita stunting. Tentukan tanggal, jam, dokter pemeriksa, lokasi poli gizi, dan instruksi KIA.",
+          icon: "📅"
+        },
+        {
+          nomor: 4,
+          judul: "Notifikasi Otomatis Terkirim ke Posyandu",
+          deskripsi:
+            "Saat jadwal disimpan, notifikasi langsung terkirim secara otomatis ke akun Posyandu tempat anak tersebut terdaftar tanpa perlu konfirmasi manual terpisah.",
+          icon: "📨"
+        }
+      ],
+      aturanKunci: [
+        "Setiap Puskesmas hanya dapat melihat data desa dan posyandu di bawah wilayah kecamatannya sendiri.",
+        "Akun Puskesmas tidak dapat saling mengintip data Puskesmas atau kecamatan lain.",
+        "Jadwal pertemuan klinis yang dibuat tersinkronisasi langsung dengan dasbor Posyandu."
       ]
     },
     dapur: {
       title: "Alur & Cara Kerja Pengelola Dapur MBG (SPPG)",
-      subtitle: "Standar Operasional Penyiapan Menu Presisi & Rantai Pasok Peternak Lokal Jatim",
+      subtitle: "Pembagian Wilayah Layanan Dapur, Penyiapan Menu Presisi, & Pantau Penerimaan",
       roleBadge: "Juru Masak & Logistik MBG",
       badgeColor: "#7866FF",
       deskripsi:
-        "Sebagai Pengelola Dapur Mandiri SPPG, tugas Anda adalah mengonversi data timbangan posyandu menjadi porsi menu presisi, belanja bahan baku langsung ke peternak/petani lokal Jawa Timur, memasak higienis, dan menempelkan label QR pelacakan.",
+        "Sebagai Pengelola Dapur Mandiri SPPG, Anda bertugas mengolah pangan bergizi untuk wilayah posyandu sasaran yang telah ditentukan agar tidak terjadi tumpang tindih antar dapur, menyiapkan Paket A & Paket B, serta memantau checklist konfirmasi penerimaan.",
       tanggungJawabUtama: [
-        "Melihat rekapitulasi kuota harian: Berapa porsi Paket A (Reguler) dan Paket B (Intervensi Gizi Tinggi).",
-        "Menggunakan Kalkulator Belanja Bahan Lokal untuk menyerap telur Blitar, lele Lamongan, hati ayam, dan kelor.",
-        "Memasak sesuai formulasi resep komoditas lokal Jawa Timur dan tekstur usia anak.",
-        "Mencetak dan menempelkan stiker QR Code unik pada setiap wadah makanan anak."
+        "Melayani wilayah posyandu sasaran sesuai pembagian zona kerja kecamatan agar tidak tabrakan.",
+        "Menyiapkan kuota Paket A (Reguler Sehat) dan Paket B (Protein Hewani Ganda Telur Blitar & Lele Lamongan).",
+        "Menggunakan kalkulator gramasi bahan baku lokal Jawa Timur.",
+        "Memantau status konfirmasi penerimaan paket oleh Posyandu secara real-time."
       ],
       langkahKerja: [
         {
           nomor: 1,
-          judul: "Buka Dasbor Kuota Masak Pagi Hari",
+          judul: "Periksa Wilayah Layanan & Posyandu Sasaran",
           deskripsi:
-            "Setiap pagi jam 06.00 WIB, buka Dasbor Dapur SPPG. Sistem menampilkan total porsi yang harus dimasak hari ini, terbagi antara Paket A (Reguler) dan Paket B (Intervensi Balita Faltering/Stunting).",
-          icon: "📊"
-        },
-        {
-          nomor: 2,
-          judul: "Cek Kalkulator Belanja Peternak Lokal",
-          deskripsi:
-            "Sistem otomatis menghitung gramasi bahan baku dalam kilogram (misal: 15 kg telur Blitar, 8 kg lele Lamongan). Pasokan diserap langsung dari mitra Koperasi Peternak Blitar Jaya & Gapoktan Mina Makmur Lamongan.",
-          icon: "🛒"
-        },
-        {
-          nomor: 3,
-          judul: "Proses Memasak Sesuai Resep Jatim",
-          deskripsi:
-            "Masak menu intervensi sesuai standar gizi: porsi dobel telur ayam ras Blitar kukus lembut, kaldu lele asap Lamongan, hati ayam kampung penambah zat besi heme, dan puree daun kelor organik.",
-          icon: "🍳"
-        },
-        {
-          nomor: 4,
-          judul: "Cetak Label QR Kotak Makan & Distribusi",
-          deskripsi:
-            "Klik 'Cetak Semua Label QR Kotak Makan'. Tempelkan stiker pada tutup wadah makan anak sebelum diantar kurir ke Posyandu sasaran.",
-          icon: "🏷️"
-        }
-      ],
-      aturanKunci: [
-        "100% bahan baku hewani dan nabati diserap dari produsen lokal Jawa Timur.",
-        "Menu Paket B tidak boleh disamakan dengan Paket A karena balita faltering membutuhkan booster protein hewani ganda.",
-        "Wadah makan harus bersegel higienis dengan QR Code terpasang rapi."
-      ]
-    },
-    puskesmas: {
-      title: "Alur & Cara Kerja Petugas Gizi / Dokter Puskesmas",
-      subtitle: "Validasi Akun Kader, Penanganan Rujukan Medis, & Evaluasi Wilayah Kerja",
-      roleBadge: "Tenaga Kesehatan Pembina",
-      badgeColor: "#10B981",
-      deskripsi:
-        "Sebagai Petugas Gizi Puskesmas Pembina di tingkat kecamatan, Anda memegang kendali verifikasi akun kader baru posyandu, memvalidasi rujukan balita yang masuk ke Zona Merah (BGM), dan memberikan terapi gizi lanjutan.",
-      tanggungJawabUtama: [
-        "Memverifikasi dan menyetujui pendaftaran akun Kader Posyandu baru di desa binaan.",
-        "Menerima notifikasi rujukan otomatis balita Zona Merah (BGM) atau stunting berat.",
-        "Mengeluarkan resep terapi gizi lanjutan (F-75/F-100/PKMK) jika diperlukan.",
-        "Mengevaluasi tren pertumbuhan balita per desa di wilayah kerja kecamatan."
-      ],
-      langkahKerja: [
-        {
-          nomor: 1,
-          judul: "Verifikasi Pendaftaran Akun Kader Baru",
-          deskripsi:
-            "Buka tab 'Verifikasi Kader Baru'. Periksa identitas pendaftar, asal desa, dan posyandu. Klik tombol '[✓ Setujui Akun Kader]' untuk mengaktifkan akses mereka mencatat data balita.",
-          icon: "🛡️"
-        },
-        {
-          nomor: 2,
-          judul: "Pantau Notifikasi Rujukan Balita Zona Merah",
-          deskripsi:
-            "Jika ada kader yang menginput balita dengan Z-score TB/U < -2 SD atau faltering parah, sistem langsung menampilkannya di daftar rujukan prioritas Puskesmas.",
-          icon: "🚨"
-        },
-        {
-          nomor: 3,
-          judul: "Pemeriksaan Medis & Konseling Klinis",
-          deskripsi:
-            "Jadwalkan balita untuk pemeriksaan fisik dokter di Puskesmas, evaluasi penyakit penyerta (seperti TBC anak atau diare kronis), dan dampingi intervensi MBG dengan suplemen mikro.",
-          icon: "🩺"
-        }
-      ],
-      aturanKunci: [
-        "Kader posyandu baru tidak bisa login sampai disetujui oleh akun Puskesmas kecamatan.",
-        "Balita zona merah wajib dievaluasi dalam waktu maksimal 7 hari kerja sejak terdeteksi."
-      ]
-    },
-    dinkes: {
-      title: "Alur & Cara Kerja Pimpinan Dinkes & TPID Provinsi Jawa Timur",
-      subtitle: "Monitoring Geospasial, Evaluasi RoN (Return on Nutrition), & Audit Akuntabilitas",
-      roleBadge: "Pengambil Kebijakan Daerah",
-      badgeColor: "#EF4444",
-      deskripsi:
-        "Sebagai Pengambil Kebijakan di Dinas Kesehatan dan Tim Pengendalian Stunting Provinsi Jawa Timur, Anda memantau prevalensi di kantong prioritas (Madura, Tapal Kuda), mengaudit serapan pangan lokal, dan mengevaluasi efektivitas intervensi MBG.",
-      tanggungJawabUtama: [
-        "Memantau Heatmap Geospasial sebaran stunting di kabupaten/kota Jawa Timur.",
-        "Mengevaluasi grafik Return on Nutrition (RoN) Tracker pada siklus 30, 60, dan 90 hari.",
-        "Mengaudit dampak ekonomi belanja MBG terhadap perputaran uang di peternak Jatim.",
-        "Mengunduh laporan rekapitulasi berkala format PDF dan Excel untuk Bappeda dan BPKP."
-      ],
-      langkahKerja: [
-        {
-          nomor: 1,
-          judul: "Analisis Heatmap Kantong Stunting Prioritas",
-          deskripsi:
-            "Pantau titik merah di Kab. Bangkalan, Sampang, Jember, Bondowoso, dan Probolinggo untuk memastikan dapur SPPG aktif mengintervensi balita faltering.",
+            "Dasbor Dapur menampilkan posyandu mana saja yang menjadi tanggung jawab Anda, sehingga antar dapur SPPG di kecamatan memiliki zona kerja yang tegas.",
           icon: "🗺️"
         },
         {
           nomor: 2,
-          judul: "Audit Return on Nutrition (RoN)",
+          judul: "Kalkulasi Kebutuhan Bahan Baku Harian",
           deskripsi:
-            "Buktikan efektivitas anggaran program MBG melalui data riil kenaikan Z-score (+0.6 SD dalam 60 hari) dan tingkat pemulihan anak keluar dari zona waspada.",
-          icon: "📊"
+            "Sistem mengonversi jumlah porsi menjadi kebutuhan riil: kg telur Blitar, kg lele Lamongan, hati ayam, dan daun kelor organik dari mitra lokal.",
+          icon: "🛒"
         },
         {
           nomor: 3,
-          judul: "Ekspor Laporan Pertanggungjawaban",
+          judul: "Produksi Paket A & Paket B",
           deskripsi:
-            "Unduh laporan audit resmi untuk rapat koordinasi lintas sektoral bersama Gubernur, Bappeda, dan Kementerian Kesehatan.",
-          icon: "📑"
+            "Masak paket gizi sesuai standar formulasi: Paket A untuk balita umum dan Paket B berprotein hewani ganda untuk balita faltering/stunting.",
+          icon: "🍳"
+        },
+        {
+          nomor: 4,
+          judul: "Pantau Konfirmasi Penerimaan dari Posyandu",
+          deskripsi:
+            "Setelah paket didistribusikan ke balai posyandu, pantau status konfirmasi penerimaan yang dicentang oleh kader posyandu secara langsung.",
+          icon: "✅"
         }
       ],
       aturanKunci: [
-        "Data bersifat agregat dan terenkripsi untuk melindungi privasi data pribadi keluarga balita.",
-        "Evaluasi dilakukan berkala setiap siklus 30 hari penimbangan serentak."
+        "Dapur SPPG memiliki pembagian wilayah posyandu sasaran yang pasti agar tidak berebut atau tabrakan.",
+        "Paket B diformulasikan khusus dengan protein hewani ganda lokal Jawa Timur.",
+        "Status distribusi terkonfirmasi langsung saat kader posyandu mencentang penerimaan paket."
       ]
     },
-    orangtua: {
-      title: "Alur & Panduan untuk Keluarga Sasaran Balita",
-      subtitle: "Pemantauan Pertumbuhan Anak & Konfirmasi Penerimaan Paket Makan Bergizi",
-      roleBadge: "Keluarga Sasaran",
-      badgeColor: "#38E8F5",
+    dinkes: {
+      title: "Alur & Cara Kerja Pimpinan Dinkes Provinsi Jawa Timur",
+      subtitle: "Monitoring Geospasial Makro 38 Kab/Kota & Evaluasi Kebijakan Stunting Jatim",
+      roleBadge: "Pengambil Kebijakan Provinsi",
+      badgeColor: "#EF4444",
       deskripsi:
-        "Sebagai orang tua atau keluarga balita, Anda dapat melihat riwayat tumbuh kembang anak, mengetahui menu makanan bergizi yang diterima, serta memberikan masukan rasa masakan.",
+        "Sebagai Pengambil Kebijakan di Dinas Kesehatan Provinsi Jawa Timur, Anda memiliki akses pemantauan tingkat makro untuk melihat peta sebaran stunting di 38 Kabupaten/Kota tanpa mengubah data mikro teknis.",
       tanggungJawabUtama: [
-        "Membawa balita ke Posyandu setiap bulan untuk penimbangan berat dan tinggi badan.",
-        "Menerima paket makanan bergizi gratis dari Dapur SPPG sesuai anjuran kader.",
-        "Memastikan makanan dihabiskan oleh anak dan mencatat status konsumsinya."
+        "Memantau Peta Sebaran dan Heatmap Stunting di 38 Kabupaten/Kota se-Jawa Timur.",
+        "Mengidentifikasi kantong-kantong prioritas intervensi (Madura, Tapal Kuda, Mataraman).",
+        "Memantau kebutuhan alokasi porsi Paket B protein hewani ganda per wilayah.",
+        "Mengevaluasi tren keberhasilan program NutriTrack Jatim dalam menurunkan angka stunting."
       ],
       langkahKerja: [
         {
           nomor: 1,
-          judul: "Kunjungi Posyandu Setiap Bulan",
-          deskripsi: "Bawa anak ke Posyandu untuk ditimbang dan dicatat kurva pertumbuhannya oleh kader.",
-          icon: "📅"
+          judul: "Buka Peta Interaktif Sebaran 38 Kab/Kota",
+          deskripsi:
+            "Amati warna indikator per kabupaten: Hijau (<10%), Kuning (10-20%), dan Merah (>20%) untuk melihat wilayah prioritas penanganan.",
+          icon: "🗺️"
         },
         {
           nomor: 2,
-          judul: "Terima & Cek Paket Makanan MBG",
-          deskripsi: "Pastikan makanan masih hangat dan higienis dengan stiker QR Code resmi NutriTrack.",
-          icon: "🍱"
+          judul: "Analisis Kebutuhan Paket B per Daerah",
+          deskripsi:
+            "Periksa kebutuhan logistik Paket B yang dikirimkan oleh dapur-dapur SPPG di tiap kabupaten berdasarkan hasil penimbangan posyandu.",
+          icon: "📊"
         },
         {
           nomor: 3,
-          judul: "Beri Asupan Bergizi & Konfirmasi",
-          deskripsi: "Suapi anak dengan sabar dan sampaikan masukan jika anak menyukai atau ada sisa makanan.",
-          icon: "❤️"
+          judul: "Evaluasi Kebijakan & Alokasi Bantuan Pangan",
+          deskripsi:
+            "Gunakan data makro untuk mengarahkan bantuan pangan lokal dan koordinasi lintas sektor bersama Gubernur, Bappeda, dan Dinkes Kabupaten/Kota.",
+          icon: "📑"
         }
       ],
       aturanKunci: [
-        "Makanan MBG Paket B dikhususkan untuk anak baduta, bukan untuk konsumsi anggota keluarga dewasa."
+        "Akun Dinkes Jatim hanya bersifat pemantauan makro (read-only monitoring).",
+        "Data disajikan transparan mencakup seluruh 38 Kabupaten/Kota di Jawa Timur."
       ]
     }
   };
 
-  const currentWorkflow = roleWorkflows[role] || roleWorkflows.kader;
+  const currentWf = roleWorkflows[role] || roleWorkflows.posyandu;
 
   return (
     <div className="space-y-8 font-sans">
-      {/* Header Banner Role Specific */}
-      <div className="relative overflow-hidden rounded-[28px] border border-zinc-200/90 bg-white p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3.5 py-1 mb-3">
+      {/* Header Banner */}
+      <div className="relative overflow-hidden rounded-[32px] border border-zinc-200/90 bg-gradient-to-br from-white via-zinc-50/60 to-purple-50/30 p-8 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex items-center gap-2">
               <span
-                className="h-2 w-2 rounded-full animate-pulse"
-                style={{ backgroundColor: currentWorkflow.badgeColor }}
+                className="inline-block h-3 w-3 rounded-full animate-pulse"
+                style={{ backgroundColor: currentWf.badgeColor }}
               />
-              <span className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-700">
-                {currentWorkflow.roleBadge}
+              <span className="font-mono text-xs font-black uppercase tracking-wider text-zinc-600">
+                {currentWf.roleBadge}
               </span>
             </div>
-            <h2 className="font-sans text-2xl font-black uppercase tracking-tight text-zinc-950">
-              {currentWorkflow.title}
+            <h2 className="font-sans text-2xl sm:text-3xl font-black text-zinc-950 tracking-tight">
+              {currentWf.title}
             </h2>
-            <p className="mt-1 font-mono text-xs text-zinc-500 max-w-2xl">
-              {currentWorkflow.subtitle}
+            <p className="font-sans text-sm text-zinc-600 leading-relaxed">
+              {currentWf.deskripsi}
             </p>
           </div>
 
-          <div className="shrink-0">
-            <span className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 font-mono text-xs font-bold text-zinc-700 block text-center">
-              Peran: <strong className="text-zinc-950 uppercase">{role}</strong>
-            </span>
+          <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+            {role === "posyandu" && onNavigateTab && (
+              <button
+                type="button"
+                onClick={() => onNavigateTab("kms")}
+                className="rounded-2xl border-2 border-[#18140B] bg-[#18140B] px-5 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all"
+              >
+                Mulai Catat Balita Posyandu →
+              </button>
+            )}
+            {role === "puskesmas" && onNavigateTab && (
+              <button
+                type="button"
+                onClick={() => onNavigateTab("puskesmas")}
+                className="rounded-2xl border-2 border-[#10B981] bg-[#10B981] px-5 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all"
+              >
+                Buka Wilayah Binaan Puskesmas →
+              </button>
+            )}
+            {role === "dapur" && onNavigateTab && (
+              <button
+                type="button"
+                onClick={() => onNavigateTab("dapur")}
+                className="rounded-2xl border-2 border-[#7866FF] bg-[#7866FF] px-5 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all"
+              >
+                Buka Manajemen Dapur MBG →
+              </button>
+            )}
+            {role === "dinkes" && onNavigateTab && (
+              <button
+                type="button"
+                onClick={() => onNavigateTab("analitik")}
+                className="rounded-2xl border-2 border-[#EF4444] bg-[#EF4444] px-5 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all"
+              >
+                Buka Peta 38 Kab/Kota Jatim →
+              </button>
+            )}
           </div>
         </div>
-
-        <div className="mt-4 border-t border-zinc-100 pt-4 text-xs font-medium text-zinc-600 leading-relaxed max-w-3xl">
-          {currentWorkflow.deskripsi}
-        </div>
       </div>
 
-      {/* Tanggung Jawab Utama Card */}
-      <div className="rounded-[24px] border border-zinc-200/80 bg-gradient-to-br from-zinc-50 to-white p-6">
-        <h3 className="font-sans text-sm font-black uppercase tracking-wider text-zinc-900 mb-3 flex items-center gap-2">
+      {/* Tanggung Jawab Utama */}
+      <div className="rounded-[28px] border border-zinc-200/90 bg-white p-6 sm:p-7 shadow-sm">
+        <h3 className="font-sans text-base font-black uppercase tracking-tight text-zinc-950 mb-4 flex items-center gap-2">
           <span>🎯</span>
-          <span>Tanggung Jawab Utama Anda:</span>
+          <span>Tugas Pokok & Tanggung Jawab Utama</span>
         </h3>
-        <ul className="grid gap-2.5 sm:grid-cols-2 text-xs text-zinc-700">
-          {currentWorkflow.tanggungJawabUtama.map((t, idx) => (
-            <li key={idx} className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-zinc-100 shadow-2xs">
-              <span className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] grid place-items-center shrink-0 mt-0.5">
-                ✓
-              </span>
-              <span>{t}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Langkah-langkah Kerja Kronologis */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-sans text-lg font-black uppercase tracking-tight text-zinc-950 flex items-center gap-2">
-            <span>🪜</span>
-            <span>Tahapan Alur Kerja Langkah Demi Langkah</span>
-          </h3>
-          <span className="font-mono text-xs text-zinc-400">
-            {currentWorkflow.langkahKerja.length} Langkah Terstruktur
-          </span>
-        </div>
-
-        <div className="space-y-4">
-          {currentWorkflow.langkahKerja.map((step) => (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {currentWf.tanggungJawabUtama.map((tj, idx) => (
             <div
-              key={step.nomor}
-              className="relative overflow-hidden rounded-[22px] border border-zinc-200 bg-white p-5 shadow-2xs hover:border-zinc-300 transition-all"
+              key={idx}
+              className="flex items-start gap-3 rounded-2xl border border-zinc-100 bg-zinc-50/60 p-4"
             >
-              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-zinc-900 text-white font-sans text-base font-black shadow-sm">
-                  <span>{step.icon}</span>
-                </div>
-
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                      Langkah {step.nomor}
-                    </span>
-                    <h4 className="font-sans text-base font-bold text-zinc-950">
-                      {step.judul}
-                    </h4>
-                  </div>
-                  <p className="text-xs text-zinc-600 leading-relaxed font-medium">
-                    {step.deskripsi}
-                  </p>
-
-                  {step.tipsKader && (
-                    <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-amber-50/80 border border-amber-200/80 px-3 py-1.5 text-[11px] text-amber-900 font-medium">
-                      <span>💡 <strong>Tips Operasional:</strong> {step.tipsKader}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-900 font-mono text-xs font-bold text-white">
+                {idx + 1}
+              </span>
+              <p className="font-sans text-xs font-medium text-zinc-800 leading-relaxed">
+                {tj}
+              </p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Aturan Kunci & Integritas Data */}
-      <div className="rounded-[22px] border border-red-200 bg-red-50/50 p-5">
-        <h4 className="font-sans text-xs font-black uppercase tracking-wider text-red-950 mb-2 flex items-center gap-2">
+      {/* Langkah Kerja Step-by-Step */}
+      <div className="space-y-4">
+        <h3 className="font-sans text-base font-black uppercase tracking-tight text-zinc-950 flex items-center gap-2">
+          <span>📋</span>
+          <span>Langkah Kerja Operasional Harian</span>
+        </h3>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {currentWf.langkahKerja.map((step) => (
+            <motion.div
+              key={step.nomor}
+              whileHover={{ y: -3 }}
+              className="flex flex-col justify-between rounded-3xl border border-zinc-200/90 bg-white p-6 shadow-sm"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-2xl">{step.icon}</span>
+                  <span className="rounded-full bg-zinc-100 px-3 py-1 font-mono text-[10px] font-black text-zinc-600">
+                    LANGKAH #{step.nomor}
+                  </span>
+                </div>
+                <h4 className="font-sans text-base font-black text-zinc-950 tracking-tight mb-2">
+                  {step.judul}
+                </h4>
+                <p className="font-sans text-xs text-zinc-600 leading-relaxed">
+                  {step.deskripsi}
+                </p>
+              </div>
+
+              {step.tipsKader && (
+                <div className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/60 p-3">
+                  <p className="font-sans text-[11px] font-bold text-amber-900">
+                    💡 Tips: <span className="font-medium text-amber-800">{step.tipsKader}</span>
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Aturan Kunci */}
+      <div className="rounded-[28px] border border-zinc-200/90 bg-white p-6 sm:p-7 shadow-sm">
+        <h3 className="font-sans text-base font-black uppercase tracking-tight text-zinc-950 mb-3 flex items-center gap-2">
           <span>⚠️</span>
-          <span>Aturan Kunci & Integritas Penugasan:</span>
-        </h4>
-        <ul className="list-disc list-inside space-y-1 font-mono text-[11px] text-red-900">
-          {currentWorkflow.aturanKunci.map((rule, idx) => (
-            <li key={idx}>{rule}</li>
+          <span>Prinsip & Aturan Kunci Sistem</span>
+        </h3>
+        <ul className="space-y-2">
+          {currentWf.aturanKunci.map((rule, idx) => (
+            <li
+              key={idx}
+              className="flex items-center gap-2.5 font-sans text-xs font-semibold text-zinc-700"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+              <span>{rule}</span>
+            </li>
           ))}
         </ul>
       </div>
