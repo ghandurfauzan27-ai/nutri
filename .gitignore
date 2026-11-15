@@ -32,6 +32,12 @@ yarn-error.log*
 # Raw uploaded assets
 WhatsApp Image*
 
+# Proposal & Dokumen Lomba Lokal
+*PROPOSAL*
+*proposal*
+docs/*PROPOSAL*
+docs/*proposal*
+
 # System & IDE
 .DS_Store
 Thumbs.db
