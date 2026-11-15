@@ -1,33 +1,30 @@
 {
-  "name": "nutritrack",
-  "version": "0.1.0",
+  "name": "nutritrack-monorepo",
+  "version": "1.0.0",
   "private": true,
+  "description": "NutriTrack - Platform Presisi Intervensi Stunting & Pemantauan MBG Berbasis Komoditas Lokal Jawa Timur",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "dev:turbo": "next dev --turbo",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "dev": "npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend"
   },
-  "dependencies": {
-    "clsx": "^2.1.1",
-    "framer-motion": "^11.11.0",
-    "gsap": "^3.12.5",
-    "lenis": "^1.1.13",
-    "next": "14.2.15",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "^20.14.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.15",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.14",
-    "typescript": "^5.5.0"
-  }
+  "keywords": [
+    "nutritrack",
+    "stunting",
+    "makan-bergizi-gratis",
+    "jawa-timur",
+    "posyandu",
+    "puskesmas",
+    "kemenkes"
+  ],
+  "author": "NutriTrack Team",
+  "license": "MIT"
 }
