@@ -23,20 +23,34 @@ export default function ModulAKmsTab({
     "Data penimbangan berhasil disinkronkan ke Cloud Server & Antrean Dapur SPPG!"
   );
 
-  // Notifikasi Jadwal Pertemuan Penanganan Stunting dari Puskesmas Pembina
+  // Notifikasi Jadwal Pertemuan Penanganan Stunting dari Puskesmas Pembina (Khusus Balita Waspada / Faltering)
   const [notifList, setNotifList] = useState<any[]>([
     {
       id: "NOTIF-01",
       puskesmas: "Puskesmas Socah",
       posyanduTarget: "Posyandu Mawar 01",
-      namaBalita: "Ahmad Fauzi",
-      nikBalita: "3505126804240001",
+      namaBalita: "Dimas Aditya Pratama",
+      nikBalita: "3505121108250007",
       tglPertemuan: "18 Nov 2026",
       waktuPertemuan: "09:00 WIB",
       lokasi: "Poli Gizi Puskesmas Socah",
       dokterPemeriksa: "dr. Nurul Hidayati, M.Gizi",
       agenda: "Pemeriksaan Antropometri Lanjutan & Preskripsi Paket B Ekstra Hewani Jatim",
       catatan: "Mohon Ibu balita membawa Buku KIA dan catatan makan 3 hari terakhir.",
+      statusTerkirim: "Belum Dikonfirmasi ke Ibu Balita",
+    },
+    {
+      id: "NOTIF-02",
+      puskesmas: "Puskesmas Socah",
+      posyanduTarget: "Posyandu Mawar 01",
+      namaBalita: "Nur Haliza",
+      nikBalita: "3505125109250008",
+      tglPertemuan: "19 Nov 2026",
+      waktuPertemuan: "10:30 WIB",
+      lokasi: "Poli Anak Puskesmas Socah",
+      dokterPemeriksa: "dr. H. Achmad Syafi'i",
+      agenda: "Konsultasi Infeksi Penyerta & Evaluasi Asupan Protein Baduta Faltering",
+      catatan: "Balita terindikasi nafsu makan menurun, perlu evaluasi klinis dokter faskes.",
       statusTerkirim: "Belum Dikonfirmasi ke Ibu Balita",
     },
   ]);
@@ -80,6 +94,33 @@ export default function ModulAKmsTab({
               return [...fresh, ...prev];
             });
           }
+        }
+        const rawJadwalPuskesmas = localStorage.getItem("nt_jadwal_pertemuan_puskesmas");
+        if (rawJadwalPuskesmas) {
+          try {
+            const parsedJ = JSON.parse(rawJadwalPuskesmas);
+            if (Array.isArray(parsedJ) && parsedJ.length > 0) {
+              setNotifList((prev) => {
+                const ids = new Set(prev.map((n) => n.id));
+                const converted = parsedJ.map((j: any) => ({
+                  id: j.id,
+                  puskesmas: j.puskesmas || "Puskesmas Socah",
+                  posyanduTarget: j.posyanduTarget || "Posyandu Mawar 01",
+                  namaBalita: j.namaBalita,
+                  nikBalita: j.nikBalita,
+                  tglPertemuan: j.tglPertemuan,
+                  waktuPertemuan: j.waktuPertemuan,
+                  lokasi: j.lokasi || "Poli Gizi Puskesmas Socah",
+                  dokterPemeriksa: j.dokterPemeriksa,
+                  agenda: j.agendaIntervensi,
+                  catatan: j.catatanKhusus,
+                  statusTerkirim: j.status === "Selesai" ? "Telah Disampaikan ke Orang Tua" : "Belum Dikonfirmasi ke Ibu Balita",
+                }));
+                const fresh = converted.filter((c: any) => !ids.has(c.id));
+                return [...fresh, ...prev];
+              });
+            }
+          } catch (e) {}
         }
 
         // 4. Muat identitas akun posyandu aktif
@@ -272,6 +313,70 @@ export default function ModulAKmsTab({
     currentZBBU < -2 ||
     (deltaWeight !== null && deltaWeight <= 0) ||
     inputWeight <= 8.4;
+
+  // Deteksi apakah balita terpilih berstatus WASPADA / FALTERING / STUNTING
+  const isChildWaspada =
+    activeChild.isFaltering ||
+    isFalteringNow ||
+    (activeChild.statusNutrisi && (
+      activeChild.statusNutrisi.toLowerCase().includes("waspada") ||
+      activeChild.statusNutrisi.toLowerCase().includes("faltering") ||
+      activeChild.statusNutrisi.toLowerCase().includes("stunting") ||
+      activeChild.statusNutrisi.toLowerCase().includes("gizi kurang") ||
+      activeChild.statusNutrisi.toLowerCase().includes("merah")
+    )) ||
+    activeChild.zTBU < -2 ||
+    (activeChild.zBBU !== undefined && activeChild.zBBU < -2) ||
+    currentZTBU < -2 ||
+    currentZBBU < -2;
+
+  // Jadwal pertemuan klinis dokter dari Puskesmas (HANYA dibuat/diambil jika balita berstatus WASPADA)
+  const activeChildJadwal = (() => {
+    if (!isChildWaspada) return null;
+
+    // 1. Cari apakah sudah ada jadwal spesifik di notifList (termasuk buatan Puskesmas)
+    const found = notifList.find(
+      (n) =>
+        (n.namaBalita && activeChild.nama && n.namaBalita.toLowerCase().trim() === activeChild.nama.toLowerCase().trim()) ||
+        (n.nikBalita && activeChild.nik && n.nikBalita === activeChild.nik)
+    );
+    if (found) return found;
+
+    // 2. Jika anak berstatus WASPADA tetapi belum ada jadwal tersimpan, buatkan jadwal rujukan resmi otomatis dari Puskesmas Pembina
+    return {
+      id: `JADWAL-${activeChild.id}`,
+      puskesmas: puskesmasPembina || `Puskesmas ${activeChild.kecamatan || "Socah"}`,
+      posyanduTarget: activeChild.posyandu || "Posyandu Mawar 01",
+      desa: activeChild.desa || "Desa Bilaporah",
+      namaBalita: activeChild.nama,
+      nikBalita: activeChild.nik,
+      tglPertemuan: "18 Nov 2026",
+      waktuPertemuan: "09:00 WIB",
+      lokasi: `Poli Gizi & Anak ${puskesmasPembina || `Puskesmas ${activeChild.kecamatan || "Socah"}`}`,
+      dokterPemeriksa: "dr. Nurul Hidayati, M.Gizi",
+      agenda: "Pemeriksaan Antropometri Lanjutan & Preskripsi Paket B Ekstra Hewani Jatim",
+      catatan: "Mohon Ibu balita membawa Buku KIA dan catatan makan 3 hari terakhir.",
+      statusTerkirim: "Belum Dikonfirmasi ke Ibu Balita",
+    };
+  })();
+
+  // Filter notifikasi di atas dashboard: Hanya tampilkan balita berstatus WASPADA / FALTERING / STUNTING
+  const waspadaNotifList = notifList.filter((n) => {
+    const matched = balitaList.find(
+      (b) =>
+        (n.namaBalita && b.nama && b.nama.toLowerCase().trim() === n.namaBalita.toLowerCase().trim()) ||
+        (n.nikBalita && b.nik && b.nik === n.nikBalita)
+    );
+    if (!matched) return true;
+    return (
+      matched.isFaltering ||
+      matched.statusNutrisi.toLowerCase().includes("waspada") ||
+      matched.statusNutrisi.toLowerCase().includes("faltering") ||
+      matched.statusNutrisi.toLowerCase().includes("stunting") ||
+      matched.statusNutrisi.toLowerCase().includes("gizi kurang") ||
+      matched.zTBU < -2
+    );
+  });
   const currentStatus = isFalteringNow ? "Waspada / Growth Faltering" : "Normal";
   const currentPack = isFalteringNow ? "Paket B (Tinggi Protein Hewani)" : "Paket A (Reguler)";
 
@@ -693,8 +798,8 @@ export default function ModulAKmsTab({
         </div>
       </div>
 
-      {/* 1. NOTIFIKASI JADWAL PERTEMUAN STUNTING DARI PUSKESMAS PEMBINA */}
-      {notifList.length > 0 && (
+      {/* 1. NOTIFIKASI JADWAL PERTEMUAN STUNTING DARI PUSKESMAS PEMBINA (HANYA UNTUK BALITA WASPADA) */}
+      {waspadaNotifList.length > 0 && (
         <div className="rounded-3xl border border-rose-300 bg-rose-50/80 p-5 shadow-xs space-y-3">
           <div className="flex items-center justify-between border-b border-rose-200/80 pb-3">
             <div className="flex items-center gap-2">
@@ -702,7 +807,7 @@ export default function ModulAKmsTab({
                 🔔
               </span>
               <h4 className="font-sans text-sm font-black text-rose-950 uppercase tracking-tight">
-                Notifikasi Jadwal Intervensi dari Puskesmas Pembina ({notifList.length} Jadwal)
+                Notifikasi Jadwal Intervensi dari Puskesmas Pembina ({waspadaNotifList.length} Balita Waspada)
               </h4>
             </div>
             <div className="flex items-center gap-2">
@@ -720,7 +825,7 @@ export default function ModulAKmsTab({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            {notifList.map((n) => (
+            {waspadaNotifList.map((n) => (
               <div key={n.id} className="rounded-2xl border border-rose-200 bg-white p-4 space-y-2 shadow-xs">
                 <div className="flex items-start justify-between">
                   <div>
@@ -1383,6 +1488,96 @@ export default function ModulAKmsTab({
               </div>
             </div>
 
+            {/* KARTU JANJI TEMU DOKTER PUSKESMAS: HANYA KELUAR JIKA BALITA BERSTATUS WASPADA / FALTERING / STUNTING */}
+            {isChildWaspada && activeChildJadwal ? (
+              <div className="mt-5 rounded-2xl border-2 border-rose-300 bg-gradient-to-r from-rose-50 via-amber-50/40 to-white p-4.5 shadow-sm space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-rose-200/80 pb-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid h-8 w-8 place-items-center rounded-xl bg-rose-600 text-white text-sm shadow-xs shrink-0">
+                      🏥
+                    </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-sans text-sm font-black text-rose-950 uppercase tracking-tight">
+                          Janji Temu Intervensi Dokter Puskesmas
+                        </h4>
+                        <span className="rounded-md bg-rose-600 text-white text-[9px] font-mono font-bold px-1.5 py-0.5">
+                          Status Waspada
+                        </span>
+                      </div>
+                      <p className="font-mono text-[11px] text-rose-800 mt-0.5">
+                        Rujukan klinis stunting & evaluasi nutrisi untuk <strong>{activeChild.nama}</strong> ({activeChild.statusNutrisi})
+                      </p>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-rose-100 border border-rose-300 px-2.5 py-0.5 font-mono text-[10px] font-bold text-rose-800 self-start sm:self-auto">
+                    ● {activeChildJadwal.statusTerkirim || "Terjadwal"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div className="rounded-xl bg-white/90 border border-rose-100 p-2.5">
+                    <span className="block font-mono text-[10px] text-zinc-400 uppercase font-bold">Waktu & Tanggal</span>
+                    <strong className="text-zinc-950 block mt-0.5">📅 {activeChildJadwal.tglPertemuan}</strong>
+                    <span className="font-mono text-[11px] text-zinc-600">pukul {activeChildJadwal.waktuPertemuan}</span>
+                  </div>
+                  <div className="rounded-xl bg-white/90 border border-rose-100 p-2.5">
+                    <span className="block font-mono text-[10px] text-zinc-400 uppercase font-bold">Lokasi Faskes</span>
+                    <strong className="text-zinc-950 block mt-0.5">🏥 {activeChildJadwal.lokasi}</strong>
+                    <span className="font-mono text-[10px] text-zinc-500">{activeChildJadwal.puskesmas}</span>
+                  </div>
+                  <div className="rounded-xl bg-white/90 border border-rose-100 p-2.5">
+                    <span className="block font-mono text-[10px] text-zinc-400 uppercase font-bold">Dokter Pemeriksa</span>
+                    <strong className="text-zinc-950 block mt-0.5">👨‍⚕️ {activeChildJadwal.dokterPemeriksa}</strong>
+                    <span className="font-mono text-[10px] text-zinc-500">Poli Gizi / Spesialis Anak</span>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-white/95 border border-rose-100 p-3 text-xs space-y-1">
+                  <div>
+                    <strong className="text-zinc-800 font-mono text-[11px] uppercase">Agenda Klinis:</strong>{" "}
+                    <span className="text-zinc-700 font-medium">{activeChildJadwal.agenda}</span>
+                  </div>
+                  {activeChildJadwal.catatan && (
+                    <div className="text-[11px] text-zinc-500 font-mono pt-1 border-t border-rose-100/60">
+                      💡 <strong>Catatan Ibu Balita:</strong> {activeChildJadwal.catatan}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 font-mono text-[11px]">
+                  <span className="text-zinc-500 text-[10px]">
+                    Instruksi: Sampaikan jadwal konsultasi dokter ini kepada Ibu {activeChild.namaIbu}.
+                  </span>
+                  {activeChildJadwal.statusTerkirim !== "Telah Disampaikan ke Orang Tua" ? (
+                    <button
+                      type="button"
+                      onClick={() => handleAcknowledgeNotif(activeChildJadwal.id, activeChild.nama)}
+                      className="rounded-xl bg-[#18140B] text-white px-3 py-1.5 font-sans text-xs font-bold hover:bg-emerald-600 transition-colors shadow-2xs shrink-0 self-end sm:self-auto"
+                    >
+                      ✓ Tandai Telah Disampaikan ke Ibu
+                    </button>
+                  ) : (
+                    <span className="text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                      ✓ Telah Disampaikan ke Orang Tua
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="font-mono text-emerald-950 font-bold">
+                    Status Nutrisi: {activeChild.statusNutrisi} ({activeChild.zTBU > 0 ? `+${activeChild.zTBU}` : activeChild.zTBU} SD) · Tumbuh kembang optimal di pita hijau. Belum memerlukan janji temu rujukan dokter Puskesmas.
+                  </span>
+                </div>
+                <span className="rounded-lg bg-emerald-100 border border-emerald-200 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-800 shrink-0">
+                  Normal & Sehat
+                </span>
+              </div>
+            )}
+
             {/* Interactive SVG KMS Chart Canvas */}
             <div className="mt-6 relative h-[320px] w-full rounded-2xl bg-zinc-50/80 border border-zinc-200/70 p-4 overflow-hidden">
               <svg viewBox="0 0 540 260" className="h-full w-full select-none">
@@ -1704,15 +1899,41 @@ export default function ModulAKmsTab({
               </div>
             </div>
 
-            {/* Status MBG Alokasi */}
-            <div className="mt-4 rounded-2xl border border-zinc-200 p-3.5 flex items-center justify-between bg-white shadow-xs">
-              <div>
-                <div className="font-mono text-[10px] text-zinc-500 uppercase font-bold">Preskripsi Menu MBG Harian:</div>
-                <div className="font-sans text-sm font-black text-[#5C46D9]">{activeChild.paketMBG}</div>
+            {/* Status MBG Alokasi & Janji Temu Puskesmas (Hanya Jika Waspada) */}
+            <div className="mt-4 rounded-2xl border border-zinc-200 p-3.5 space-y-2.5 bg-white shadow-xs">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-mono text-[10px] text-zinc-500 uppercase font-bold">Preskripsi Menu MBG Harian:</div>
+                  <div className="font-sans text-sm font-black text-[#5C46D9]">{activeChild.paketMBG}</div>
+                </div>
+                <span className="rounded-xl bg-zinc-100 px-3 py-1 font-mono text-xs font-bold text-zinc-700">
+                  Puskesmas {activeChild.kecamatan}
+                </span>
               </div>
-              <span className="rounded-xl bg-zinc-100 px-3 py-1 font-mono text-xs font-bold text-zinc-700">
-                Puskesmas {activeChild.kecamatan}
-              </span>
+
+              {isChildWaspada && activeChildJadwal ? (
+                <div className="pt-2.5 border-t border-rose-100 rounded-xl bg-rose-50/70 p-3 text-xs text-rose-950 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-sans font-black uppercase text-[11px] text-rose-900 flex items-center gap-1.5">
+                      <span>🏥 Janji Temu Intervensi Puskesmas (Status Waspada)</span>
+                    </span>
+                    <span className="font-mono text-[10px] font-bold text-rose-700 bg-white border border-rose-200 px-2 py-0.5 rounded">
+                      📅 {activeChildJadwal.tglPertemuan} ({activeChildJadwal.waktuPertemuan})
+                    </span>
+                  </div>
+                  <div className="font-mono text-[11px] text-zinc-700 mt-1">
+                    Dokter: <strong>{activeChildJadwal.dokterPemeriksa}</strong> · Lokasi: <strong>{activeChildJadwal.lokasi}</strong>
+                  </div>
+                  <div className="text-[11px] text-zinc-600">
+                    Agenda: <strong>{activeChildJadwal.agenda}</strong>
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-2 border-t border-zinc-100 text-[11px] font-mono text-emerald-800 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span>Status Normal · Tumbuh kembang baik di pita hijau, belum memerlukan janji temu rujukan faskes.</span>
+                </div>
+              )}
             </div>
 
             {/* Riwayat Penimbangan Table */}
