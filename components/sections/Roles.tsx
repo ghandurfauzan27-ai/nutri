@@ -106,67 +106,67 @@ function MockupKader() {
         {/* App Header */}
         <div className="flex items-center justify-between border-b border-zinc-200 pb-2.5 text-xs">
           <div>
-            <span className="font-mono text-[9px] text-[#7866FF] font-bold block">KADER PWA</span>
-            <span className="font-bold text-zinc-950">Posyandu Melati 03</span>
+            <span className="font-mono text-[9px] text-[#7866FF] font-bold block">POSYANDU DESA</span>
+            <span className="font-bold text-zinc-950">Posyandu Mawar 01 (Bilaporah)</span>
           </div>
           <span className="token-chip bg-emerald-100 text-emerald-800 border-emerald-300 font-bold">
-            ● Offline Ready
+            ● 10 Balita Terpantau
           </span>
         </div>
 
         {/* Child Card */}
         <div className="mt-3 rounded-xl bg-white p-3 border border-zinc-200 text-xs shadow-sm">
           <div className="flex justify-between items-baseline font-bold text-zinc-950">
-            <span>Ananda Arya W.</span>
+            <span>Ahmad Fauzi</span>
             <span className="font-mono text-[10px] text-zinc-500">L · 14 Bulan</span>
           </div>
-          <span className="font-mono text-[9px] text-zinc-400 block mt-0.5">NIK: 351408**** · Sukorejo</span>
+          <span className="font-mono text-[9px] text-zinc-400 block mt-0.5">NIK: 3505126804240001 · Bilaporah</span>
         </div>
 
         {/* Inputs */}
         <div className="mt-3 grid grid-cols-3 gap-2 text-center font-mono">
           <div className="rounded-xl bg-white p-2 border border-zinc-200 shadow-sm">
             <span className="text-[9px] text-zinc-500 block">BB</span>
-            <span className="text-sm font-bold text-[#FF764C]">8.2 kg</span>
+            <span className="text-sm font-bold text-emerald-700">10.1 kg</span>
           </div>
           <div className="rounded-xl bg-white p-2 border border-zinc-200 shadow-sm">
             <span className="text-[9px] text-zinc-500 block">TB</span>
-            <span className="text-sm font-bold text-zinc-950">73.5 cm</span>
+            <span className="text-sm font-bold text-zinc-950">79.5 cm</span>
           </div>
           <div className="rounded-xl bg-white p-2 border border-zinc-200 shadow-sm">
             <span className="text-[9px] text-zinc-500 block">L.Kepala</span>
-            <span className="text-sm font-bold text-zinc-950">45.0 cm</span>
+            <span className="text-sm font-bold text-zinc-950">46.2 cm</span>
           </div>
         </div>
 
         {/* Action Button */}
         <button className="mt-3 w-full rounded-xl bg-[#38E8F5] py-2.5 font-sans text-xs font-bold text-[#032D30] shadow-sm">
-          HITUNG STATUS GIZI
+          SIMPAN PENIMBANGAN (WHO KMS)
         </button>
 
-        {/* Warning Banner */}
-        <div className="mt-3 rounded-xl bg-[#FEFCE8] border border-[#FEF08A] p-2.5 text-[11px] font-bold text-[#713F12]">
-          [!] STATUS: GROWTH FALTERING (WASPADA)
+        {/* Status Banner */}
+        <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-200 p-2.5 text-[11px] font-bold text-emerald-900">
+          [✓] STATUS: GIZI BAIK / NORMAL (PITA HIJAU)
         </div>
 
         <div className="mt-2 text-[10px] text-zinc-600 space-y-1">
-          <div>Z-Score TB/U: <span className="font-bold text-[#FF764C]">-2.1 SD (Risiko Stunting)</span></div>
+          <div>Z-Score TB/U: <span className="font-bold text-emerald-700">+0.15 SD (Optimal)</span></div>
           <div className="rounded-lg bg-white p-2 border border-zinc-200 text-zinc-800 shadow-sm">
-            <span className="font-bold text-[#7866FF]">Rekomendasi Paket B:</span> Ekstra Protein (Porsi Dobel Telur Blitar + Puree Lele).
+            <span className="font-bold text-emerald-700">Alokasi Ransum:</span> Paket A (Reguler Bergizi Seimbang).
           </div>
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs font-bold font-sans">
-          <button className="rounded-xl bg-[#FF764C] py-2 text-white shadow-sm">
-            SCAN TERIMA MBG
+          <button className="rounded-xl bg-emerald-600 py-2 text-white shadow-sm">
+            CHECKLIST TERIMA MBG
           </button>
           <button className="rounded-xl bg-white py-2 text-zinc-800 border border-zinc-200 shadow-sm">
-            SIMPAN DATA
+            CETAK KMS
           </button>
         </div>
 
         <span className="font-mono text-[9px] text-zinc-400 block text-center mt-3">
-          Antarmuka Kader Posyandu
+          Antarmuka Meja Timbang Posyandu
         </span>
       </div>
     </motion.div>
@@ -186,56 +186,52 @@ function MockupDapur() {
         
         <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
           <div>
-            <span className="font-mono text-xs text-[#16A34A] font-bold block">DAPUR MBG / SENTRA PELAYANAN GIZI</span>
-            <h4 className="text-lg font-bold">Dapur Pelayanan MBG Kec. Sukorejo</h4>
+            <span className="font-mono text-xs text-[#16A34A] font-bold block">SPPG RESMI JAWA TIMUR (SPPG-BKL-01)</span>
+            <h4 className="text-lg font-bold">SPPG Dapur Sehat Socah Mandiri</h4>
           </div>
           <span className="token-chip bg-emerald-100 text-emerald-800 border-emerald-300 font-bold">
-            ● Sinkron Real-Time
+            ● 4 Tahap Verifikasi
           </span>
         </div>
 
         <div className="mt-5 grid grid-cols-3 gap-3 text-center">
           <div className="rounded-2xl bg-white p-3 border border-zinc-200 shadow-sm">
             <span className="font-mono text-[10px] text-zinc-500 block font-bold">Total Porsi</span>
-            <span className="font-sans text-2xl font-black text-zinc-950">120</span>
+            <span className="font-sans text-2xl font-black text-zinc-950">10</span>
           </div>
           <div className="rounded-2xl bg-emerald-50 p-3 border border-emerald-200 shadow-sm">
             <span className="font-mono text-[10px] text-emerald-700 block font-bold">Paket A (Reguler)</span>
-            <span className="font-sans text-2xl font-black text-emerald-700">85</span>
+            <span className="font-sans text-2xl font-black text-emerald-700">6</span>
           </div>
           <div className="rounded-2xl bg-orange-50 p-3 border border-orange-200 shadow-sm">
-            <span className="font-mono text-[10px] text-[#FF764C] block font-bold">Paket B (Intervensi)</span>
-            <span className="font-sans text-2xl font-black text-[#FF764C]">35</span>
+            <span className="font-mono text-[10px] text-[#FF764C] block font-bold">Paket B (Protein Ganda)</span>
+            <span className="font-sans text-2xl font-black text-[#FF764C]">4</span>
           </div>
         </div>
 
         <div className="mt-5 rounded-2xl bg-white p-4 border border-zinc-200 shadow-sm">
           <div className="flex justify-between items-center border-b border-zinc-100 pb-2">
-            <span className="text-xs font-bold text-zinc-900">Kebutuhan Bahan Baku Lokal Hari Ini:</span>
-            <span className="token-chip bg-zinc-50 text-zinc-600 border-zinc-200 text-[10px] font-bold">35 Porsi Khusus</span>
+            <span className="text-xs font-bold text-zinc-900">Alur Verifikasi Pesanan Posyandu Mawar 01:</span>
+            <span className="token-chip bg-purple-50 text-purple-700 border-purple-200 text-[10px] font-bold">10 Porsi Terverifikasi</span>
           </div>
           <ul className="mt-3 space-y-2 text-xs font-mono text-zinc-700">
-            <li className="flex justify-between">
-              <span className="font-bold text-zinc-900">Telur Ayam Blitar (7.5 kg)</span>
-              <span className="text-zinc-500">Koperasi Peternak Blitar Jaya</span>
+            <li className="flex justify-between items-center bg-zinc-50 p-2 rounded-xl">
+              <span className="font-bold text-zinc-900">1. Diterima → 2. Diproses → 3. Diantar → 4. Selesai</span>
+              <span className="text-emerald-700 font-black">✓ Siap Saji</span>
             </li>
             <li className="flex justify-between">
-              <span className="font-bold text-zinc-900">Lele Segar Fillet (4.0 kg)</span>
-              <span className="text-zinc-500">Gapoktan Mina Makmur Lamongan</span>
-            </li>
-            <li className="flex justify-between">
-              <span className="font-bold text-zinc-900">Hati Ayam (2.5 kg) & Kelor (1.5 kg)</span>
-              <span className="text-zinc-500">Kebun Sayur Warga Sukorejo</span>
+              <span className="font-bold text-zinc-900">Bahan Baku: Telur Blitar & Lele Lamongan</span>
+              <span className="text-zinc-500">Gapoktan Jawa Timur</span>
             </li>
           </ul>
         </div>
 
         <div className="mt-5 flex gap-3 text-xs font-bold">
           <button className="flex-1 rounded-xl bg-zinc-950 py-3 text-white shadow-sm">
-            CETAK DAFTAR MASAK
+            PANDUAN ISI WADAH
           </button>
-          <button className="flex-1 rounded-xl bg-[#38E8F5] py-3 text-[#032D30] shadow-sm">
-            CETAK SEMUA LABEL QR KOTAK
+          <button className="flex-1 rounded-xl bg-[#7866FF] py-3 text-white shadow-sm">
+            VERIFIKASI 4 TAHAP PESANAN
           </button>
         </div>
 
@@ -259,64 +255,64 @@ function MockupPuskesmas() {
       <div className="rounded-2xl bg-[#F7F8F8] p-6 border border-zinc-200 font-sans text-zinc-950">
         <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
           <div>
-            <span className="font-mono text-xs text-[#7866FF] font-bold block">PETUGAS GIZI PUSKESMAS</span>
-            <h4 className="text-lg font-bold">Puskesmas Wilayah Sukorejo</h4>
+            <span className="font-mono text-xs text-[#10B981] font-bold block">PUSKESMAS PEMBINA WILAYAH</span>
+            <h4 className="text-lg font-bold">Puskesmas Socah (Bangkalan)</h4>
           </div>
-          <span className="token-chip bg-red-100 text-red-700 border-red-300 font-bold">
-            ● 3 Rujukan Zona Merah
+          <span className="token-chip bg-emerald-100 text-emerald-800 border-emerald-300 font-bold">
+            ● Membina Posyandu Mawar 01
           </span>
         </div>
 
         <div className="mt-5 grid grid-cols-3 gap-3 text-center">
           <div className="rounded-2xl bg-white p-3 border border-zinc-200 shadow-sm">
-            <span className="font-mono text-[10px] text-zinc-500 block font-bold">Balita Terdata</span>
-            <span className="font-sans text-2xl font-black text-zinc-950">1.420</span>
+            <span className="font-mono text-[10px] text-zinc-500 block font-bold">Total Balita</span>
+            <span className="font-sans text-2xl font-black text-zinc-950">10</span>
           </div>
-          <div className="rounded-2xl bg-white p-3 border border-zinc-200 shadow-sm">
-            <span className="font-mono text-[10px] text-zinc-500 block font-bold">Prevalensi</span>
-            <span className="font-sans text-2xl font-black text-amber-600">14.2%</span>
+          <div className="rounded-2xl bg-emerald-50 p-3 border border-emerald-200 shadow-sm">
+            <span className="font-mono text-[10px] text-emerald-700 block font-bold">Paket A (Normal)</span>
+            <span className="font-sans text-2xl font-black text-emerald-700">6</span>
           </div>
-          <div className="rounded-2xl bg-white p-3 border border-zinc-200 shadow-sm">
-            <span className="font-mono text-[10px] text-zinc-500 block font-bold">Paket B Aktif</span>
-            <span className="font-sans text-2xl font-black text-[#FF764C]">84</span>
+          <div className="rounded-2xl bg-red-50 p-3 border border-red-200 shadow-sm">
+            <span className="font-mono text-[10px] text-red-700 block font-bold">Paket B (Stunting)</span>
+            <span className="font-sans text-2xl font-black text-red-600">4</span>
           </div>
         </div>
 
         <div className="mt-5 rounded-2xl bg-white p-4 border border-zinc-200 shadow-sm">
-          <span className="text-xs font-bold text-zinc-900 block mb-2">Antrean Validasi Terapi Gizi Balita:</span>
+          <span className="text-xs font-bold text-zinc-900 block mb-2">Jadwal Intervensi Dokter untuk Anak Stunting:</span>
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between rounded-xl bg-zinc-50 p-2.5 border border-zinc-200">
               <div>
-                <span className="font-bold text-zinc-950">Bima Sakti (18 bln)</span>
-                <span className="font-mono text-[10px] text-red-600 ml-2 font-bold">TB/U -2.8 SD</span>
+                <span className="font-bold text-zinc-950">Siti Aisyah (16 bln)</span>
+                <span className="font-mono text-[10px] text-red-600 ml-2 font-bold">TB/U -2.8 SD (Stunting)</span>
               </div>
-              <button className="rounded-lg bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 text-[10px] font-bold">
-                Validasi
+              <button className="rounded-lg bg-emerald-600 text-white px-2.5 py-1 text-[10px] font-bold">
+                Jadwalkan Dokter
               </button>
             </div>
             <div className="flex items-center justify-between rounded-xl bg-zinc-50 p-2.5 border border-zinc-200">
               <div>
-                <span className="font-bold text-zinc-950">Siti Rahma (11 bln)</span>
-                <span className="font-mono text-[10px] text-red-600 ml-2 font-bold">TB/U -2.4 SD</span>
+                <span className="font-bold text-zinc-950">Nurul Hidayah (11 bln)</span>
+                <span className="font-mono text-[10px] text-red-600 ml-2 font-bold">TB/U -2.4 SD (Faltering)</span>
               </div>
-              <button className="rounded-lg bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 text-[10px] font-bold">
-                Validasi
+              <button className="rounded-lg bg-emerald-600 text-white px-2.5 py-1 text-[10px] font-bold">
+                Jadwalkan Dokter
               </button>
             </div>
           </div>
         </div>
 
         <div className="mt-5 flex gap-3 text-xs font-bold">
-          <button className="flex-1 rounded-xl bg-[#7866FF] py-3 text-white shadow-sm">
-            VALIDASI RUJUKAN RESEP
+          <button className="flex-1 rounded-xl bg-[#10B981] py-3 text-white shadow-sm">
+            JADWALKAN DOKTER GIZI
           </button>
-          <button className="rounded-xl bg-white px-5 py-3 text-zinc-800 border border-zinc-200 shadow-sm">
-            Ekspor Rekap
+          <button className="rounded-xl bg-zinc-950 px-5 py-3 text-white shadow-sm">
+            ORDER PESANAN MBG (PO)
           </button>
         </div>
 
         <span className="font-mono text-[9px] text-zinc-400 block text-right mt-3">
-          Antarmuka Puskesmas Pembina
+          Antarmuka Puskesmas Pembina (Socah)
         </span>
       </div>
     </motion.div>

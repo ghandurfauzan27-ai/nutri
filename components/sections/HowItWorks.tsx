@@ -31,9 +31,9 @@ export default function HowItWorks() {
     },
     {
       id: 2,
-      title: "LABEL QR 128-BIT & AUDIT RETURN ON NUTRITION",
-      desc: "Setiap wadah makanan diberi label QR unik 128-bit untuk verifikasi penerimaan dan daya terima konsumsi anak. Dasbor pimpinan daerah memantau perbaikan Z-score pada siklus 30, 60, dan 90 hari dengan audit transparan berstandar Permenkes No. 2/2020.",
-      tag: "MODUL C & D · DINKES & PEMERINTAH DAERAH",
+      title: "VERIFIKASI FISIK MBG, AUDIT & SINKRONISASI PUSKESMAS",
+      desc: "Penerimaan ransum di Posyandu diverifikasi fisik (suhu hangat ≥60°C, segel kemasan utuh) dan diserahterimakan via checklist harian per anak. Puskesmas memantau rujukan medis dan perbaikan Z-score balita secara transparan.",
+      tag: "MODUL C & D · POSYANDU & PUSKESMAS PEMBINA",
       cardTheme: "bg-[#F2FCE8] border-[#C0FC92]",
     },
   ];
@@ -367,10 +367,10 @@ export default function HowItWorks() {
 
                           <div className="flex items-center justify-between p-1.5 rounded-lg hover:bg-zinc-50">
                             <span className="flex items-center gap-1.5">
-                              <span>🏷️</span>
-                              <span>Label QR 128-bit</span>
+                              <span>📦</span>
+                              <span>Pemeriksaan Suhu</span>
                             </span>
-                            <span className="font-mono text-[9px] text-emerald-600 font-black">Siap Cetak</span>
+                            <span className="font-mono text-[9px] text-emerald-600 font-black">≥ 60°C Hangat</span>
                           </div>
                         </div>
                       </div>

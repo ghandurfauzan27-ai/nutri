@@ -8,69 +8,23 @@ import {
   DESA_PER_KECAMATAN,
   MASTER_PUSKESMAS_INFO,
   POSYANDU_MIKRO_DATA,
+  MASTER_DAPUR_MBG,
+  INITIAL_PESANAN_MBG_PUSKESMAS,
   getPuskesmasNameByKecamatan,
   getPuskesmasAddressByKecamatan,
+  getClosestSppgForWilayah,
   type PosyanduMikro,
   type BalitaMikro,
   type JadwalPertemuanStunting,
+  type DapurMbgWilayah,
+  type TitikDistribusiMbg,
+  type PesananMbgPuskesmas,
   INITIAL_JADWAL_PERTEMUAN,
 } from "@/lib/puskesmas-data";
-
-interface PendingKader {
-  id: string;
-  nama: string;
-  email: string;
-  posyandu: string;
-  desa: string;
-  alamatPosyandu?: string;
-  kecamatan: string;
-  kabupaten: string;
-  noHp: string;
-  tglDaftar: string;
-  status: "Menunggu Verifikasi" | "Disetujui" | "Ditolak";
-}
-
-const INITIAL_PENDING_KADERS: PendingKader[] = [
-  {
-    id: "KDR-REG-01",
-    nama: "Dewi Lestari, S.Pd",
-    email: "posyandu.mawar02@jatim.go.id",
-    posyandu: "Posyandu Mawar 02",
-    desa: "Desa Bilaporah",
-    alamatPosyandu: "Balai Dusun Jedingan RT 03 / RW 04",
-    kecamatan: "Socah",
-    kabupaten: "Kab. Bangkalan",
-    noHp: "081234567801",
-    tglDaftar: "Hari ini, 08:30 WIB",
-    status: "Menunggu Verifikasi",
-  },
-  {
-    id: "KDR-REG-02",
-    nama: "Nur Aini",
-    email: "posyandu.dakiring@jatim.go.id",
-    posyandu: "Posyandu Melati 01",
-    desa: "Desa Dakiring",
-    alamatPosyandu: "Balai Desa Dakiring Timur RT 01 / RW 01",
-    kecamatan: "Socah",
-    kabupaten: "Kab. Bangkalan",
-    noHp: "081234567802",
-    tglDaftar: "Kemarin, 14:15 WIB",
-    status: "Menunggu Verifikasi",
-  },
-  {
-    id: "KDR-REG-03",
-    nama: "Siti Rahmawati, S.Pd",
-    email: "posyandu.mawar01@jatim.go.id",
-    posyandu: "Posyandu Mawar 01",
-    desa: "Desa Bilaporah",
-    alamatPosyandu: "Balai RW 01, Dusun Krajan Barat",
-    kecamatan: "Socah",
-    kabupaten: "Kab. Bangkalan",
-    noHp: "081234567891",
-    tglDaftar: "2 Nov 2026",
-    status: "Disetujui",
-  },
-];
+import CetakLaporanModal, {
+  type LaporanColumn,
+  type LaporanSummaryItem,
+} from "./CetakLaporanModal";
 
 export default function PuskesmasTab() {
   const searchParams = useSearchParams();
@@ -78,13 +32,16 @@ export default function PuskesmasTab() {
 
   // YURISDIKSI RESMI TERKUNCI (Sesuai UU PDP No. 27/2022 & Permenkes No. 2/2020)
   // Puskesmas beroperasi per kecamatan dan DILARANG mengakses/memilih wilayah puskesmas/kabupaten lain.
-  const selectedKabupaten =
-    faskesParam === "kedungdung" ? "Kab. Sampang" : "Kab. Bangkalan";
-  const selectedKecamatan =
-    faskesParam === "kedungdung" ? "Kedungdung" : faskesParam === "burneh" ? "Burneh" : "Socah";
+  const [selectedKabupaten, setSelectedKabupaten] = useState<string>(
+    faskesParam === "kedungdung" ? "Kab. Sampang" : "Kab. Bangkalan"
+  );
+  const [selectedKecamatan, setSelectedKecamatan] = useState<string>(
+    faskesParam === "kedungdung" ? "Kedungdung" : faskesParam === "burneh" ? "Burneh" : "Socah"
+  );
   
   const puskesmasName = getPuskesmasNameByKecamatan(selectedKecamatan);
   const puskesmasAddress = getPuskesmasAddressByKecamatan(selectedKecamatan);
+  const closestSppg = getClosestSppgForWilayah(selectedKabupaten, selectedKecamatan);
   const desaBinaanList = DESA_PER_KECAMATAN[selectedKecamatan] || [
     "Desa Bilaporah",
     "Desa Dakiring",
@@ -98,7 +55,7 @@ export default function PuskesmasTab() {
 
   // Tab internal sub-modul Puskesmas
   const [activeSubTab, setActiveSubTab] = useState<
-    "posyandu_desa" | "jadwal_pertemuan" | "verifikasi_kader" | "rujukan_merah"
+    "posyandu_desa" | "jadwal_pertemuan" | "pesan_mbg" | "status_pesanan" | "riwayat_pesanan" | "rujukan_merah"
   >("posyandu_desa");
 
   // State untuk modal drill-down rincian nama balita
@@ -124,13 +81,71 @@ export default function PuskesmasTab() {
 
   // Master Data Posyandu Mikro yang Tersinkronisasi Otomatis
   const [allPosyandu, setAllPosyandu] = useState<PosyanduMikro[]>(POSYANDU_MIKRO_DATA);
-  const [kaderList, setKaderList] = useState<PendingKader[]>(INITIAL_PENDING_KADERS);
   const [toastMessage, setToastMessage] = useState<string>("");
 
-  // Sinkronkan data pendaftaran Posyandu & Balita baru dari localStorage saat mount
+  // State Fitur Pemesanan MBG Puskesmas ke SPPG / Dapur MBG
+  const [pesananMbgList, setPesananMbgList] = useState<PesananMbgPuskesmas[]>(INITIAL_PESANAN_MBG_PUSKESMAS);
+  const [orderPosyandu, setOrderPosyandu] = useState<string>("Posyandu Mawar 01 (Desa Bilaporah)");
+  const [orderSppgId, setOrderSppgId] = useState<string>("SPPG-BKL-01");
+  const [orderTgl, setOrderTgl] = useState<string>("Besok, 15 Nov 2026");
+  const [orderSesi, setOrderSesi] = useState<"Sesi Pagi (09:00 WIB)" | "Sesi Siang (11:30 WIB)">("Sesi Pagi (09:00 WIB)");
+  const [orderPaketA, setOrderPaketA] = useState<number>(6);
+  const [orderPaketB, setOrderPaketB] = useState<number>(4);
+  const [orderPaketC, setOrderPaketC] = useState<number>(0);
+  const [orderCatatan, setOrderCatatan] = useState<string>(
+    "Preskripsi MBG Puskesmas: 4 porsi Paket B diprioritaskan protein hewani ganda (dobel telur omega Blitar + lele Babat)."
+  );
+
+  // State Filter & Pencarian Riwayat Pesanan MBG
+  const [riwayatSearch, setRiwayatSearch] = useState<string>("");
+  const [riwayatStatusFilter, setRiwayatStatusFilter] = useState<"semua" | "selesai" | "aktif">("semua");
+
+  // State Modal Cetak Dokumen Resmi
+  const [printReportData, setPrintReportData] = useState<{
+    instansi: string;
+    subInstansi?: string;
+    alamatInstansi?: string;
+    judulLaporan: string;
+    nomorSurat: string;
+    wilayah: string;
+    tanggalLaporan: string;
+    penanggungJawab: { nama: string; jabatan: string; nip?: string };
+    summaryItems?: LaporanSummaryItem[];
+    columns: LaporanColumn[];
+    data: any[];
+    catatanKhusus?: string;
+    filenameCsv?: string;
+  } | null>(null);
+
+  // Sinkronkan data pendaftaran Posyandu, Balita baru, dan Pesanan MBG dari localStorage saat mount
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
+        // 0. Sinkronkan Akun Puskesmas dari Sesi Login Terkunci
+        const rawSession = localStorage.getItem("nt_current_session");
+        if (rawSession) {
+          try {
+            const parsedSession = JSON.parse(rawSession);
+            if (parsedSession.role === "puskesmas") {
+              if (parsedSession.unit?.toLowerCase().includes("kedungdung")) {
+                setSelectedKecamatan("Kedungdung");
+                setSelectedKabupaten("Kab. Sampang");
+              } else if (parsedSession.unit?.toLowerCase().includes("burneh")) {
+                setSelectedKecamatan("Burneh");
+                setSelectedKabupaten("Kab. Bangkalan");
+              } else if (parsedSession.wilayah) {
+                const matchedKec = Object.keys(DESA_PER_KECAMATAN).find((k) =>
+                  parsedSession.wilayah.toLowerCase().includes(k.toLowerCase())
+                );
+                if (matchedKec) setSelectedKecamatan(matchedKec);
+                if (parsedSession.wilayah.includes("Kab.")) {
+                  const matchedKab = parsedSession.wilayah.split(",").find((s: string) => s.includes("Kab."));
+                  if (matchedKab) setSelectedKabupaten(matchedKab.trim());
+                }
+              }
+            }
+          } catch (e) {}
+        }
         // 1. Sinkronkan pendaftaran akun Posyandu Baru
         const raw = localStorage.getItem("nt_registered_posyandu");
         if (raw) {
@@ -140,27 +155,6 @@ export default function PuskesmasTab() {
               const existingIds = new Set(prev.map((p) => p.id));
               const newItems = registered.filter((r: any) => !existingIds.has(r.id));
               return [...newItems, ...prev];
-            });
-
-            // Tambahkan juga ke daftar verifikasi jika belum ada
-            setKaderList((prev) => {
-              const existingKaderIds = new Set(prev.map((k) => k.id));
-              const newKaders: PendingKader[] = registered
-                .filter((r: any) => !existingKaderIds.has(r.id))
-                .map((r: any) => ({
-                  id: r.id,
-                  nama: r.kaderPenanggungJawab || "Kader Posyandu",
-                  email: r.emailAkun || "posyandu@jatim.go.id",
-                  posyandu: r.posyandu,
-                  desa: r.desa,
-                  alamatPosyandu: r.alamatPosyandu,
-                  kecamatan: r.kecamatan,
-                  kabupaten: r.kabupaten,
-                  noHp: r.noHpKader || "-",
-                  tglDaftar: r.tglDaftar || "Baru Daftar",
-                  status: (r.statusAkun as any) || "Menunggu Verifikasi",
-                }));
-              return [...newKaders, ...prev];
             });
           }
         }
@@ -194,11 +188,11 @@ export default function PuskesmasTab() {
                   statusRujukan: cb.isFaltering ? "Rujukan Aktif ke Dokter Puskesmas" : "Belum Perlu Rujukan",
                 }));
 
+                const convertedMap = new Map(converted.map((b) => [b.id, b]));
+                const updatedExisting = p.balitaList.map((b) => convertedMap.get(b.id) || b);
                 const existingIds = new Set(p.balitaList.map((b) => b.id));
                 const fresh = converted.filter((b) => !existingIds.has(b.id));
-                if (fresh.length === 0) return p;
-
-                const mergedBalitas = [...fresh, ...p.balitaList];
+                const mergedBalitas = [...fresh, ...updatedExisting];
                 const stuntingCnt = mergedBalitas.filter(
                   (b) => b.statusGizi.includes("Stunting") || b.statusGizi.includes("Waspada")
                 ).length;
@@ -229,9 +223,95 @@ export default function PuskesmasTab() {
             });
           }
         }
+
+        // 4. Sinkronkan Pesanan MBG Puskesmas dari localStorage
+        const rawOrders = localStorage.getItem("nt_mbg_orders_puskesmas");
+        if (rawOrders !== null) {
+          const parsedOrders = JSON.parse(rawOrders);
+          setPesananMbgList(Array.isArray(parsedOrders) ? parsedOrders : []);
+        } else {
+          setPesananMbgList(INITIAL_PESANAN_MBG_PUSKESMAS);
+          localStorage.setItem("nt_mbg_orders_puskesmas", JSON.stringify(INITIAL_PESANAN_MBG_PUSKESMAS));
+        }
       }
     } catch (e) {}
   }, []);
+
+  // Listener sinkronisasi perubahan pesanan dari Dapur SPPG & Posyandu
+  useEffect(() => {
+    const handleSyncOrders = () => {
+      try {
+        const raw = localStorage.getItem("nt_mbg_orders_puskesmas");
+        if (raw !== null) {
+          setPesananMbgList(JSON.parse(raw) || []);
+        }
+      } catch (e) {}
+    };
+
+    const handleSyncPosyandu = () => {
+      try {
+        const raw = localStorage.getItem("nt_registered_posyandu");
+        if (raw) {
+          const registered = JSON.parse(raw);
+          if (Array.isArray(registered) && registered.length > 0) {
+            setAllPosyandu((prev) => {
+              const existingIds = new Set(prev.map((p) => p.id));
+              const newItems = registered.filter((r: any) => !existingIds.has(r.id));
+              return [...newItems, ...prev];
+            });
+          }
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener("storage", handleSyncOrders);
+    window.addEventListener("nt_orders_updated", handleSyncOrders);
+    window.addEventListener("nt_posyandu_registered", handleSyncPosyandu);
+    window.addEventListener("nt_balita_updated", handleSyncPosyandu);
+    return () => {
+      window.removeEventListener("storage", handleSyncOrders);
+      window.removeEventListener("nt_orders_updated", handleSyncOrders);
+      window.removeEventListener("nt_posyandu_registered", handleSyncPosyandu);
+      window.removeEventListener("nt_balita_updated", handleSyncPosyandu);
+    };
+  }, []);
+
+  // Handler Hapus Riwayat Jadwal Pertemuan Puskesmas
+  const handleClearJadwalHistory = () => {
+    if (!confirm("Hapus seluruh riwayat jadwal pertemuan konsultasi stunting?")) return;
+    setJadwalList([]);
+    try {
+      localStorage.removeItem("nt_jadwal_pertemuan_puskesmas");
+      localStorage.removeItem("nt_posyandu_notif");
+    } catch (e) {}
+    setToastMessage("✓ Seluruh riwayat jadwal pertemuan berhasil dibersihkan.");
+    setTimeout(() => setToastMessage(""), 4000);
+  };
+
+  // Handler Hapus Seluruh Riwayat Pesanan MBG Puskesmas
+  const handleClearPesananHistory = () => {
+    if (!confirm("Hapus seluruh riwayat pesanan MBG dari daftar?")) return;
+    setPesananMbgList([]);
+    try {
+      localStorage.setItem("nt_mbg_orders_puskesmas", JSON.stringify([]));
+      window.dispatchEvent(new Event("nt_orders_updated"));
+    } catch (e) {}
+    setToastMessage("✓ Seluruh riwayat pesanan MBG berhasil dibersihkan.");
+    setTimeout(() => setToastMessage(""), 4000);
+  };
+
+  // Handler Hapus 1 Surat Pesanan Tertentu
+  const handleDeleteOrder = (orderId: string, orderNomor?: string) => {
+    if (!confirm(`Hapus surat pesanan ${orderNomor || orderId} dari daftar?`)) return;
+    const updated = pesananMbgList.filter((p) => p.id !== orderId);
+    setPesananMbgList(updated);
+    try {
+      localStorage.setItem("nt_mbg_orders_puskesmas", JSON.stringify(updated));
+      window.dispatchEvent(new Event("nt_orders_updated"));
+    } catch (e) {}
+    setToastMessage(`✓ Surat pesanan ${orderNomor || orderId} berhasil dihapus.`);
+    setTimeout(() => setToastMessage(""), 4000);
+  };
 
   // Filter posyandu sesuai Kabupaten dan Kecamatan pilihan
   const filteredPosyandu = allPosyandu.filter(
@@ -316,19 +396,68 @@ export default function PuskesmasTab() {
       ? (Math.round((totalSehatKecamatan / totalBalitaKecamatan) * 1000) / 10).toFixed(1)
       : "0";
 
-  const handleApproveKader = (id: string, nama: string) => {
-    setKaderList((prev) =>
-      prev.map((k) => (k.id === id ? { ...k, status: "Disetujui" as const } : k))
-    );
-    setToastMessage(`Akun Posyandu ${nama} BERHASIL DISETUJUI & DIAKTIFKAN oleh Puskesmas!`);
-    setTimeout(() => setToastMessage(""), 4500);
+  // Handler Pemesanan MBG oleh Puskesmas
+  const handleCreatePesananMbg = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orderPosyandu) {
+      setToastMessage("Harap tentukan Posyandu sasaran pemesanan MBG!");
+      setTimeout(() => setToastMessage(""), 4000);
+      return;
+    }
+
+    const targetPosyanduObj = allPosyandu.find((p) => p.posyandu === orderPosyandu) || displayPosyanduList[0];
+    const targetSppg = closestSppg;
+    const totalPorsi = Number(orderPaketA) + Number(orderPaketB) + Number(orderPaketC);
+
+    const newPo: PesananMbgPuskesmas = {
+      id: `PO-MBG-${Date.now()}`,
+      nomorPo: `PO-MBG/PSK-${selectedKecamatan.toUpperCase()}/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}/${Math.floor(100 + Math.random() * 900)}`,
+      puskesmasPemesan: puskesmasName,
+      sppgDituju: targetSppg.namaDapur,
+      posyanduTarget: targetPosyanduObj ? `${targetPosyanduObj.posyandu} (${targetPosyanduObj.desa})` : orderPosyandu,
+      desa: targetPosyanduObj ? targetPosyanduObj.desa : `Desa ${selectedKecamatan}`,
+      kecamatan: selectedKecamatan,
+      tglPenyaluran: orderTgl,
+      sesiPenyaluran: orderSesi,
+      jumlahPaketA: Number(orderPaketA),
+      jumlahPaketB: Number(orderPaketB),
+      jumlahPaketC: Number(orderPaketC),
+      totalPorsi,
+      catatanKlinis: orderCatatan || "Preskripsi pemenuhan gizi Puskesmas.",
+      statusPesanan: "Diajukan ke SPPG",
+      tglDibuat: "Hari ini, " + new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB",
+    };
+
+    const updated = [newPo, ...pesananMbgList];
+    setPesananMbgList(updated);
+    try {
+      localStorage.setItem("nt_mbg_orders_puskesmas", JSON.stringify(updated));
+      window.dispatchEvent(new Event("nt_orders_updated"));
+    } catch (err) {}
+
+    setToastMessage(`✓ PESANAN MBG ${newPo.nomorPo} (${totalPorsi} Porsi) BERHASIL DIKIRIM KE ${targetSppg.namaDapur}!`);
+    setTimeout(() => setToastMessage(""), 5000);
+    setActiveSubTab("status_pesanan");
   };
 
-  const handleRejectKader = (id: string, nama: string) => {
-    setKaderList((prev) =>
-      prev.map((k) => (k.id === id ? { ...k, status: "Ditolak" as const } : k))
-    );
-    setToastMessage(`Pendaftaran Akun Posyandu ${nama} ditolak.`);
+  const handleUpdateOrderStatus = (orderId: string, nextStatus: PesananMbgPuskesmas["statusPesanan"]) => {
+    const updated = pesananMbgList.map((po) => (po.id === orderId ? { ...po, statusPesanan: nextStatus } : po));
+    setPesananMbgList(updated);
+    try {
+      localStorage.setItem("nt_mbg_orders_puskesmas", JSON.stringify(updated));
+      window.dispatchEvent(new Event("nt_orders_updated"));
+    } catch (err) {}
+    setToastMessage(`✓ Status Pesanan MBG diperbarui menjadi: "${nextStatus}"`);
+    setTimeout(() => setToastMessage(""), 4000);
+  };
+
+  const handleQuickOrderForPosyandu = (pos: PosyanduMikro) => {
+    setOrderPosyandu(`${pos.posyandu} (${pos.desa})`);
+    setOrderPaketA(pos.paketA);
+    setOrderPaketB(pos.paketB);
+    setOrderPaketC(pos.paketC || 0);
+    setActiveSubTab("pesan_mbg");
+    setToastMessage(`Form Pemesanan MBG diisi otomatis untuk ${pos.posyandu} (${pos.desa}).`);
     setTimeout(() => setToastMessage(""), 4500);
   };
 
@@ -402,23 +531,281 @@ export default function PuskesmasTab() {
     setTimeout(() => setToastMessage(""), 4500);
   };
 
-  const pendingCount = kaderList.filter((k) => k.status === "Menunggu Verifikasi").length;
+  // 1. Cetak Laporan Rincian Balita di Posyandu Tertentu
+  const handlePrintPosyanduMikro = (pos: PosyanduMikro) => {
+    const formattedDate = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
 
-  // Filter balita di dalam modal rincian
+    setPrintReportData({
+      instansi: `PEMERINTAH KABUPATEN ${selectedKabupaten.replace("Kab. ", "").replace("Kota ", "").toUpperCase()}`,
+      subInstansi: `DINAS KESEHATAN · PUSKESMAS ${puskesmasName.toUpperCase()} · ${pos.posyandu.toUpperCase()}`,
+      alamatInstansi: `${puskesmasAddress} · Wilayah Binaan Desa ${pos.desa}, Kec. ${selectedKecamatan}`,
+      judulLaporan: `LAPORAN HASIL PENIMBANGAN DAN SKRINING STUNTING TINGKAT POSYANDU`,
+      nomorSurat: `440/${pos.id}/PKM-${selectedKecamatan.toUpperCase()}/${new Date().getFullYear()}`,
+      wilayah: `${pos.posyandu}, Desa ${pos.desa}, Kec. ${selectedKecamatan}, ${selectedKabupaten}`,
+      tanggalLaporan: formattedDate,
+      penanggungJawab: {
+        nama: "dr. H. Achmad Syafi'i",
+        jabatan: `Kepala ${puskesmasName}`,
+        nip: "19780512 200312 1 004",
+      },
+      summaryItems: [
+        { label: "Total Balita", value: `${pos.totalBalita} Anak` },
+        { label: "Balita Sehat (Paket A)", value: `${pos.sehatCount} Anak`, subtext: `${pos.sehatPersen}% Normal` },
+        { label: "Stunting / Faltering (Paket B)", value: `${pos.stuntingCount} Anak`, subtext: `${pos.stuntingPersen}% Kasus` },
+        { label: "Rujukan Medis Puskesmas", value: `${pos.rujukanCount} Anak`, subtext: "Pemeriksaan Dokter" },
+      ],
+      columns: [
+        { header: "Nama Balita & NIK", key: "namaInfo" },
+        { header: "Usia & JK", key: "usiaJk" },
+        { header: "Nama Ibu", key: "namaIbu" },
+        { header: "Antropometri", key: "antropometri" },
+        { header: "Z-Score TB/U", key: "zTbuStr" },
+        { header: "Status Gizi", key: "statusGizi" },
+        { header: "Alokasi MBG", key: "alokasiPaket" },
+        { header: "Tindak Lanjut Faskes", key: "tindakLanjut" },
+      ],
+      data: pos.balitaList.map((b) => {
+        const needsInterv = isBalitaStuntingOrFaltering(b);
+        const existing = jadwalList.find(
+          (j) =>
+            (j.namaBalita.toLowerCase().trim() === b.nama.toLowerCase().trim() ||
+              (j.nikBalita && b.nik && j.nikBalita === b.nik)) &&
+            j.status !== "Dibatalkan"
+        );
+        return {
+          namaInfo: `${b.nama} (NIK: ${b.nik})`,
+          usiaJk: `${b.usiaBulan} Bln (${b.jenisKelamin})`,
+          namaIbu: b.namaIbu,
+          antropometri: `BB: ${b.bbKg}kg | TB: ${b.tbCm}cm`,
+          zTbuStr: `${b.zTbu > 0 ? "+" : ""}${b.zTbu} SD`,
+          statusGizi: b.statusGizi,
+          alokasiPaket: b.alokasiPaket,
+          tindakLanjut: existing
+            ? `Terjadwal (${existing.tglPertemuan})`
+            : needsInterv
+            ? "Perlu Jadwal Dokter"
+            : "Terpantau Baik",
+        };
+      }),
+      catatanKhusus: `Seluruh balita yang mengalami faltering/stunting di ${pos.posyandu} telah otomatis dikoordinasikan untuk mendapatkan intervensi menu Paket B (Protein Hewani Ganda Jatim) dan terjadwal pada poli gizi ${puskesmasName}.`,
+      filenameCsv: `laporan-posyandu-${pos.posyandu.toLowerCase().replace(/\s+/g, "-")}.csv`,
+    });
+  };
+
+  // 2. Cetak Rekapitulasi Seluruh Wilayah Binaan Puskesmas
+  const handlePrintPuskesmasRekap = () => {
+    const formattedDate = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    const totalBalitaKec = displayPosyanduList.reduce((acc, p) => acc + p.totalBalita, 0);
+    const totalStuntingKec = displayPosyanduList.reduce((acc, p) => acc + p.stuntingCount, 0);
+    const avgStunting =
+      totalBalitaKec > 0 ? Math.round((totalStuntingKec / totalBalitaKec) * 1000) / 10 : 0;
+
+    setPrintReportData({
+      instansi: `PEMERINTAH KABUPATEN ${selectedKabupaten.replace("Kab. ", "").replace("Kota ", "").toUpperCase()}`,
+      subInstansi: `DINAS KESEHATAN · PUSKESMAS ${puskesmasName.toUpperCase()}`,
+      alamatInstansi: `${puskesmasAddress} · Wilayah Kerja Binaan Kecamatan ${selectedKecamatan}`,
+      judulLaporan: `REKAPITULASI PEMANTAUAN STUNTING & DISTRIBUSI MBG KECAMATAN`,
+      nomorSurat: `440/REKAP-PKM/${selectedKecamatan.toUpperCase()}/${new Date().getFullYear()}`,
+      wilayah: `Kecamatan ${selectedKecamatan}, ${selectedKabupaten}`,
+      tanggalLaporan: formattedDate,
+      penanggungJawab: {
+        nama: "dr. H. Achmad Syafi'i",
+        jabatan: `Kepala ${puskesmasName}`,
+        nip: "19780512 200312 1 004",
+      },
+      summaryItems: [
+        { label: "Posyandu Binaan", value: `${displayPosyanduList.length} Titik`, subtext: `${desaBinaanList.length} Desa` },
+        { label: "Total Balita Terdata", value: `${totalBalitaKec} Anak` },
+        { label: "Prevalensi Stunting Kec", value: `${avgStunting}%`, subtext: `${totalStuntingKec} Kasus Faltering` },
+        { label: "Dapur MBG Mitra", value: closestSppg.namaDapur.split(" ")[0] + " " + closestSppg.namaDapur.split(" ")[1] },
+      ],
+      columns: [
+        { header: "Posyandu & Desa", key: "posyanduDesa" },
+        { header: "Kader Penanggung Jawab", key: "kader" },
+        { header: "Total Anak", key: "totalBalita", align: "center" },
+        { header: "Sehat (Paket A)", key: "sehatCount", align: "center" },
+        { header: "Stunting (Paket B)", key: "stuntingCount", align: "center" },
+        { header: "Rujukan Faskes", key: "rujukanCount", align: "center" },
+        { header: "Prevalensi Stunting", key: "stuntingPersen", align: "center" },
+        { header: "Dapur SPPG Terdekat", key: "sppg" },
+      ],
+      data: displayPosyanduList.map((p) => ({
+        posyanduDesa: `${p.posyandu} (Desa ${p.desa})`,
+        kader: p.kaderPenanggungJawab,
+        totalBalita: `${p.totalBalita} Anak`,
+        sehatCount: `${p.sehatCount} (${p.sehatPersen}%)`,
+        stuntingCount: `${p.stuntingCount} (${p.stuntingPersen}%)`,
+        rujukanCount: `${p.rujukanCount} Anak`,
+        stuntingPersen: `${p.stuntingPersen}%`,
+        sppg: closestSppg.namaDapur,
+      })),
+      catatanKhusus: `Laporan resmi ini diterbitkan secara berkala untuk pengawasan dinas kesehatan dan koordinasi rantai pasok ransum MBG lokal Jawa Timur.`,
+      filenameCsv: `rekap-stunting-puskesmas-${selectedKecamatan.toLowerCase()}.csv`,
+    });
+  };
+
+  // 3. Cetak Rekap Jadwal Pertemuan Stunting
+  const handlePrintJadwalStunting = () => {
+    const formattedDate = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    setPrintReportData({
+      instansi: `PEMERINTAH KABUPATEN ${selectedKabupaten.replace("Kab. ", "").replace("Kota ", "").toUpperCase()}`,
+      subInstansi: `DINAS KESEHATAN · PUSKESMAS ${puskesmasName.toUpperCase()}`,
+      alamatInstansi: `${puskesmasAddress}`,
+      judulLaporan: `DAFTAR JADWAL LAYANAN INTERVENSI MEDIS & POLI GIZI STUNTING`,
+      nomorSurat: `440/JADWAL-GIZI/PKM/${new Date().getFullYear()}`,
+      wilayah: `Kecamatan ${selectedKecamatan}, ${selectedKabupaten}`,
+      tanggalLaporan: formattedDate,
+      penanggungJawab: {
+        nama: "dr. Nurul Hidayati, M.Gizi",
+        jabatan: "Dokter Penanggung Jawab Gizi Klinis",
+        nip: "19840215 201001 2 018",
+      },
+      summaryItems: [
+        { label: "Total Jadwal", value: `${jadwalList.length} Balita` },
+        { label: "Status Terjadwal", value: `${jadwalList.filter((j) => j.status === "Dijadwalkan").length} Kasus` },
+        { label: "Status Selesai", value: `${jadwalList.filter((j) => j.status === "Selesai").length} Kasus` },
+        { label: "Lokasi Layanan", value: `Poli Gizi Puskesmas` },
+      ],
+      columns: [
+        { header: "Tanggal & Jam", key: "jadwalWaktu" },
+        { header: "Nama Balita & NIK", key: "balitaInfo" },
+        { header: "Posyandu Asal", key: "posyanduInfo" },
+        { header: "Dokter Pemeriksa", key: "dokter" },
+        { header: "Agenda Intervensi", key: "agenda" },
+        { header: "Status", key: "status" },
+      ],
+      data: jadwalList.map((j) => ({
+        jadwalWaktu: `${j.tglPertemuan} - ${j.waktuPertemuan}`,
+        balitaInfo: `${j.namaBalita} (NIK: ${j.nikBalita || "-"})`,
+        posyanduInfo: `${j.posyanduTarget} (${j.desa})`,
+        dokter: j.dokterPemeriksa,
+        agenda: j.agendaIntervensi,
+        status: j.status,
+      })),
+      catatanKhusus: `Semua pertemuan klinis mewajibkan kehadiran orang tua balita dengan membawa Buku KIA dan buku catatan makan harian.`,
+      filenameCsv: `jadwal-intervensi-stunting-${selectedKecamatan.toLowerCase()}.csv`,
+    });
+  };
+
+  // 4. Cetak Rekap Pesanan MBG Puskesmas
+  const handlePrintPesananMbg = () => {
+    const formattedDate = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    const totalA = pesananMbgList.reduce((acc, p) => acc + p.jumlahPaketA, 0);
+    const totalB = pesananMbgList.reduce((acc, p) => acc + p.jumlahPaketB, 0);
+
+    setPrintReportData({
+      instansi: `PEMERINTAH KABUPATEN ${selectedKabupaten.replace("Kab. ", "").replace("Kota ", "").toUpperCase()}`,
+      subInstansi: `DINAS KESEHATAN · PUSKESMAS ${puskesmasName.toUpperCase()}`,
+      alamatInstansi: `${puskesmasAddress}`,
+      judulLaporan: `REKAPITULASI ALOKASI PESANAN MAKAN BERGIZI GRATIS (MBG) KE SPPG`,
+      nomorSurat: `440/MBG-ORDER/PKM/${new Date().getFullYear()}`,
+      wilayah: `Kecamatan ${selectedKecamatan}, ${selectedKabupaten}`,
+      tanggalLaporan: formattedDate,
+      penanggungJawab: {
+        nama: "dr. H. Achmad Syafi'i",
+        jabatan: `Kepala ${puskesmasName}`,
+        nip: "19780512 200312 1 004",
+      },
+      summaryItems: [
+        { label: "Total Pesanan", value: `${pesananMbgList.length} Order` },
+        { label: "Total Paket A", value: `${totalA} Porsi`, subtext: "Gizi Reguler" },
+        { label: "Total Paket B", value: `${totalB} Porsi`, subtext: "Ekstra Protein Hewani" },
+        { label: "Sentra SPPG Tujuan", value: closestSppg.namaDapur.split(" ")[0] + " " + closestSppg.namaDapur.split(" ")[1] },
+      ],
+      columns: [
+        { header: "ID Order", key: "idPesanan" },
+        { header: "Posyandu Sasaran", key: "posyanduTarget" },
+        { header: "Jadwal Kirim", key: "jadwalKirim" },
+        { header: "Paket A (Porsi)", key: "paketA", align: "center" },
+        { header: "Paket B (Porsi)", key: "paketB", align: "center" },
+        { header: "Status Distribusi", key: "statusPesanan" },
+      ],
+      data: pesananMbgList.map((p) => ({
+        idPesanan: p.id,
+        posyanduTarget: p.posyanduTarget,
+        jadwalKirim: `${p.tglPenyaluran} (${p.sesiPenyaluran})`,
+        paketA: p.jumlahPaketA,
+        paketB: p.jumlahPaketB,
+        statusPesanan: p.statusPesanan,
+      })),
+      catatanKhusus: `Pesanan MBG Puskesmas wajib diverifikasi oleh nutrisionis puskesmas sebelum diserahkan ke Dapur MBG SPPG mitra.`,
+      filenameCsv: `rekap-pesanan-mbg-${selectedKecamatan.toLowerCase()}.csv`,
+    });
+  };
+
+  const activeOrdersCount = pesananMbgList.filter((p) => p.statusPesanan !== "Tiba di Posyandu").length;
+  const completedOrdersCount = pesananMbgList.filter((p) => p.statusPesanan === "Tiba di Posyandu").length;
+
+  // Helper deteksi komprehensif balita stunting / faltering / perlu intervensi klinis Puskesmas
+  const isBalitaStuntingOrFaltering = (balita: BalitaMikro) => {
+    const gizi = (balita.statusGizi || "").toLowerCase();
+    const paket = (balita.alokasiPaket || "").toLowerCase();
+    const rujukan = (balita.statusRujukan || "").toLowerCase();
+
+    return (
+      gizi.includes("stunting") ||
+      gizi.includes("faltering") ||
+      gizi.includes("waspada") ||
+      gizi.includes("gizi buruk") ||
+      gizi.includes("gizi kurang") ||
+      gizi.includes("merah") ||
+      rujukan.includes("rujuk") ||
+      rujukan.includes("dokter") ||
+      rujukan.includes("faskes") ||
+      paket.includes("paket b") ||
+      paket.includes("paket c") ||
+      paket.includes("protein") ||
+      balita.zTbu < -1.5
+    );
+  };
+
+  const isBalitaPerluRujukan = (balita: BalitaMikro) => {
+    const gizi = (balita.statusGizi || "").toLowerCase();
+    const rujukan = (balita.statusRujukan || "").toLowerCase();
+    const paket = (balita.alokasiPaket || "").toLowerCase();
+    return (
+      gizi.includes("rujukan") ||
+      gizi.includes("gizi buruk") ||
+      rujukan.includes("rujuk") ||
+      paket.includes("paket c") ||
+      balita.zTbu <= -3.0
+    );
+  };
+
+  const isBalitaSehat = (balita: BalitaMikro) => {
+    return !isBalitaStuntingOrFaltering(balita);
+  };
+
+  // Filter balita di dalam modal rincian mikro posyandu
   const getFilteredBalitaInModal = () => {
     if (!selectedPosyandu) return [];
     if (filterBalitaStatus === "stunting") {
-      return selectedPosyandu.balitaList.filter(
-        (b) => b.statusGizi === "Stunting Garis Merah" || b.statusGizi === "Waspada (Faltering)"
-      );
+      return selectedPosyandu.balitaList.filter((b) => isBalitaStuntingOrFaltering(b));
     }
     if (filterBalitaStatus === "sehat") {
-      return selectedPosyandu.balitaList.filter((b) => b.statusGizi === "Sehat / Normal");
+      return selectedPosyandu.balitaList.filter((b) => isBalitaSehat(b));
     }
     if (filterBalitaStatus === "rujukan") {
-      return selectedPosyandu.balitaList.filter(
-        (b) => b.statusGizi === "Gizi Buruk / Rujukan Faskes" || b.statusRujukan.includes("Rujukan")
-      );
+      return selectedPosyandu.balitaList.filter((b) => isBalitaPerluRujukan(b));
     }
     return selectedPosyandu.balitaList;
   };
@@ -440,13 +827,24 @@ export default function PuskesmasTab() {
             </p>
           </div>
 
-          {/* Unit Puskesmas Tag */}
-          <div className="flex items-center gap-2">
+          {/* Unit Puskesmas Tag Terkunci Permanen & Tombol Cetak Laporan */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={handlePrintPuskesmasRekap}
+              className="rounded-2xl bg-[#18140B] text-white hover:bg-emerald-600 px-4 py-2 font-sans text-xs font-black transition-all shadow-xs flex items-center gap-2"
+            >
+              <span>🖨️</span>
+              <span>Cetak Laporan Faskes Kecamatan</span>
+            </button>
             <span className="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-2 font-mono text-xs font-bold text-emerald-950 flex items-center gap-2 shadow-xs">
               <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-white text-[10px]">
                 🏥
               </span>
               <span>{puskesmasName} ({selectedKabupaten})</span>
+              <span className="rounded-md bg-emerald-700 px-1.5 py-0.5 text-[9px] font-black text-white">
+                Terkunci Akun
+              </span>
             </span>
           </div>
         </div>
@@ -473,7 +871,7 @@ export default function PuskesmasTab() {
               </span>
             </p>
             <p className="font-mono text-[11px] text-zinc-500">
-              Alamat Faskes: {puskesmasAddress} · Kepala Faskes: dr. H. Achmad Syafi'i · Nutrisionis: dr. Nurul Hidayati, M.Gizi
+              Alamat Faskes: {puskesmasAddress} · Kepala Faskes: dr. H. Achmad Syafi&apos;i · Nutrisionis: dr. Nurul Hidayati, M.Gizi
             </p>
           </div>
 
@@ -589,20 +987,49 @@ export default function PuskesmasTab() {
 
         <button
           type="button"
-          onClick={() => setActiveSubTab("verifikasi_kader")}
+          onClick={() => setActiveSubTab("pesan_mbg")}
           className={`rounded-2xl px-4 py-2.5 font-sans text-xs font-black transition-all flex items-center gap-2 ${
-            activeSubTab === "verifikasi_kader"
+            activeSubTab === "pesan_mbg"
               ? "bg-[#18140B] text-white shadow-md"
               : "bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-100"
           }`}
         >
-          <span>🛡️</span>
-          <span>Verifikasi Pendaftaran Posyandu Baru</span>
-          {pendingCount > 0 && (
-            <span className="rounded-full bg-amber-400 px-2 py-0.2 font-mono text-[10px] font-black text-zinc-950">
-              {pendingCount}
+          <span>🍱</span>
+          <span>Pesan Ransum MBG</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab("status_pesanan")}
+          className={`rounded-2xl px-4 py-2.5 font-sans text-xs font-black transition-all flex items-center gap-2 ${
+            activeSubTab === "status_pesanan"
+              ? "bg-[#18140B] text-white shadow-md"
+              : "bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-100"
+          }`}
+        >
+          <span>🚚</span>
+          <span>Status Pesanan</span>
+          {activeOrdersCount > 0 && (
+            <span className="rounded-full bg-sky-500 text-white px-2 py-0.5 font-mono text-[9px] font-black animate-pulse">
+              {activeOrdersCount} Berjalan
             </span>
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab("riwayat_pesanan")}
+          className={`rounded-2xl px-4 py-2.5 font-sans text-xs font-black transition-all flex items-center gap-2 ${
+            activeSubTab === "riwayat_pesanan"
+              ? "bg-[#18140B] text-white shadow-md"
+              : "bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-100"
+          }`}
+        >
+          <span>📜</span>
+          <span>Riwayat Pesan MBG</span>
+          <span className="rounded-full bg-zinc-200 text-zinc-800 px-2 py-0.5 font-mono text-[9px] font-black">
+            {pesananMbgList.length}
+          </span>
         </button>
 
         <button
@@ -632,9 +1059,27 @@ export default function PuskesmasTab() {
                 Setiap jadwal yang dibuat dokter faskes akan **langsung terkirim sebagai notifikasi real-time ke akun Posyandu terkait**.
               </p>
             </div>
-            <span className="rounded-full bg-rose-50 border border-rose-200 px-3 py-1 font-mono text-xs font-bold text-rose-800">
-              ● {jadwalList.filter((j) => j.status === "Dijadwalkan").length} Pertemuan Menunggu
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePrintJadwalStunting}
+                className="rounded-2xl border border-zinc-200 bg-white hover:bg-zinc-100 px-3.5 py-1.5 font-mono text-xs font-bold text-zinc-800 transition-colors shadow-2xs flex items-center gap-1.5"
+              >
+                <span>🖨️</span>
+                <span>Cetak Rekap Jadwal</span>
+              </button>
+              <span className="rounded-full bg-rose-50 border border-rose-200 px-3 py-1 font-mono text-xs font-bold text-rose-800">
+                ● {jadwalList.filter((j) => j.status === "Dijadwalkan").length} Pertemuan Menunggu
+              </span>
+              <button
+                type="button"
+                onClick={handleClearJadwalHistory}
+                className="rounded-2xl border border-rose-300 bg-white hover:bg-rose-50 px-3 py-1 font-mono text-xs font-bold text-rose-700 transition-colors shadow-2xs"
+                title="Hapus seluruh riwayat jadwal pertemuan"
+              >
+                🗑️ Hapus Riwayat Jadwal
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -813,10 +1258,20 @@ export default function PuskesmasTab() {
                     )}
                   </div>
 
-                  {/* Tombol Klik Rincian */}
-                  <div className="mt-4 pt-2 flex items-center justify-between text-xs font-sans font-bold text-[#032D30] group-hover:text-[#38E8F5] transition-colors">
-                    <span className="font-mono text-[11px] text-zinc-500">Kader: {pos.kaderPenanggungJawab}</span>
-                    <span className="flex items-center gap-1 font-black">
+                  {/* Tombol Aksi Puskesmas */}
+                  <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-sans gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuickOrderForPosyandu(pos);
+                      }}
+                      className="rounded-xl border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-950 hover:bg-emerald-100 transition-colors flex items-center gap-1 shadow-xs"
+                    >
+                      <span>🍱</span>
+                      <span>Pesan Ransum MBG</span>
+                    </button>
+                    <span className="flex items-center gap-1 font-black text-[#032D30] group-hover:text-emerald-700 transition-colors">
                       <span>Rincian Anak</span>
                       <span>→</span>
                     </span>
@@ -828,96 +1283,838 @@ export default function PuskesmasTab() {
         </div>
       )}
 
-      {/* SUB-TAB 2: VERIFIKASI PENDAFTARAN KADER */}
-      {activeSubTab === "verifikasi_kader" && (
-        <div className="rounded-[28px] border border-zinc-200/90 bg-white p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+      {/* ========================================================
+          1. FITUR PESAN: FORMULIR PEMESANAN RANSUM MBG
+          ======================================================== */}
+      {activeSubTab === "pesan_mbg" && (
+        <div className="space-y-6">
+          {/* Header Subtab Pesan */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-zinc-200 shadow-xs">
             <div>
-              <h3 className="font-sans text-base font-black uppercase tracking-tight text-zinc-950 flex items-center gap-2">
-                <span>🛡️</span>
-                <span>Persetujuan & Verifikasi Pendaftaran Kader Posyandu Baru</span>
+              <div className="flex items-center gap-2">
+                <span className="rounded-md bg-emerald-500 text-white font-mono text-[10px] font-black px-2 py-0.5 uppercase">
+                  Surat Pesanan Resmi (PO)
+                </span>
+                <span className="font-mono text-xs text-zinc-500 font-bold">
+                  {puskesmasName} · {selectedKabupaten}
+                </span>
+              </div>
+              <h3 className="font-sans text-lg font-black uppercase tracking-tight text-zinc-950 mt-1 flex items-center gap-2">
+                <span>🍱</span>
+                <span>Formulir Pemesanan Ransum MBG</span>
               </h3>
               <p className="font-mono text-xs text-zinc-500 mt-0.5">
-                Setiap kader posyandu di wilayah Kec. {selectedKecamatan} wajib disetujui Puskesmas sebelum dapat menginput balita.
+                Penerbitan surat pesanan (PO) ransum bergizi balita untuk Posyandu sasaran, dialokasikan langsung ke Dapur SPPG mitra terdekat.
               </p>
             </div>
-            <span className="rounded-full bg-amber-50 border border-amber-300 px-3 py-1 font-mono text-xs font-bold text-amber-900">
-              {pendingCount} Permohonan Menunggu
-            </span>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("status_pesanan")}
+                className="rounded-2xl border border-sky-300 bg-sky-50 hover:bg-sky-100 text-sky-950 px-3.5 py-1.5 font-mono text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>🚚</span>
+                <span>Status Pesanan ({activeOrdersCount} Berjalan)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("riwayat_pesanan")}
+                className="rounded-2xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-800 px-3.5 py-1.5 font-mono text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>📜</span>
+                <span>Riwayat Pesan ({pesananMbgList.length})</span>
+              </button>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left font-sans text-xs">
-              <thead>
-                <tr className="border-b border-zinc-200 text-zinc-400 font-mono text-[10px] uppercase tracking-wider">
-                  <th className="py-3 px-3">Nama Kader</th>
-                  <th className="py-3 px-3">Posyandu & Desa</th>
-                  <th className="py-3 px-3">Kontak / No HP</th>
-                  <th className="py-3 px-3">Waktu Daftar</th>
-                  <th className="py-3 px-3">Status Verifikasi</th>
-                  <th className="py-3 px-3 text-right">Aksi Puskesmas</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 text-zinc-800">
-                {kaderList.map((kader) => (
-                  <tr key={kader.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="py-3.5 px-3">
-                      <div className="font-bold text-zinc-950">{kader.nama}</div>
-                      <div className="font-mono text-[11px] text-zinc-400">{kader.email}</div>
-                    </td>
-                    <td className="py-3.5 px-3">
-                      <div className="font-semibold text-zinc-900">{kader.posyandu}</div>
-                      <div className="text-[11px] text-zinc-500">{kader.desa}, {kader.kecamatan}</div>
-                    </td>
-                    <td className="py-3.5 px-3 font-mono text-zinc-700">{kader.noHp}</td>
-                    <td className="py-3.5 px-3 font-mono text-zinc-500 text-[11px]">{kader.tglDaftar}</td>
-                    <td className="py-3.5 px-3">
-                      {kader.status === "Menunggu Verifikasi" && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 font-mono text-[10px] font-black uppercase text-amber-900">
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
-                          Menunggu Puskesmas
-                        </span>
-                      )}
-                      {kader.status === "Disetujui" && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 font-mono text-[10px] font-black uppercase text-emerald-900">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          Disetujui & Aktif
-                        </span>
-                      )}
-                      {kader.status === "Ditolak" && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-red-300 bg-red-50 px-2.5 py-0.5 font-mono text-[10px] font-black uppercase text-red-900">
-                          Ditolak
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-3 text-right">
-                      {kader.status === "Menunggu Verifikasi" ? (
-                        <div className="flex items-center justify-end gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Form Pemesanan MBG Puskesmas */}
+            <div className="lg:col-span-7 rounded-[28px] border border-zinc-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-5">
+              <div className="border-b border-zinc-100 pb-3">
+                <h4 className="font-sans text-base font-black text-zinc-950 flex items-center gap-2">
+                  <span>📝</span>
+                  <span>Input Parameter Pemesanan Ransum</span>
+                </h4>
+                <p className="font-mono text-xs text-zinc-500 mt-0.5">
+                  Sesuaikan jumlah porsi berdasarkan data penimbangan dan status gizi balita posyandu.
+                </p>
+              </div>
+
+              <form onSubmit={handleCreatePesananMbg} className="space-y-4 text-xs font-sans">
+                {/* 1. Posyandu Sasaran */}
+                <div>
+                  <label className="block font-bold text-zinc-800 mb-1">
+                    Posyandu Sasaran Distribusi:
+                  </label>
+                  <select
+                    value={orderPosyandu}
+                    onChange={(e) => {
+                      const chosen = e.target.value;
+                      setOrderPosyandu(chosen);
+                      const matched = allPosyandu.find((p) => `${p.posyandu} (${p.desa})` === chosen || p.posyandu === chosen);
+                      if (matched) {
+                        setOrderPaketA(matched.paketA);
+                        setOrderPaketB(matched.paketB);
+                        setOrderPaketC(matched.paketC || 0);
+                      }
+                    }}
+                    className="w-full rounded-xl border border-zinc-300 bg-zinc-50/50 p-3 font-sans text-xs font-bold text-zinc-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                  >
+                    {displayPosyanduList.map((pos) => (
+                      <option key={pos.id} value={`${pos.posyandu} (${pos.desa})`}>
+                        {pos.posyandu} ({pos.desa}) — {pos.totalBalita} Balita ({pos.stuntingCount} Stunting)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 2. Tanggal & Sesi */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-zinc-800 mb-1">
+                      Tanggal Penyaluran:
+                    </label>
+                    <input
+                      type="text"
+                      value={orderTgl}
+                      onChange={(e) => setOrderTgl(e.target.value)}
+                      placeholder="e.g. Besok, 15 Nov 2026"
+                      className="w-full rounded-xl border border-zinc-300 bg-zinc-50/50 p-2.5 font-sans text-xs font-bold text-zinc-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-zinc-800 mb-1">
+                      Sesi Distribusi:
+                    </label>
+                    <select
+                      value={orderSesi}
+                      onChange={(e) => setOrderSesi(e.target.value as any)}
+                      className="w-full rounded-xl border border-zinc-300 bg-zinc-50/50 p-2.5 font-sans text-xs font-bold text-zinc-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                    >
+                      <option value="Sesi Pagi (09:00 WIB)">Sesi Pagi (09:00 WIB)</option>
+                      <option value="Sesi Siang (11:30 WIB)">Sesi Siang (11:30 WIB)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 3. Rincian Porsi Paket */}
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[11px] font-bold uppercase text-zinc-700">
+                      Alokasi Porsi Paket Berdasarkan Status Gizi
+                    </span>
+                    <span className="font-mono text-[10px] text-zinc-400">
+                      Formula Standar Kemenkes RI
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-white p-3 rounded-xl border border-emerald-200">
+                      <label className="font-mono text-[10px] text-emerald-800 font-bold block mb-1">
+                        Paket A (Reguler)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={orderPaketA}
+                        onChange={(e) => setOrderPaketA(Number(e.target.value))}
+                        className="w-full rounded-lg border border-emerald-300 bg-emerald-50/30 p-2 font-mono text-sm font-black text-emerald-950 text-center focus:outline-none focus:border-emerald-500"
+                      />
+                      <span className="text-[9px] text-zinc-400 block mt-1 text-center font-mono">Balita Gizi Baik</span>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-rose-200">
+                      <label className="font-mono text-[10px] text-rose-800 font-bold block mb-1">
+                        Paket B (Protein Hewani)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={orderPaketB}
+                        onChange={(e) => setOrderPaketB(Number(e.target.value))}
+                        className="w-full rounded-lg border border-rose-300 bg-rose-50/30 p-2 font-mono text-sm font-black text-rose-950 text-center focus:outline-none focus:border-rose-500"
+                      />
+                      <span className="text-[9px] text-rose-500 block mt-1 text-center font-mono">Intervensi Stunting</span>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-amber-200">
+                      <label className="font-mono text-[10px] text-amber-800 font-bold block mb-1">
+                        Paket C (F-100/Khusus)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={orderPaketC}
+                        onChange={(e) => setOrderPaketC(Number(e.target.value))}
+                        className="w-full rounded-lg border border-amber-300 bg-amber-50/30 p-2 font-mono text-sm font-black text-amber-950 text-center focus:outline-none focus:border-amber-500"
+                      />
+                      <span className="text-[9px] text-amber-600 block mt-1 text-center font-mono">Terapi Pemulihan</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-zinc-200 pt-2.5 font-mono text-xs">
+                    <span className="text-zinc-600 font-medium">Total Ransum Dipesan:</span>
+                    <strong className="text-zinc-950 font-black text-base bg-emerald-100 text-emerald-900 px-3 py-0.5 rounded-lg border border-emerald-200">
+                      {Number(orderPaketA) + Number(orderPaketB) + Number(orderPaketC)} porsi
+                    </strong>
+                  </div>
+                </div>
+
+                {/* 4. Catatan Klinis Puskesmas */}
+                <div>
+                  <label className="block font-bold text-zinc-800 mb-1">
+                    Instruksi Medis / Catatan Khusus Faskes:
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={orderCatatan}
+                    onChange={(e) => setOrderCatatan(e.target.value)}
+                    placeholder="Instruksi alergi, pengemasan hangat, atau perhatian dokter..."
+                    className="w-full rounded-xl border border-zinc-300 bg-zinc-50/50 p-2.5 font-sans text-xs text-zinc-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full rounded-2xl bg-[#18140B] py-3.5 text-xs font-black text-white hover:bg-emerald-600 transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>🚀</span>
+                  <span>Terbitkan Surat Pesanan (PO) & Kirim ke SPPG</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Right Column: Preview Alokasi Dapur SPPG Terdekat & Rangkuman PO */}
+            <div className="lg:col-span-5 space-y-4">
+              {/* Dapur SPPG Terdekat Terpilih Otomatis */}
+              <div className="rounded-[28px] border border-sky-300 bg-sky-50/80 p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] uppercase font-black text-sky-950 bg-sky-200/90 px-2 py-0.5 rounded flex items-center gap-1 shadow-2xs">
+                    <span>🎯</span>
+                    <span>Dapur SPPG Terdekat (Dialokasikan Otomatis)</span>
+                  </span>
+                  <span className="font-mono text-[10px] text-emerald-800 font-bold bg-white px-2 py-0.5 rounded border border-emerald-200">
+                    ● Siap Melayani
+                  </span>
+                </div>
+
+                <div>
+                  <h5 className="font-sans text-sm font-black text-zinc-950 flex items-center gap-1.5">
+                    <span>🍲</span>
+                    <span>{closestSppg.namaDapur}</span>
+                  </h5>
+                  <p className="font-mono text-xs text-zinc-600 mt-1 leading-relaxed">
+                    📍 {closestSppg.alamatDapur}
+                  </p>
+                  <p className="font-mono text-[11px] text-zinc-500 mt-0.5">
+                    Zona Kerja: Kec. {closestSppg.kecamatanLayanan.join(", ")} ({closestSppg.kabupaten})
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 border-t border-sky-200/70 pt-3 font-mono text-[11px] text-sky-950">
+                  <div className="bg-white/80 p-2 rounded-xl">
+                    <span className="text-zinc-400 block text-[10px]">Kapasitas Harian</span>
+                    <strong className="text-zinc-900">{closestSppg.kapasitasHarian} porsi/hari</strong>
+                  </div>
+                  <div className="bg-white/80 p-2 rounded-xl">
+                    <span className="text-zinc-400 block text-[10px]">Ahli Gizi PJ</span>
+                    <strong className="text-zinc-900 truncate block">{closestSppg.ahliGiziPj}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rangkuman Surat Pesanan Live */}
+              <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-xs space-y-3">
+                <h5 className="font-sans text-xs font-black uppercase text-zinc-950 tracking-wider flex items-center gap-1.5">
+                  <span>📋</span>
+                  <span>Ringkasan Ransum yang Dipesan</span>
+                </h5>
+
+                <div className="space-y-2 text-xs font-mono">
+                  <div className="flex justify-between py-1 border-b border-zinc-100">
+                    <span className="text-zinc-500">Posyandu Tujuan:</span>
+                    <span className="font-bold text-zinc-900 text-right">{orderPosyandu}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-zinc-100">
+                    <span className="text-zinc-500">Jadwal Pengiriman:</span>
+                    <span className="font-bold text-zinc-900">{orderTgl} · {orderSesi}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-zinc-100">
+                    <span className="text-zinc-500">Komposisi Menu:</span>
+                    <span className="font-bold text-zinc-900">
+                      {orderPaketA} Reguler · {orderPaketB} Hewani · {orderPaketC} Khusus
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 text-sm pt-1">
+                    <span className="text-zinc-900 font-bold">Total Ransum:</span>
+                    <span className="font-black text-emerald-700">
+                      {Number(orderPaketA) + Number(orderPaketB) + Number(orderPaketC)} Porsi
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-zinc-50 p-3 border border-zinc-100 text-[11px] font-mono text-zinc-600 space-y-1">
+                  <div className="flex items-center gap-1.5 text-zinc-800 font-bold">
+                    <span>🛡️</span>
+                    <span>Standar Pelayanan Logistik MBG:</span>
+                  </div>
+                  <p className="text-[10px] leading-relaxed">
+                    1. Ransum dikemas dalam wadah termal tertutup suhu minimum 60°C.
+                  </p>
+                  <p className="text-[10px] leading-relaxed">
+                    2. Pengiriman dipantau real-time pada tab <strong>Status Pesanan</strong>.
+                  </p>
+                  <p className="text-[10px] leading-relaxed">
+                    3. Kader Posyandu melakukan verifikasi fisik jumlah & mutu saat tiba.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          2. FITUR STATUS PESANAN: PELACAKAN STATUS & ARMADA YANG BERJALAN
+          ======================================================== */}
+      {activeSubTab === "status_pesanan" && (
+        <div className="space-y-6">
+          {/* Header Subtab Status Pesanan */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-zinc-200 shadow-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-md bg-sky-500 text-white font-mono text-[10px] font-black px-2 py-0.5 uppercase">
+                  Pelacakan Logistik Real-Time
+                </span>
+                <span className="font-mono text-xs text-zinc-500 font-bold">
+                  {puskesmasName} · {selectedKabupaten}
+                </span>
+              </div>
+              <h3 className="font-sans text-lg font-black uppercase tracking-tight text-zinc-950 mt-1 flex items-center gap-2">
+                <span>🚚</span>
+                <span>Status & Pelacakan Armada Pesanan MBG</span>
+              </h3>
+              <p className="font-mono text-xs text-zinc-500 mt-0.5">
+                Pelacakan alur pesanan dari verifikasi dapur SPPG hingga pengantaran armada logistik ke Posyandu sasaran.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-2xl border border-sky-300 bg-sky-50 px-3.5 py-1.5 font-mono text-xs font-bold text-sky-950 shadow-xs">
+                ● {activeOrdersCount} Pesanan Sedang Berjalan
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("pesan_mbg")}
+                className="rounded-2xl bg-[#18140B] hover:bg-emerald-600 text-white px-3.5 py-1.5 font-sans text-xs font-black transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>+</span>
+                <span>Buat Pesanan Baru</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Metrics Bar Status */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-3.5 shadow-xs">
+              <span className="font-mono text-[10px] uppercase text-zinc-400 font-bold block">
+                Total Pesanan Aktif
+              </span>
+              <div className="font-sans text-xl font-black text-zinc-950 mt-0.5">
+                {activeOrdersCount} <span className="text-xs font-normal text-zinc-500">PO Berjalan</span>
+              </div>
+              <span className="font-mono text-[10px] text-zinc-400 block mt-0.5">Dalam Proses Pengiriman</span>
+            </div>
+
+            <div className="rounded-2xl border border-zinc-200 bg-white p-3.5 shadow-xs">
+              <span className="font-mono text-[10px] uppercase text-zinc-500 font-bold block">
+                ⏳ Menunggu Dapur SPPG
+              </span>
+              <div className="font-sans text-xl font-black text-zinc-900 mt-0.5">
+                {pesananMbgList.filter((p) => p.statusPesanan === "Diajukan ke SPPG").length} <span className="text-xs font-normal text-zinc-500">PO</span>
+              </div>
+              <span className="font-mono text-[10px] text-zinc-400 block mt-0.5">Antrean Masak Dapur</span>
+            </div>
+
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3.5 shadow-xs">
+              <span className="font-mono text-[10px] uppercase text-amber-800 font-bold block">
+                🍳 Sedang Dimasak
+              </span>
+              <div className="font-sans text-xl font-black text-amber-950 mt-0.5">
+                {pesananMbgList.filter((p) => p.statusPesanan === "Diterima Dapur MBG").length} <span className="text-xs font-normal text-amber-700">PO</span>
+              </div>
+              <span className="font-mono text-[10px] text-amber-600 block mt-0.5">Standar Higiene Kemenkes</span>
+            </div>
+
+            <div className="rounded-2xl border border-sky-200 bg-sky-50/60 p-3.5 shadow-xs">
+              <span className="font-mono text-[10px] uppercase text-sky-800 font-bold block">
+                🚚 Dalam Pengiriman
+              </span>
+              <div className="font-sans text-xl font-black text-sky-950 mt-0.5">
+                {pesananMbgList.filter((p) => p.statusPesanan === "Dalam Pengiriman").length} <span className="text-xs font-normal text-sky-700">Armada</span>
+              </div>
+              <span className="font-mono text-[10px] text-sky-600 block mt-0.5">Thermal Box On the Way</span>
+            </div>
+          </div>
+
+          {/* List of Active Orders */}
+          {activeOrdersCount === 0 ? (
+            <div className="rounded-[28px] border border-dashed border-zinc-300 bg-white p-12 text-center space-y-3">
+              <div className="text-4xl">🎉</div>
+              <h4 className="font-sans text-base font-black text-zinc-900">
+                Tidak Ada Pesanan yang Sedang Berjalan
+              </h4>
+              <p className="font-mono text-xs text-zinc-500 max-w-md mx-auto">
+                Seluruh surat pesanan ransum MBG telah tiba dan terverifikasi di Posyandu, atau belum ada pesanan baru yang diajukan.
+              </p>
+              <div className="pt-2 flex justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("pesan_mbg")}
+                  className="rounded-2xl bg-[#18140B] text-white px-5 py-2.5 font-sans text-xs font-black shadow-md hover:bg-emerald-600 transition-colors cursor-pointer"
+                >
+                  + Buat Pesanan Baru
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("riwayat_pesanan")}
+                  className="rounded-2xl border border-zinc-300 bg-zinc-50 text-zinc-800 px-5 py-2.5 font-sans text-xs font-bold hover:bg-zinc-100 transition-colors cursor-pointer"
+                >
+                  📜 Buka Riwayat Transaksi
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pesananMbgList
+                .filter((p) => p.statusPesanan !== "Tiba di Posyandu")
+                .map((po) => {
+                  const isShipping = po.statusPesanan === "Dalam Pengiriman";
+                  const isCooking = po.statusPesanan === "Diterima Dapur MBG";
+                  const isSubmitted = po.statusPesanan === "Diajukan ke SPPG";
+
+                  return (
+                    <div
+                      key={po.id}
+                      className="rounded-3xl border border-zinc-200 bg-white p-5 sm:p-6 shadow-xs space-y-4 hover:shadow-md transition-shadow"
+                    >
+                      {/* Top Bar: PO Number + Posyandu + Status Badge + TOMBOL HAPUS */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-black text-zinc-900">
+                              {po.nomorPo}
+                            </span>
+                            <span className="font-mono text-[10px] text-zinc-400">
+                              · Dibuat: {po.tglDibuat}
+                            </span>
+                          </div>
+                          <h5 className="font-sans text-base font-black text-emerald-950 mt-0.5">
+                            📍 {po.posyanduTarget}
+                          </h5>
+                        </div>
+
+                        {/* Status Badge & Tombol Hapus */}
+                        <div className="flex items-center gap-2">
+                          {isShipping && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-sky-50 px-3 py-1 font-mono text-[11px] font-black uppercase text-sky-900 animate-pulse">
+                              <span className="h-2 w-2 rounded-full bg-sky-500 animate-ping" />
+                              Dalam Pengiriman Armada
+                            </span>
+                          )}
+                          {isCooking && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 font-mono text-[11px] font-black uppercase text-amber-900">
+                              <span className="h-2 w-2 rounded-full bg-amber-500" />
+                              Diterima & Dimasak Dapur
+                            </span>
+                          )}
+                          {isSubmitted && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 font-mono text-[11px] font-black uppercase text-zinc-800">
+                              <span className="h-2 w-2 rounded-full bg-zinc-400" />
+                              Diajukan ke SPPG
+                            </span>
+                          )}
+
+                          {/* TOMBOL HAPUS */}
                           <button
                             type="button"
-                            onClick={() => handleApproveKader(kader.id, kader.nama)}
-                            className="rounded-xl bg-[#18140B] px-3 py-1.5 font-sans text-xs font-black text-white hover:bg-emerald-600 transition-colors shadow-xs"
+                            onClick={() => handleDeleteOrder(po.id, po.nomorPo)}
+                            className="rounded-xl border border-rose-200 bg-rose-50/80 hover:bg-rose-100 text-rose-700 px-3 py-1.5 font-mono text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
+                            title="Hapus surat pesanan ini"
                           >
-                            ✓ Setujui Akun
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRejectKader(kader.id, kader.nama)}
-                            className="rounded-xl border border-zinc-200 bg-white px-2.5 py-1.5 font-sans text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            Tolak
+                            <span>🗑️</span>
+                            <span>Hapus</span>
                           </button>
                         </div>
-                      ) : (
-                        <span className="font-mono text-[11px] text-zinc-400">
-                          {kader.status === "Disetujui" ? "Terverifikasi" : "Selesai"}
+                      </div>
+
+                      {/* 4 RAPIH COLUMNS */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                        <div className="bg-zinc-50 p-3 rounded-2xl border border-zinc-100">
+                          <span className="text-[10px] text-zinc-400 block font-bold uppercase">Dapur Penyedia (SPPG)</span>
+                          <strong className="text-zinc-900 text-xs block truncate mt-0.5">{po.sppgDituju}</strong>
+                          <span className="text-[10px] text-zinc-500 block">Mitra Faskes Terdekat</span>
+                        </div>
+                        <div className="bg-zinc-50 p-3 rounded-2xl border border-zinc-100">
+                          <span className="text-[10px] text-zinc-400 block font-bold uppercase">Jadwal & Sesi Distribusi</span>
+                          <strong className="text-zinc-900 text-xs block mt-0.5">{po.tglPenyaluran}</strong>
+                          <span className="text-[10px] text-zinc-500 block">{po.sesiPenyaluran}</span>
+                        </div>
+                        <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200">
+                          <span className="text-[10px] text-emerald-800 block font-bold uppercase">Total Ransum</span>
+                          <strong className="text-emerald-950 font-black text-sm block mt-0.5">{po.totalPorsi} Porsi</strong>
+                          <div className="text-[10px] text-emerald-700 flex gap-2 font-bold mt-0.5">
+                            <span>A: {po.jumlahPaketA}</span>
+                            <span>B: {po.jumlahPaketB}</span>
+                            {po.jumlahPaketC > 0 && <span>C: {po.jumlahPaketC}</span>}
+                          </div>
+                        </div>
+                        <div className="bg-zinc-50 p-3 rounded-2xl border border-zinc-100">
+                          <span className="text-[10px] text-zinc-400 block font-bold uppercase">Instruksi Medis Puskesmas</span>
+                          <p className="text-[11px] text-zinc-700 truncate block mt-0.5" title={po.catatanKlinis}>
+                            {po.catatanKlinis || "Preskripsi pemenuhan gizi Puskesmas."}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 4-STAGE STEPPER TIMELINE */}
+                      <div className="rounded-2xl bg-zinc-50/80 p-4 border border-zinc-100 space-y-3">
+                        <span className="font-mono text-[10px] uppercase font-bold text-zinc-500 block">
+                          Tahapan Pemrosesan & Pengiriman Ransum (4 Tahap)
                         </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+                        <div className="grid grid-cols-4 gap-2 font-mono text-center">
+                          {/* Step 1: Diajukan */}
+                          <div className={`p-2 rounded-xl border text-[11px] ${
+                            isSubmitted || isCooking || isShipping
+                              ? "bg-emerald-50 border-emerald-300 text-emerald-950 font-bold"
+                              : "bg-white border-zinc-200 text-zinc-400"
+                          }`}>
+                            <div className="text-base mb-0.5">📝</div>
+                            <div>1. Diajukan</div>
+                            <span className="text-[9px] opacity-75 block">Surat Terbit</span>
+                          </div>
+
+                          {/* Step 2: Dapur Memasak */}
+                          <div className={`p-2 rounded-xl border text-[11px] ${
+                            isCooking || isShipping
+                              ? "bg-amber-50 border-amber-300 text-amber-950 font-bold"
+                              : isSubmitted
+                              ? "bg-white border-dashed border-zinc-300 text-zinc-500"
+                              : "bg-white border-zinc-200 text-zinc-400"
+                          }`}>
+                            <div className="text-base mb-0.5">🍳</div>
+                            <div>2. Dimasak</div>
+                            <span className="text-[9px] opacity-75 block">Standar Higiene</span>
+                          </div>
+
+                          {/* Step 3: Armada Pengantaran */}
+                          <div className={`p-2 rounded-xl border text-[11px] ${
+                            isShipping
+                              ? "bg-sky-50 border-sky-300 text-sky-950 font-bold animate-pulse"
+                              : "bg-white border-zinc-200 text-zinc-400"
+                          }`}>
+                            <div className="text-base mb-0.5">🚚</div>
+                            <div>3. Pengiriman</div>
+                            <span className="text-[9px] opacity-75 block">Mobil Termal</span>
+                          </div>
+
+                          {/* Step 4: Tiba & Verifikasi */}
+                          <div className="p-2 rounded-xl border border-zinc-200 bg-white text-zinc-400 text-[11px]">
+                            <div className="text-base mb-0.5">✓</div>
+                            <div>4. Serah Terima</div>
+                            <span className="text-[9px] opacity-75 block">Kader Posyandu</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Simulasi Aksi Cepat Perubahan Status untuk Pengujian */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-zinc-100 font-mono text-xs">
+                        <span className="text-[11px] text-zinc-400">
+                          Aksi Pembaruan Status Alur MBG:
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {isSubmitted && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateOrderStatus(po.id, "Diterima Dapur MBG")}
+                              className="rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 px-3 py-1 font-bold text-[11px] transition-colors cursor-pointer"
+                            >
+                              🍳 Konfirmasi Dimasak di SPPG
+                            </button>
+                          )}
+                          {isCooking && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateOrderStatus(po.id, "Dalam Pengiriman")}
+                              className="rounded-xl border border-sky-300 bg-sky-50 hover:bg-sky-100 text-sky-900 px-3 py-1 font-bold text-[11px] transition-colors cursor-pointer"
+                            >
+                              🚚 Armada Berangkat ke Posyandu
+                            </button>
+                          )}
+                          {isShipping && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateOrderStatus(po.id, "Tiba di Posyandu")}
+                              className="rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 px-3 py-1 font-bold text-[11px] transition-colors cursor-pointer"
+                            >
+                              ✓ Konfirmasi Tiba & Masuk Riwayat
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================
+          3. FITUR RIWAYAT: ARSIP & HISTORI PEMESANAN RANSUM MBG
+          ======================================================== */}
+      {activeSubTab === "riwayat_pesanan" && (
+        <div className="space-y-6">
+          {/* Header Subtab Riwayat */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-zinc-200 shadow-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-md bg-zinc-800 text-white font-mono text-[10px] font-black px-2 py-0.5 uppercase">
+                  Arsip Resmi MBG
+                </span>
+                <span className="font-mono text-xs text-zinc-500 font-bold">
+                  Puskesmas {selectedKecamatan} · {selectedKabupaten}
+                </span>
+              </div>
+              <h3 className="font-sans text-lg font-black uppercase tracking-tight text-zinc-950 mt-1 flex items-center gap-2">
+                <span>📜</span>
+                <span>Riwayat Surat Pesanan (PO) MBG</span>
+              </h3>
+              <p className="font-mono text-xs text-zinc-500 mt-0.5">
+                Daftar lengkap seluruh transaksi pesanan ransum MBG, pencatatan serah terima fisik posyandu, dan riwayat distribusi.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePrintPesananMbg}
+                className="rounded-2xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-800 px-3.5 py-1.5 font-mono text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>🖨️</span>
+                <span>Cetak Rekap Pesanan MBG</span>
+              </button>
+              <span className="rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 py-1.5 font-mono text-xs font-bold text-zinc-800 shadow-xs">
+                ● {pesananMbgList.length} Total Transaksi ({completedOrdersCount} Selesai)
+              </span>
+              <button
+                type="button"
+                onClick={handleClearPesananHistory}
+                className="rounded-2xl border border-rose-300 bg-white hover:bg-rose-50 text-rose-700 px-3.5 py-1.5 font-mono text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="Hapus seluruh riwayat pesanan"
+              >
+                <span>🗑️</span>
+                <span>Hapus Semua Riwayat</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Filter & Search Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-zinc-200 shadow-xs">
+            <div className="w-full sm:w-72">
+              <input
+                type="text"
+                value={riwayatSearch}
+                onChange={(e) => setRiwayatSearch(e.target.value)}
+                placeholder="🔍 Cari No. PO, Posyandu, Desa..."
+                className="w-full rounded-xl border border-zinc-300 bg-zinc-50 p-2 font-sans text-xs text-zinc-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+              <span className="font-mono text-[11px] text-zinc-400 font-bold">Filter Status:</span>
+              <button
+                type="button"
+                onClick={() => setRiwayatStatusFilter("semua")}
+                className={`rounded-xl px-3 py-1 font-mono text-xs font-bold transition-colors cursor-pointer ${
+                  riwayatStatusFilter === "semua"
+                    ? "bg-[#18140B] text-white"
+                    : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                }`}
+              >
+                Semua ({pesananMbgList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setRiwayatStatusFilter("selesai")}
+                className={`rounded-xl px-3 py-1 font-mono text-xs font-bold transition-colors cursor-pointer ${
+                  riwayatStatusFilter === "selesai"
+                    ? "bg-emerald-600 text-white"
+                    : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
+                }`}
+              >
+                Selesai ({completedOrdersCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setRiwayatStatusFilter("aktif")}
+                className={`rounded-xl px-3 py-1 font-mono text-xs font-bold transition-colors cursor-pointer ${
+                  riwayatStatusFilter === "aktif"
+                    ? "bg-sky-600 text-white"
+                    : "bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200"
+                }`}
+              >
+                Sedang Berjalan ({activeOrdersCount})
+              </button>
+            </div>
+          </div>
+
+          {/* TABEL DATA RAPI & TERSTRUKTUR */}
+          <div className="rounded-[28px] border border-zinc-200 bg-white p-5 sm:p-6 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
+              <h4 className="font-sans text-sm font-black uppercase text-zinc-950 flex items-center gap-2">
+                <span>📋</span>
+                <span>Tabel Data Riwayat Surat Pesanan Ransum MBG</span>
+              </h4>
+              <span className="font-mono text-xs text-zinc-400">
+                Menampilkan data terverifikasi
+              </span>
+            </div>
+
+            {/* Filter data */}
+            {(() => {
+              const filteredList = pesananMbgList.filter((po) => {
+                if (riwayatStatusFilter === "selesai" && po.statusPesanan !== "Tiba di Posyandu") return false;
+                if (riwayatStatusFilter === "aktif" && po.statusPesanan === "Tiba di Posyandu") return false;
+                if (riwayatSearch) {
+                  const q = riwayatSearch.toLowerCase();
+                  return (
+                    po.nomorPo.toLowerCase().includes(q) ||
+                    po.posyanduTarget.toLowerCase().includes(q) ||
+                    po.desa.toLowerCase().includes(q) ||
+                    po.sppgDituju.toLowerCase().includes(q)
+                  );
+                }
+                return true;
+              });
+
+              if (filteredList.length === 0) {
+                return (
+                  <div className="p-8 text-center text-zinc-500 font-mono text-xs">
+                    Tidak ada catatan riwayat pesanan yang sesuai dengan filter pencarian.
+                  </div>
+                );
+              }
+
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left font-sans text-xs">
+                    <thead>
+                      <tr className="border-b border-zinc-200 text-zinc-400 font-mono text-[10px] uppercase tracking-wider bg-zinc-50/70">
+                        <th className="py-3 px-3">No. Surat Pesanan (PO)</th>
+                        <th className="py-3 px-3">Posyandu Sasaran</th>
+                        <th className="py-3 px-3">Dapur Penyedia (SPPG)</th>
+                        <th className="py-3 px-3 text-center">Rincian Ransum</th>
+                        <th className="py-3 px-3">Jadwal & Sesi</th>
+                        <th className="py-3 px-3">Status & Verifikasi</th>
+                        <th className="py-3 px-3 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 text-zinc-800">
+                      {filteredList.map((po) => {
+                        const isDone = po.statusPesanan === "Tiba di Posyandu";
+                        return (
+                          <tr key={po.id} className="hover:bg-zinc-50/80 transition-colors">
+                            {/* 1. No PO */}
+                            <td className="py-3 px-3 font-mono">
+                              <span className="font-black text-zinc-950 block text-xs">
+                                {po.nomorPo}
+                              </span>
+                              <span className="text-[10px] text-zinc-400 block mt-0.5">
+                                {po.tglDibuat}
+                              </span>
+                            </td>
+
+                            {/* 2. Posyandu Target */}
+                            <td className="py-3 px-3">
+                              <div className="font-bold text-zinc-950">
+                                📍 {po.posyanduTarget}
+                              </div>
+                              <div className="font-mono text-[10px] text-zinc-400 mt-0.5">
+                                {po.desa}, Kec. {po.kecamatan}
+                              </div>
+                            </td>
+
+                            {/* 3. Dapur SPPG */}
+                            <td className="py-3 px-3 font-mono">
+                              <span className="font-medium text-zinc-900 block text-[11px]">
+                                {po.sppgDituju}
+                              </span>
+                              <span className="text-[10px] text-zinc-400">
+                                Sentra Dapur Mitra
+                              </span>
+                            </td>
+
+                            {/* 4. Rincian Ransum */}
+                            <td className="py-3 px-3 text-center font-mono">
+                              <span className="font-black text-xs text-zinc-950 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                {po.totalPorsi} Porsi
+                              </span>
+                              <div className="text-[10px] text-zinc-500 mt-1 flex justify-center gap-1.5 font-bold">
+                                <span className="text-emerald-700">A:{po.jumlahPaketA}</span>
+                                <span className="text-rose-700">B:{po.jumlahPaketB}</span>
+                                {po.jumlahPaketC > 0 && <span className="text-amber-700">C:{po.jumlahPaketC}</span>}
+                              </div>
+                            </td>
+
+                            {/* 5. Jadwal & Sesi */}
+                            <td className="py-3 px-3 font-mono text-[11px]">
+                              <div className="text-zinc-900 font-bold">{po.tglPenyaluran}</div>
+                              <div className="text-zinc-500 text-[10px]">{po.sesiPenyaluran}</div>
+                            </td>
+
+                            {/* 6. Status & Verifikasi */}
+                            <td className="py-3 px-3">
+                              {isDone ? (
+                                <div className="space-y-1">
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 font-mono text-[10px] font-black uppercase text-emerald-900">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                    Tiba & Terverifikasi
+                                  </span>
+                                  <div className="font-mono text-[10px] text-zinc-500">
+                                    Penerima: <strong className="text-zinc-800">{po.verifikasiPosyandu?.kaderPenerima || "Kader"}</strong>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-sky-300 bg-sky-50 px-2.5 py-0.5 font-mono text-[10px] font-black uppercase text-sky-900">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse" />
+                                  {po.statusPesanan}
+                                </span>
+                              )}
+                            </td>
+
+                            {/* 7. TOMBOL HAPUS */}
+                            <td className="py-3 px-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteOrder(po.id, po.nomorPo)}
+                                className="rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-700 px-3 py-1 font-mono text-xs font-bold transition-colors shadow-2xs inline-flex items-center gap-1 cursor-pointer"
+                                title="Hapus surat pesanan ini dari riwayat"
+                              >
+                                <span>🗑️</span>
+                                <span>Hapus</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -942,34 +2139,81 @@ export default function PuskesmasTab() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {displayPosyanduList
-              .flatMap((p) => p.balitaList)
-              .filter((b) => b.statusGizi === "Stunting Garis Merah" || b.statusGizi === "Gizi Buruk / Rujukan Faskes")
-              .map((b) => (
-                <div key={b.id} className="rounded-2xl border border-red-200 bg-red-50/40 p-4 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-sans text-sm font-black text-zinc-950">{b.nama} ({b.usiaBulan} Bulan)</h4>
-                      <p className="font-mono text-xs text-zinc-500">NIK: {b.nik} · Ibu {b.namaIbu}</p>
-                      <p className="text-xs text-zinc-600 font-medium mt-1">Status: {b.statusGizi}</p>
+              .flatMap((p) => p.balitaList.map((b) => ({ balita: b, posyandu: p })))
+              .filter(({ balita }) => isBalitaStuntingOrFaltering(balita))
+              .map(({ balita: b, posyandu: p }) => {
+                const existingJadwal = jadwalList.find(
+                  (j) =>
+                    (j.namaBalita.toLowerCase().trim() === b.nama.toLowerCase().trim() ||
+                      (j.nikBalita && b.nik && j.nikBalita === b.nik)) &&
+                    j.status !== "Dibatalkan"
+                );
+
+                return (
+                  <div key={b.id} className="rounded-2xl border border-red-200 bg-red-50/40 p-4 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-sans text-sm font-black text-zinc-950">{b.nama} ({b.usiaBulan} Bulan)</h4>
+                          <span className="font-mono text-[10px] text-zinc-500 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
+                            {p.posyandu}
+                          </span>
+                        </div>
+                        <p className="font-mono text-xs text-zinc-500 mt-0.5">NIK: {b.nik} · Ibu {b.namaIbu}</p>
+                        <p className="text-xs text-rose-900 font-bold mt-1">Status: {b.statusGizi} · {b.alokasiPaket}</p>
+                      </div>
+                      <span className="rounded-lg bg-red-600 text-white font-mono text-[10px] font-black px-2 py-0.5">
+                        TB/U: {b.zTbu} SD
+                      </span>
                     </div>
-                    <span className="rounded-lg bg-red-600 text-white font-mono text-[10px] font-black px-2 py-0.5">
-                      TB/U: {b.zTbu} SD
-                    </span>
+                    <div className="text-xs text-red-900 bg-white p-2.5 rounded-xl border border-red-200 font-medium">
+                      <strong>Catatan Klinis:</strong> {b.catatanKlinis}
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      {existingJadwal ? (
+                        <div className="flex items-center justify-between w-full">
+                          <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-300 px-2.5 py-1.5 font-mono text-xs font-bold text-emerald-800">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                            Terjadwal: {existingJadwal.tglPertemuan} ({existingJadwal.waktuPertemuan})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSchedulingChild({ balita: b, posyandu: p });
+                              setFormLokasi(existingJadwal.lokasi || `Poli Gizi ${puskesmasName}`);
+                              setFormTgl(existingJadwal.tglPertemuan);
+                              setFormJam(existingJadwal.waktuPertemuan);
+                              setFormDokter(existingJadwal.dokterPemeriksa);
+                              setFormAgenda(existingJadwal.agendaIntervensi);
+                              setFormCatatan(existingJadwal.catatanKhusus || "");
+                            }}
+                            className="text-xs font-mono font-bold text-[#5C46D9] hover:underline"
+                          >
+                            ✏️ Edit Jadwal
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSchedulingChild({ balita: b, posyandu: p });
+                            setFormLokasi(`Poli Gizi ${puskesmasName}`);
+                            setFormAgenda(
+                              isBalitaPerluRujukan(b)
+                                ? "Rujukan Dokter Spesialis Anak & Terapi Intervensi Klinis F100"
+                                : `Pemeriksaan Intervensi Stunting (${b.statusGizi}) & Resep MBG Paket B Protein Ganda Jatim`
+                            );
+                          }}
+                          className="w-full rounded-xl bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white py-2 font-sans text-xs font-black transition-all shadow-xs flex items-center justify-center gap-2"
+                        >
+                          <span>📅</span>
+                          <span>Buat Jadwal Intervensi Klinis</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-xs text-red-900 bg-white p-2.5 rounded-xl border border-red-200 font-medium">
-                    <strong>Catatan Klinis:</strong> {b.catatanKlinis}
-                  </div>
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => handleTindakLanjutBalita(b.nama)}
-                      className="flex-1 rounded-xl bg-red-600 text-white py-2 font-sans text-xs font-black hover:bg-red-700 transition-colors shadow-xs"
-                    >
-                      Jadwalkan Konseling Dokter Puskesmas
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
           </div>
         </div>
       )}
@@ -1013,13 +2257,23 @@ export default function PuskesmasTab() {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedPosyandu(null)}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors"
-                >
-                  ✕
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handlePrintPosyanduMikro(selectedPosyandu)}
+                    className="rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-800 px-3.5 py-2 font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <span>🖨️</span>
+                    <span>Cetak Laporan Posyandu</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPosyandu(null)}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
 
               {/* 3 Kartu Ringkasan Persentase Kasus di Posyandu Tersebut */}
@@ -1050,8 +2304,34 @@ export default function PuskesmasTab() {
                       {selectedPosyandu.stuntingPersen}%
                     </span>
                   </div>
-                  <div className="mt-2 font-sans text-2xl font-black text-rose-950">
-                    {selectedPosyandu.stuntingCount} <span className="text-xs font-normal text-rose-700">anak</span>
+                  <div className="mt-2 flex items-baseline justify-between">
+                    <div className="font-sans text-2xl font-black text-rose-950">
+                      {selectedPosyandu.stuntingCount} <span className="text-xs font-normal text-rose-700">anak</span>
+                    </div>
+                    {(() => {
+                      const stuntingBalitas = selectedPosyandu.balitaList.filter((b) => isBalitaStuntingOrFaltering(b));
+                      const unScheduled = stuntingBalitas.filter(
+                        (b) =>
+                          !jadwalList.some(
+                            (j) =>
+                              (j.namaBalita.toLowerCase().trim() === b.nama.toLowerCase().trim() ||
+                                (j.nikBalita && b.nik && j.nikBalita === b.nik)) &&
+                              j.status !== "Dibatalkan"
+                          )
+                      );
+                      if (unScheduled.length > 0) {
+                        return (
+                          <span className="rounded-full bg-rose-200 text-rose-900 border border-rose-300 px-2 py-0.5 font-mono text-[10px] font-bold">
+                            ⚠️ {unScheduled.length} Belum Dijadwal
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 font-mono text-[10px] font-bold">
+                          ✓ Semua Terjadwal
+                        </span>
+                      );
+                    })()}
                   </div>
                   <div className="mt-1 font-mono text-[11px] text-rose-800">
                     Menerima: <strong>Paket B (Protein Ganda Blitar-Lamongan)</strong>
@@ -1120,13 +2400,26 @@ export default function PuskesmasTab() {
                   </thead>
                   <tbody className="divide-y divide-zinc-100 text-zinc-800">
                     {getFilteredBalitaInModal().map((balita) => {
-                      const isBalitaStunting =
-                        balita.statusGizi === "Stunting Garis Merah" ||
-                        balita.statusGizi === "Gizi Buruk / Rujukan Faskes";
+                      const needsIntervention = isBalitaStuntingOrFaltering(balita);
+                      const isRujukan = isBalitaPerluRujukan(balita);
+
+                      // Cek otomatis apakah sudah pernah diterbitkan jadwal pertemuan stunting untuk balita ini
+                      const existingJadwal = jadwalList.find(
+                        (j) =>
+                          (j.namaBalita.toLowerCase().trim() === balita.nama.toLowerCase().trim() ||
+                            (j.nikBalita && balita.nik && j.nikBalita === balita.nik)) &&
+                          j.status !== "Dibatalkan"
+                      );
+
                       return (
                         <tr key={balita.id} className="hover:bg-zinc-50/70 transition-colors">
                           <td className="py-3.5 px-3.5">
-                            <div className="font-black text-zinc-950 text-sm">{balita.nama}</div>
+                            <div className="font-black text-zinc-950 text-sm flex items-center gap-1.5">
+                              {needsIntervention && !existingJadwal && (
+                                <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shrink-0" title="Perlu Jadwal Intervensi" />
+                              )}
+                              <span>{balita.nama}</span>
+                            </div>
                             <div className="font-mono text-[11px] text-zinc-400">
                               NIK: {balita.nik}
                             </div>
@@ -1146,6 +2439,8 @@ export default function PuskesmasTab() {
                               className={`inline-block font-mono font-black text-xs px-2 py-0.5 rounded-md ${
                                 balita.zTbu < -2
                                   ? "bg-rose-100 text-rose-700"
+                                  : balita.zTbu < -1.5
+                                  ? "bg-amber-100 text-amber-800"
                                   : "bg-emerald-100 text-emerald-800"
                               }`}
                             >
@@ -1155,12 +2450,17 @@ export default function PuskesmasTab() {
                           <td className="py-3.5 px-3.5">
                             <div>
                               <span
-                                className={`inline-block rounded-md px-2 py-0.5 font-mono text-[10px] font-bold ${
-                                  isBalitaStunting
+                                className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 font-mono text-[10px] font-bold ${
+                                  isRujukan
+                                    ? "bg-amber-100 border border-amber-300 text-amber-900"
+                                    : needsIntervention
                                     ? "bg-rose-50 border border-rose-200 text-rose-900"
                                     : "bg-emerald-50 border border-emerald-200 text-emerald-900"
                                 }`}
                               >
+                                {needsIntervention && !existingJadwal && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-rose-600 animate-pulse" />
+                                )}
                                 {balita.statusGizi}
                               </span>
                             </div>
@@ -1169,23 +2469,55 @@ export default function PuskesmasTab() {
                             </div>
                           </td>
                           <td className="py-3.5 px-3.5 text-right">
-                            {isBalitaStunting ? (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (selectedPosyandu) {
-                                    setSchedulingChild({ balita, posyandu: selectedPosyandu });
-                                    setFormLokasi(`Poli Gizi ${puskesmasName}`);
-                                  }
-                                }}
-                                className="rounded-xl bg-[#18140B] px-3.5 py-2 font-sans text-xs font-black text-white hover:bg-rose-600 transition-colors shadow-xs flex items-center gap-1.5 ml-auto"
-                              >
-                                <span>📅</span>
-                                <span>Buat Jadwal Intervensi</span>
-                              </button>
+                            {needsIntervention ? (
+                              existingJadwal ? (
+                                <div className="inline-flex flex-col items-end gap-1">
+                                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-300 px-2.5 py-1 font-mono text-[10px] font-black text-emerald-800 shadow-xs">
+                                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    ✓ Terjadwal: {existingJadwal.tglPertemuan}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (selectedPosyandu) {
+                                        setSchedulingChild({ balita, posyandu: selectedPosyandu });
+                                        setFormLokasi(existingJadwal.lokasi || `Poli Gizi ${puskesmasName}`);
+                                        setFormTgl(existingJadwal.tglPertemuan);
+                                        setFormJam(existingJadwal.waktuPertemuan);
+                                        setFormDokter(existingJadwal.dokterPemeriksa);
+                                        setFormAgenda(existingJadwal.agendaIntervensi);
+                                        setFormCatatan(existingJadwal.catatanKhusus || "");
+                                      }
+                                    }}
+                                    className="text-[10px] font-mono font-bold text-[#5C46D9] hover:underline"
+                                  >
+                                    ✏️ Edit / Lihat Jadwal
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (selectedPosyandu) {
+                                      setSchedulingChild({ balita, posyandu: selectedPosyandu });
+                                      setFormLokasi(`Poli Gizi ${puskesmasName}`);
+                                      setFormAgenda(
+                                        isRujukan
+                                          ? "Rujukan Dokter Spesialis Anak & Terapi Intervensi Klinis F100"
+                                          : `Pemeriksaan Intervensi Klinis Stunting (${balita.statusGizi}) & Resep MBG Paket B Protein Ganda Jatim`
+                                      );
+                                    }
+                                  }}
+                                  className="rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 px-3.5 py-2 font-sans text-xs font-black text-white transition-all shadow-sm flex items-center gap-1.5 ml-auto"
+                                >
+                                  <span>📅</span>
+                                  <span>Buat Jadwal Intervensi</span>
+                                </button>
+                              )
                             ) : (
-                              <span className="font-mono text-[11px] text-emerald-700 font-bold">
-                                ✓ Terpantau Baik
+                              <span className="inline-flex items-center gap-1 font-mono text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                                <span>✓</span>
+                                <span>Terpantau Baik</span>
                               </span>
                             )}
                           </td>
@@ -1382,6 +2714,15 @@ export default function PuskesmasTab() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Modal Cetak Dokumen Laporan Resmi Puskesmas & Posyandu */}
+      {printReportData && (
+        <CetakLaporanModal
+          {...printReportData}
+          isOpen={!!printReportData}
+          onClose={() => setPrintReportData(null)}
+        />
+      )}
     </div>
   );
 }

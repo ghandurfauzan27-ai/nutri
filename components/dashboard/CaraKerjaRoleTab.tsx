@@ -30,155 +30,221 @@ export default function CaraKerjaRoleTab({ role, onNavigateTab }: CaraKerjaProps
   > = {
     posyandu: {
       title: "Alur & Cara Kerja Akun Posyandu Desa",
-      subtitle: "Standar Operasional Pencatatan Balita, Notifikasi Puskesmas & Konfirmasi MBG",
-      roleBadge: "Garda Terdepan Desa",
+      subtitle: "Standar Operasional Penimbangan KMS, Notifikasi Puskesmas & Verifikasi MBG (2 Tab Terpisah)",
+      roleBadge: "Garda Terdepan Desa (Posyandu Mawar 01)",
       badgeColor: "#38E8F5",
       deskripsi:
-        "Sebagai Akun Resmi Posyandu di tingkat desa, Anda bertugas mendata balita secara mandiri, mencatat penimbangan rutin, menerima jadwal pertemuan dokter dari Puskesmas pembina, dan mengonfirmasi penerimaan paket MBG harian anak.",
+        "Sebagai Akun Resmi Posyandu di tingkat desa, sistem memisahkan tugas Anda secara tegas ke dalam 2 Tab Utama: (1) Tab Penimbangan & KMS Balita untuk pendaftaran balita manual, pengukuran antropometri rutin bulanan, grafik Z-score WHO, serta tombol hapus riwayat & reset data master; dan (2) Tab Verifikasi & Penerimaan MBG untuk menerima batch ransum SPPG (cek suhu ≥60°C & segel wadah) dan checklist serah terima 10 anak (Paket A vs B) serta tombol hapus riwayat serah terima tanpa perlu scan QR code.",
       tanggungJawabUtama: [
-        "Mendaftarkan balita baru secara manual lewat ketikan form (cukup 1x di awal).",
-        "Menimbang berat badan (BB) dan mengukur tinggi badan (TB/PB) setiap jadwal posyandu.",
-        "Melihat visual kurva pertumbuhan Z-score WHO resmi Dinkes Jatim (Hijau, Kuning, Merah).",
-        "Menerima notifikasi otomatis jadwal pertemuan dokter dari Puskesmas untuk balita stunting.",
-        "Konfirmasi penerimaan paket Makan Bergizi Gratis (MBG) harian per anak melalui tabel checklist sederhana."
+        "Memantau 10 Balita Master Binaan di Posyandu (sinkron 1:1 dengan Puskesmas pembina).",
+        "Tab Penimbangan & KMS: Input manual penimbangan bulanan (BB, TB, LK) dengan grafik Z-Score WHO real-time.",
+        "Menerima Notifikasi Real-Time: Jadwal pertemuan dokter/poli gizi dari Puskesmas pembina untuk anak stunting.",
+        "Tab Verifikasi MBG (Tahap 1): Verifikasi fisik kedatangan batch dari SPPG (cek suhu ≥60°C & keutuhan segel wadah).",
+        "Tab Verifikasi MBG (Tahap 2): Checklist serah terima ransum harian 10 anak (6 Paket A reguler & 4 Paket B gizi ganda) atau 1-klik konfirmasi semua.",
+        "Manajemen Riwayat Mandiri: Tombol Hapus Riwayat Penimbangan, Hapus Riwayat Serah Terima MBG, dan Reset Data Master Balita."
       ],
       langkahKerja: [
         {
           nomor: 1,
-          judul: "Pendaftaran Balita Baru (Input Manual Form)",
+          judul: "Tab Penimbangan: Pendaftaran Balita & Input Penimbangan Rutin",
           deskripsi:
-            "Klik tombol '[+ Daftarkan Balita Baru Manual]'. Masukkan Nama, NIK 16 digit, Tanggal Lahir, Nama Ibu, BB, dan TB. Data tersimpan permanen di Posyandu Anda dan otomatis terbaca oleh Puskesmas pembina.",
-          tipsKader: "Cukup daftarkan 1 kali saja. Pada bulan berikutnya, nama anak langsung ada di dropdown pilihan.",
-          icon: "📝"
-        },
-        {
-          nomor: 2,
-          judul: "Penimbangan Rutin Bulanan",
-          deskripsi:
-            "Pilih nama anak dari daftar 'PILIH BALITA TERDAFTAR'. Masukkan BB (kg) dan TB (cm) terbaru untuk melihat pergerakan kurva KMS.",
-          tipsKader: "Pastikan timbangan diletakkan di permukaan rata agar akurasi gramasi presisi.",
+            "Buka tab 'Penimbangan & KMS Balita'. Pilih balita dari daftar 10 balita binaan (atau klik [+ Daftarkan Balita Baru Manual]). Masukkan BB (kg), TB (cm), dan LK (cm). Kurva Z-Score WHO langsung mendeteksi status gizi (Hijau Normal, Kuning Faltering, Merah Stunting).",
+          tipsKader: "Tersedia tombol 'Hapus Riwayat Penimbangan' untuk membersihkan log dan 'Reset Data Master Balita' untuk mengembalikan ke 10 balita standar.",
           icon: "⚖️"
         },
         {
-          nomor: 3,
-          judul: "Terima Notifikasi Jadwal Dokter Puskesmas",
+          nomor: 2,
+          judul: "Terima Notifikasi Jadwal Dokter dari Puskesmas",
           deskripsi:
-            "Jika anak terdeteksi stunting, Puskesmas pembina akan menjadwalkan jadwal intervensi poli gizi/dokter. Notifikasi jadwal langsung muncul di bagian atas halaman Posyandu dengan rincian tanggal, jam, dokter, dan catatan.",
-          tipsKader: "Kader dapat mengonfirmasi 'Tandai Telah Disampaikan' setelah memberi tahu ibu balita.",
+            "Jika balita terdeteksi stunting, Puskesmas pembina (misal Puskesmas Socah) menjadwalkan konsultasi dokter. Notifikasi jadwal langsung muncul di bagian atas dasbor dengan nama dokter, tanggal, jam, dan instruksi KIA.",
+          tipsKader: "Kader dapat mengeklik 'Tandai Telah Disampaikan' setelah mengabari ibu balita.",
           icon: "🔔"
         },
         {
-          nomor: 4,
-          judul: "Konfirmasi Penerimaan Paket Gizi Harian (Checklist Cepat)",
+          nomor: 3,
+          judul: "Tab Verifikasi MBG - Tahap 1: Verifikasi Fisik Batch SPPG",
           deskripsi:
-            "Buka tab 'Konfirmasi MBG'. Dapur SPPG telah mengirimkan Paket A (Reguler) atau Paket B (Protein Hewani Ganda). Cukup klik tombol '✓ Konfirmasi Diterima' per anak tanpa perlu scan kamera yang merepotkan.",
-          tipsKader: "Bisa juga menggunakan tombol 'Konfirmasi Semua Paket Diterima' jika seluruh anak hadir di balai.",
+            "Pindah ke tab 'Verifikasi & Penerimaan MBG'. Saat armada SPPG tiba, lakukan verifikasi fisik: periksa suhu makanan hangat (wajib ≥60°C), keutuhan segel wadah, dan berita acara. Klik tombol 'Konfirmasi Terima Makanan dari Dapur SPPG'.",
+          tipsKader: "Status batch langsung berubah menjadi 'Telah Diterima Posyandu' dan tercatat di SPPG & Puskesmas.",
+          icon: "🌡️"
+        },
+        {
+          nomor: 4,
+          judul: "Tab Verifikasi MBG - Tahap 2: Checklist Serah Terima per Balita",
+          deskripsi:
+            "Setelah batch diterima, buka checklist 10 sasaran balita: 6 anak menerima Paket A (Gizi Reguler) dan 4 anak menerima Paket B (Protein Hewani Ganda: Telur Blitar + Lele Lamongan). Cukup centang/klik tombol '✓ Konfirmasi Diterima' per anak atau tombol '✓ Konfirmasi Semua Paket Diterima'.",
+          tipsKader: "Bebas dari repot scan QR code; tersedia tombol 'Hapus Riwayat Serah Terima MBG' jika ingin mereset riwayat harian.",
           icon: "🍱"
         }
       ],
       aturanKunci: [
-        "Satu Posyandu memiliki satu akun resmi yang terdaftar di bawah naungan Puskesmas kecamatan setempat.",
-        "Posyandu hanya mengakses dan mengelola balita di wilayah posyandunya sendiri.",
-        "Tidak menggunakan kamera/scan barcode; konfirmasi MBG menggunakan sistem checklist harian digital."
+        "Pemisahan tegas: Tab Penimbangan khusus meja timbang & KMS; Tab Verifikasi khusus penerimaan ransum MBG.",
+        "Satu akun posyandu membina wilayah dusunnya (sinkron 10 balita master dengan Puskesmas pembina).",
+        "Verifikasi kedatangan fisik wajib memastikan suhu hangat ≥60°C dan wadah higienis sebelum dibagikan ke balita.",
+        "Bebas scan QR rumit: Serah terima menggunakan sistem checklist digital cepat dengan tombol hapus riwayat mandiri."
+      ]
+    },
+    kader: {
+      title: "Alur & Cara Kerja Kader Posyandu Desa",
+      subtitle: "Standar Operasional Penimbangan KMS, Notifikasi Puskesmas & Verifikasi MBG (2 Tab Terpisah)",
+      roleBadge: "Garda Terdepan Desa (Posyandu Mawar 01)",
+      badgeColor: "#38E8F5",
+      deskripsi:
+        "Sebagai Kader Resmi Posyandu di tingkat desa, sistem memisahkan tugas Anda secara tegas ke dalam 2 Tab Utama: (1) Tab Penimbangan & KMS Balita untuk pendaftaran balita manual, pengukuran antropometri rutin bulanan, grafik Z-score WHO, serta tombol hapus riwayat & reset data master; dan (2) Tab Verifikasi & Penerimaan MBG untuk menerima batch ransum SPPG (cek suhu ≥60°C & segel wadah) dan checklist serah terima 10 anak (Paket A vs B) serta tombol hapus riwayat serah terima tanpa perlu scan QR code.",
+      tanggungJawabUtama: [
+        "Memantau 10 Balita Master Binaan di Posyandu (sinkron 1:1 dengan Puskesmas pembina).",
+        "Tab Penimbangan & KMS: Input manual penimbangan bulanan (BB, TB, LK) dengan grafik Z-Score WHO real-time.",
+        "Menerima Notifikasi Real-Time: Jadwal pertemuan dokter/poli gizi dari Puskesmas pembina untuk anak stunting.",
+        "Tab Verifikasi MBG (Tahap 1): Verifikasi fisik kedatangan batch dari SPPG (cek suhu ≥60°C & keutuhan segel wadah).",
+        "Tab Verifikasi MBG (Tahap 2): Checklist serah terima ransum harian 10 anak (6 Paket A reguler & 4 Paket B gizi ganda) atau 1-klik konfirmasi semua.",
+        "Manajemen Riwayat Mandiri: Tombol Hapus Riwayat Penimbangan, Hapus Riwayat Serah Terima MBG, dan Reset Data Master Balita."
+      ],
+      langkahKerja: [
+        {
+          nomor: 1,
+          judul: "Tab Penimbangan: Pendaftaran Balita & Input Penimbangan Rutin",
+          deskripsi:
+            "Buka tab 'Penimbangan & KMS Balita'. Pilih balita dari daftar 10 balita binaan (atau klik [+ Daftarkan Balita Baru Manual]). Masukkan BB (kg), TB (cm), dan LK (cm). Kurva Z-Score WHO langsung mendeteksi status gizi (Hijau Normal, Kuning Faltering, Merah Stunting).",
+          tipsKader: "Tersedia tombol 'Hapus Riwayat Penimbangan' untuk membersihkan log dan 'Reset Data Master Balita' untuk mengembalikan ke 10 balita standar.",
+          icon: "⚖️"
+        },
+        {
+          nomor: 2,
+          judul: "Terima Notifikasi Jadwal Dokter dari Puskesmas",
+          deskripsi:
+            "Jika balita terdeteksi stunting, Puskesmas pembina (misal Puskesmas Socah) menjadwalkan konsultasi dokter. Notifikasi jadwal langsung muncul di bagian atas dasbor dengan nama dokter, tanggal, jam, dan instruksi KIA.",
+          tipsKader: "Kader dapat mengeklik 'Tandai Telah Disampaikan' setelah mengabari ibu balita.",
+          icon: "🔔"
+        },
+        {
+          nomor: 3,
+          judul: "Tab Verifikasi MBG - Tahap 1: Verifikasi Fisik Batch SPPG",
+          deskripsi:
+            "Pindah ke tab 'Verifikasi & Penerimaan MBG'. Saat armada SPPG tiba, lakukan verifikasi fisik: periksa suhu makanan hangat (wajib ≥60°C), keutuhan segel wadah, dan berita acara. Klik tombol 'Konfirmasi Terima Makanan dari Dapur SPPG'.",
+          tipsKader: "Status batch langsung berubah menjadi 'Telah Diterima Posyandu' dan tercatat di SPPG & Puskesmas.",
+          icon: "🌡️"
+        },
+        {
+          nomor: 4,
+          judul: "Tab Verifikasi MBG - Tahap 2: Checklist Serah Terima per Balita",
+          deskripsi:
+            "Setelah batch diterima, buka checklist 10 sasaran balita: 6 anak menerima Paket A (Gizi Reguler) dan 4 anak menerima Paket B (Protein Hewani Ganda: Telur Blitar + Lele Lamongan). Cukup centang/klik tombol '✓ Konfirmasi Diterima' per anak atau tombol '✓ Konfirmasi Semua Paket Diterima'.",
+          tipsKader: "Bebas dari repot scan QR code; tersedia tombol 'Hapus Riwayat Serah Terima MBG' jika ingin mereset riwayat harian.",
+          icon: "🍱"
+        }
+      ],
+      aturanKunci: [
+        "Pemisahan tegas: Tab Penimbangan khusus meja timbang & KMS; Tab Verifikasi khusus penerimaan ransum MBG.",
+        "Satu akun posyandu membina wilayah dusunnya (sinkron 10 balita master dengan Puskesmas pembina).",
+        "Verifikasi kedatangan fisik wajib memastikan suhu hangat ≥60°C dan wadah higienis sebelum dibagikan ke balita.",
+        "Bebas scan QR rumit: Serah terima menggunakan sistem checklist digital cepat dengan tombol hapus riwayat mandiri."
       ]
     },
     puskesmas: {
       title: "Alur & Cara Kerja Petugas Gizi & Dokter Puskesmas",
-      subtitle: "Pengawasan Posyandu Binaan, Penjadwalan Intervensi Stunting, & Koordinasi Faskes",
-      roleBadge: "Tenaga Kesehatan Pembina",
+      subtitle: "Pengawasan Posyandu Binaan, Pemesanan Ransum MBG & Jadwal Intervensi Stunting",
+      roleBadge: "Tenaga Kesehatan Pembina Wilayah",
       badgeColor: "#10B981",
       deskripsi:
-        "Sebagai Puskesmas Pembina di tingkat kecamatan, Anda mengawasi seluruh posyandu dan desa di wilayah kerja Anda, memantau balita yang terdeteksi stunting, dan membuat jadwal pertemuan intervensi medis yang terhubung langsung ke akun posyandu.",
+        "Sebagai Puskesmas Pembina (seperti Puskesmas Socah), Anda mengawasi posyandu binaan di wilayah kerja Anda (seperti Posyandu Mawar 01 Bilaporah), memantau data 10 balita binaan yang tersinkronisasi, menerbitkan pesanan resmi kuota MBG (6 Paket A + 4 Paket B), dan menjadwalkan pertemuan klinis dokter gizi dengan notifikasi otomatis ke akun posyandu.",
       tanggungJawabUtama: [
-        "Memantau persentase balita sehat dan kasus stunting di setiap desa binaan.",
-        "Melihat rincian anak stunting (nama, NIK, usia, nilai Z-score, dan jenis paket MBG).",
-        "Menjadwalkan pertemuan intervensi klinis dokter/poli gizi untuk balita stunting.",
-        "Sistem langsung mengirimkan notifikasi jadwal otomatis ke akun Posyandu terkait.",
-        "Memverifikasi akun pendaftaran Posyandu baru di wilayah kerja kecamatan."
+        "Memantau data 10 balita wilayah binaan secara sinkron (nama, NIK, status gizi Z-score, dan tren pertumbuhan).",
+        "Menerbitkan Pesanan Resmi Ransum MBG (PO) ke Dapur SPPG: 10 porsi presisi (6 Paket A reguler + 4 Paket B stunting).",
+        "Menjadwalkan pertemuan intervensi klinis dokter gizi/KIA untuk balita yang terdeteksi stunting akut.",
+        "Notifikasi jadwal dokter otomatis terkirim langsung ke dasbor Posyandu binaan secara real-time.",
+        "Manajemen data bersih: Tombol Hapus Riwayat Pesanan MBG dan Tombol Hapus Riwayat Jadwal Dokter."
       ],
       langkahKerja: [
         {
           nomor: 1,
-          judul: "Masuk Melalui Akun Puskesmas Wilayah Sendiri",
+          judul: "1. Masuk via Akun Puskesmas Wilayah Terdaftar",
           deskripsi:
-            "Semua akun Puskesmas se-Jawa Timur telah terdaftar di sistem. Pilih nama Puskesmas Anda pada halaman login untuk langsung masuk ke dasbor wilayah kerja.",
+            "Pilih nama Puskesmas Anda (misal Puskesmas Socah - Bangkalan). Sistem langsung menampilkan wilayah desa dan posyandu binaan (Posyandu Mawar 01 Bilaporah).",
           icon: "🏥"
         },
         {
           nomor: 2,
-          judul: "Pantau Rincian Desa & Posyandu Binaan",
+          judul: "2. Pantau Status 10 Balita & Deteksi Stunting",
           deskripsi:
-            "Klik pada kartu desa binaan untuk melihat persentase stunting, nama anak yang terdampak, serta status intervensi Paket B (Protein Hewani Ganda).",
+            "Periksa daftar 10 balita binaan. Data berat badan, kurva KMS, dan status gizi langsung sinkron dengan hasil penimbangan kader di meja posyandu.",
           icon: "📊"
         },
         {
           nomor: 3,
-          judul: "Buat Jadwal Intervensi Dokter untuk Anak Stunting",
+          judul: "3. Terbitkan Pesanan Ransum MBG (PO) ke SPPG",
           deskripsi:
-            "Klik tombol 'Buat Jadwal Intervensi' pada baris balita stunting. Tentukan tanggal, jam, dokter pemeriksa, lokasi poli gizi, dan instruksi KIA.",
-          icon: "📅"
+            "Klik tombol order ransum ke Dapur SPPG rekanan: sistem mengalokasikan kuota 10 porsi (6 Paket A sehat + 4 Paket B dobel protein). Status PO langsung masuk ke antrean akun SPPG terkait.",
+          icon: "📝"
         },
         {
           nomor: 4,
-          judul: "Notifikasi Otomatis Terkirim ke Posyandu",
+          judul: "4. Jadwalkan Konsultasi Dokter untuk Balita Stunting",
           deskripsi:
-            "Saat jadwal disimpan, notifikasi langsung terkirim secara otomatis ke akun Posyandu tempat anak tersebut terdaftar tanpa perlu konfirmasi manual terpisah.",
-          icon: "📨"
+            "Klik 'Buat Jadwal Intervensi' pada balita garis merah. Tentukan tanggal, jam, nama dokter pemeriksa, dan instruksi klinis. Notifikasi jadwal langsung muncul di dasbor Posyandu sasaran.",
+          tipsKader: "Tersedia tombol 'Hapus Riwayat Jadwal' & 'Hapus Riwayat Pesanan' jika ingin mereset catatan.",
+          icon: "📅"
         }
       ],
       aturanKunci: [
-        "Setiap Puskesmas hanya dapat melihat data desa dan posyandu di bawah wilayah kecamatannya sendiri.",
-        "Akun Puskesmas tidak dapat saling mengintip data Puskesmas atau kecamatan lain.",
-        "Jadwal pertemuan klinis yang dibuat tersinkronisasi langsung dengan dasbor Posyandu."
+        "Data balita di Puskesmas sinkron 1:1 dengan data di Posyandu binaan (maksimal 10 balita master).",
+        "Pemesanan MBG terintegrasi langsung dengan alur verifikasi 4 tahap di akun SPPG mitra.",
+        "Setiap jadwal intervensi dokter otomatis terhubung sebagai notifikasi real-time ke posyandu terkait.",
+        "Tersedia tombol hapus riwayat untuk pembersihan data berkala secara mandiri."
       ]
     },
     dapur: {
-      title: "Alur & Cara Kerja Pengelola Dapur MBG (SPPG)",
-      subtitle: "Pembagian Wilayah Layanan Dapur, Penyiapan Menu Presisi, & Pantau Penerimaan",
-      roleBadge: "Juru Masak & Logistik MBG",
+      title: "Alur & Cara Kerja Akun Dapur MBG (SPPG)",
+      subtitle: "Verifikasi 4 Tahap Pesanan: Diterima → Diproses → Diantar → Selesai",
+      roleBadge: "Juru Masak & Logistik SPPG (20 Akun Resmi Jatim)",
       badgeColor: "#7866FF",
       deskripsi:
-        "Sebagai Pengelola Dapur Mandiri SPPG, Anda bertugas mengolah pangan bergizi untuk wilayah posyandu sasaran yang telah ditentukan agar tidak terjadi tumpang tindih antar dapur, menyiapkan Paket A & Paket B, serta memantau checklist konfirmasi penerimaan.",
+        "Akun SPPG terdaftar secara resmi di 20 titik sentra gizi Jawa Timur (seperti SPPG Dapur Sehat Socah Mandiri, SPPG Brantas Nutrisi Pesantren, dll). Tugas SPPG fokus memverifikasi setiap pesanan masuk melalui 4 tahapan alur resmi: (1) Diterima, (2) Diproses, (3) Diantar, dan (4) Selesai, lengkap dengan Panduan Isi Wadah resep lokal dan tombol reset riwayat verifikasi.",
       tanggungJawabUtama: [
-        "Melayani wilayah posyandu sasaran sesuai pembagian zona kerja kecamatan agar tidak tabrakan.",
-        "Menyiapkan kuota Paket A (Reguler Sehat) dan Paket B (Protein Hewani Ganda Telur Blitar & Lele Lamongan).",
-        "Menggunakan kalkulator gramasi bahan baku lokal Jawa Timur.",
-        "Memantau status konfirmasi penerimaan paket oleh Posyandu secara real-time."
+        "Memeriksa pesanan masuk harian (10 porsi: 6 Paket A Reguler + 4 Paket B Dobel Protein Hewani) khusus untuk posyandu sasaran binaan.",
+        "Memverifikasi alur 4 tahap pesanan secara disiplin: 1. Diterima → 2. Diproses → 3. Diantar → 4. Selesai.",
+        "Melihat Panduan Isi Wadah: Memastikan isian kompartemen ransum sesuai gramasi baku Kemenkes & resep lokal Jatim.",
+        "Memastikan standar keamanan pangan: Wadah tersegel higienis dan suhu makanan tetap hangat (≥60°C) saat armada tiba di balai posyandu.",
+        "Mereset Riwayat Verifikasi: Tombol Hapus Riwayat Verifikasi untuk memulai siklus pesanan baru yang bersih."
       ],
       langkahKerja: [
         {
           nomor: 1,
-          judul: "Periksa Wilayah Layanan & Posyandu Sasaran",
+          judul: "1. Verifikasi Terima Pesanan (Diterima)",
           deskripsi:
-            "Dasbor Dapur menampilkan posyandu mana saja yang menjadi tanggung jawab Anda, sehingga antar dapur SPPG di kecamatan memiliki zona kerja yang tegas.",
-          icon: "🗺️"
+            "Periksa kartu pesanan masuk dari Puskesmas pembina. Periksa alokasi 10 porsi (6 Paket A dan 4 Paket B). Klik tombol '[✓ Terima Pesanan Ini]'. Status pesanan langsung berubah menjadi 'Diterima' dan tercatat di sistem.",
+          tipsKader: "SPPG hanya melayani pesanan di wilayah kerja binaannya (terkunci per akun resmi).",
+          icon: "📥"
         },
         {
           nomor: 2,
-          judul: "Kalkulasi Kebutuhan Bahan Baku Harian",
+          judul: "2. Memasak & Packing Isi Wadah (Diproses)",
           deskripsi:
-            "Sistem mengonversi jumlah porsi menjadi kebutuhan riil: kg telur Blitar, kg lele Lamongan, hati ayam, dan daun kelor organik dari mitra lokal.",
-          icon: "🛒"
-        },
-        {
-          nomor: 3,
-          judul: "Produksi Paket A & Paket B",
-          deskripsi:
-            "Masak paket gizi sesuai standar formulasi: Paket A untuk balita umum dan Paket B berprotein hewani ganda untuk balita faltering/stunting.",
+            "Klik tombol '[🍳 Mulai Proses Masak & Packing]'. Juru masak mengolah bahan lokal berkualitas. Buka modal 'Panduan Isi Wadah' untuk mengecek rincian: Paket A (Nasi, Lele/Ayam, Sayur Sop, Buah) vs Paket B (Nasi, Dobel Protein: Telur Blitar + Lele Lamongan/Hati Ayam, Sayur, Buah).",
+          tipsKader: "Semua wadah dipacking rapi dan disegel higienis tanpa menggunakan label QR code.",
           icon: "🍳"
         },
         {
-          nomor: 4,
-          judul: "Pantau Konfirmasi Penerimaan dari Posyandu",
+          nomor: 3,
+          judul: "3. Pengantaran Armada Logistik (Diantar)",
           deskripsi:
-            "Setelah paket didistribusikan ke balai posyandu, pantau status konfirmasi penerimaan yang dicentang oleh kader posyandu secara langsung.",
-          icon: "✅"
+            "Setelah wadah bersegel siap dalam thermal box tertutup, armada logistik diberangkatkan menuju balai posyandu. Klik tombol '[🚚 Berangkatkan Armada (Diantar)]'.",
+          tipsKader: "Posyandu penerima akan melihat status pesanan telah 'Diantar' dan bersiap di meja penerimaan.",
+          icon: "🚚"
+        },
+        {
+          nomor: 4,
+          judul: "4. Konfirmasi Serah Terima Tuntas (Selesai)",
+          deskripsi:
+            "Ketika armada tiba di posyandu dan makanan diserahkan kepada kader dalam kondisi hangat (≥60°C), klik tombol '[🏁 Selesaikan Serah Terima (Selesai)]'.",
+          tipsKader: "Serah terima tuntas dan tercatat otomatis. Gunakan tombol 'Hapus / Reset Riwayat' jika ingin mengulang siklus simulasi.",
+          icon: "🏁"
         }
       ],
       aturanKunci: [
-        "Dapur SPPG memiliki pembagian wilayah posyandu sasaran yang pasti agar tidak berebut atau tabrakan.",
-        "Paket B diformulasikan khusus dengan protein hewani ganda lokal Jawa Timur.",
-        "Status distribusi terkonfirmasi langsung saat kader posyandu mencentang penerimaan paket."
+        "Fokus tugas akun SPPG adalah memverifikasi 4 tahapan alur pesanan: Diterima → Diproses → Diantar → Selesai.",
+        "Paket B wajib mengandung dobel protein hewani lokal Jawa Timur untuk percepatan pemulihan stunting.",
+        "Wadah higienis bersegel dengan suhu terjaga hangat minimal ≥60°C tanpa scan QR yang merepotkan.",
+        "Tersedia tombol hapus riwayat verifikasi untuk tata kelola data operasional mandiri."
       ]
     },
     dinkes: {
@@ -250,14 +316,23 @@ export default function CaraKerjaRoleTab({ role, onNavigateTab }: CaraKerjaProps
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-            {role === "posyandu" && onNavigateTab && (
-              <button
-                type="button"
-                onClick={() => onNavigateTab("kms")}
-                className="rounded-2xl border-2 border-[#18140B] bg-[#18140B] px-5 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all"
-              >
-                Mulai Catat Balita Posyandu →
-              </button>
+            {(role === "posyandu" || role === "kader") && onNavigateTab && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onNavigateTab("kms")}
+                  className="rounded-2xl border-2 border-[#18140B] bg-[#18140B] px-5 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all"
+                >
+                  1. Meja Penimbangan & KMS →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigateTab("konsumsi")}
+                  className="rounded-2xl border-2 border-cyan-700 bg-cyan-600 px-5 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all"
+                >
+                  2. Verifikasi Penerimaan MBG →
+                </button>
+              </>
             )}
             {role === "puskesmas" && onNavigateTab && (
               <button
@@ -274,7 +349,7 @@ export default function CaraKerjaRoleTab({ role, onNavigateTab }: CaraKerjaProps
                 onClick={() => onNavigateTab("dapur")}
                 className="rounded-2xl border-2 border-[#7866FF] bg-[#7866FF] px-5 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all"
               >
-                Buka Manajemen Dapur MBG →
+                Buka Verifikasi Pesanan SPPG →
               </button>
             )}
             {role === "dinkes" && onNavigateTab && (

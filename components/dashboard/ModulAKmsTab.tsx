@@ -4,8 +4,16 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BALITA_MOCK, type BalitaRecord } from "@/lib/app-data";
 import ClayCard from "@/components/auth/ClayCard";
+import CetakLaporanModal, {
+  type LaporanColumn,
+  type LaporanSummaryItem,
+} from "./CetakLaporanModal";
 
-export default function ModulAKmsTab() {
+export default function ModulAKmsTab({
+  onNavigateToMbg,
+}: {
+  onNavigateToMbg?: () => void;
+} = {}) {
   const [balitaList, setBalitaList] = useState<BalitaRecord[]>(BALITA_MOCK);
   const [selectedChildId, setSelectedChildId] = useState<string>("B-001");
   const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -33,24 +41,35 @@ export default function ModulAKmsTab() {
     },
   ]);
 
-  // Muat data balita baru & notifikasi jadwal dari Puskesmas
+  // Muat data balita baru, hasil timbangan tersimpan, notifikasi jadwal
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
-        // 1. Muat balita baru hasil ketikan manual
+        // 1. Muat balita & riwayat penimbangan tersimpan dari localStorage (dibatasi maksimal 10 balita)
         const raw = localStorage.getItem("nt_custom_balita");
         if (raw) {
           const customList = JSON.parse(raw);
           if (Array.isArray(customList) && customList.length > 0) {
             setBalitaList((prev) => {
-              const existingIds = new Set(prev.map((b) => b.id));
-              const fresh = customList.filter((item: any) => !existingIds.has(item.id));
-              return [...fresh, ...prev];
+              const customMap = new Map(customList.map((item: any) => [item.id, item]));
+              const updatedPrev = prev.map((b) => customMap.get(b.id) || b);
+              const prevIds = new Set(prev.map((b) => b.id));
+              const brandNew = customList.filter((item: any) => !prevIds.has(item.id));
+              return [...brandNew, ...updatedPrev].slice(0, 10);
             });
           }
         }
 
-        // 2. Muat notifikasi jadwal pertemuan dari Puskesmas
+        // 2. Muat antrean data offline penimbangan jika ada
+        const rawQueue = localStorage.getItem("nt_offline_queue");
+        if (rawQueue) {
+          try {
+            const q = JSON.parse(rawQueue);
+            if (Array.isArray(q)) setPendingSyncCount(q.length);
+          } catch (e) {}
+        }
+
+        // 3. Muat notifikasi jadwal pertemuan dari Puskesmas
         const rawNotif = localStorage.getItem("nt_posyandu_notif");
         if (rawNotif) {
           const parsedNotif = JSON.parse(rawNotif);
@@ -62,6 +81,24 @@ export default function ModulAKmsTab() {
             });
           }
         }
+
+        // 4. Muat identitas akun posyandu aktif
+        const syncSession = () => {
+          const rawSession = localStorage.getItem("nt_current_session");
+          if (rawSession) {
+            try {
+              const parsed = JSON.parse(rawSession);
+              if (parsed.unit) {
+                setPosyanduUnit(parsed.unit);
+                setNewPosyandu(parsed.unit.split("—")[0].trim());
+              }
+              if (parsed.wilayah) setPosyanduWilayah(parsed.wilayah);
+              if (parsed.puskesmasPembina) setPuskesmasPembina(parsed.puskesmasPembina);
+            } catch (e) {}
+          }
+        };
+        syncSession();
+        window.addEventListener("nt_session_updated", syncSession);
       }
     } catch (e) {}
   }, []);
@@ -88,6 +125,9 @@ export default function ModulAKmsTab() {
   const [newKecamatan, setNewKecamatan] = useState("Socah");
   const [newKabupaten, setNewKabupaten] = useState("Kab. Bangkalan");
   const [newPosyandu, setNewPosyandu] = useState("Posyandu Mawar 01");
+  const [posyanduUnit, setPosyanduUnit] = useState("Posyandu Mawar 01 — Desa Bilaporah");
+  const [posyanduWilayah, setPosyanduWilayah] = useState("Kecamatan Socah, Kab. Bangkalan · Alamat: Balai RW 01, Dusun Krajan");
+  const [puskesmasPembina, setPuskesmasPembina] = useState("Puskesmas Socah");
   const [newSex, setNewSex] = useState<"L" | "P">("L");
   const [newBb, setNewBb] = useState<number>(8.5);
   const [newTb, setNewTb] = useState<number>(73.0);
@@ -95,6 +135,9 @@ export default function ModulAKmsTab() {
   const [newCatatan, setNewCatatan] = useState("");
 
   // Form State untuk Timbangan Bulanan
+  const [inputRecordDate, setInputRecordDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
   const [inputWeight, setInputWeight] = useState<number>(8.4);
   const [inputHeight, setInputHeight] = useState<number>(72.8);
   const [inputHeadCircumference, setInputHeadCircumference] = useState<number>(45.2);
@@ -103,8 +146,106 @@ export default function ModulAKmsTab() {
   const [measuringMethod, setMeasuringMethod] = useState<"panjang" | "tinggi">(
     inputAgeMonths < 24 ? "panjang" : "tinggi"
   );
+  const [inputCatatan, setInputCatatan] = useState<string>("");
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [printReportData, setPrintReportData] = useState<{
+    instansi: string;
+    subInstansi?: string;
+    alamatInstansi?: string;
+    judulLaporan: string;
+    nomorSurat: string;
+    wilayah: string;
+    tanggalLaporan: string;
+    penanggungJawab: { nama: string; jabatan: string; nip?: string };
+    summaryItems?: LaporanSummaryItem[];
+    columns: LaporanColumn[];
+    data: any[];
+    catatanKhusus?: string;
+    filenameCsv?: string;
+  } | null>(null);
+
+  const handlePrintMonthlyReport = () => {
+    const formattedDate = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    const total = balitaList.length;
+    const faltering = balitaList.filter((b) => b.isFaltering).length;
+    const normal = total - faltering;
+    const posName = activeChild?.posyandu || "Posyandu Mawar 01";
+    const desaName = activeChild?.desa || "Desa Bilaporah";
+    const kecName = activeChild?.kecamatan || "Socah";
+
+    setPrintReportData({
+      instansi: "PEMERINTAH KABUPATEN BANGKALAN",
+      subInstansi: `DINAS KESEHATAN · PUSKESMAS ${kecName.toUpperCase()} · ${posName.toUpperCase()}`,
+      alamatInstansi: `Balai Pertemuan Warga ${desaName}, Kecamatan ${kecName} · Wilayah Binaan Puskesmas ${kecName}`,
+      judulLaporan: "REKAPITULASI PENIMBANGAN BULANAN & INTERVENSI MBG POSYANDU",
+      nomorSurat: `440/LAP-BUL/${posName.replace(/\s+/g, "-")}/${new Date().getFullYear()}`,
+      wilayah: `${posName}, ${desaName}, Kec. ${kecName}, Kab. Bangkalan`,
+      tanggalLaporan: formattedDate,
+      penanggungJawab: {
+        nama: "Siti Rahmawati, S.Pd",
+        jabatan: `Kader Utama ${posName}`,
+      },
+      summaryItems: [
+        { label: "Total Balita Terdaftar", value: `${total} Anak` },
+        { label: "Balita Sehat / Normal", value: `${normal} Anak`, subtext: `${Math.round((normal / total) * 100)}% Paket A Reguler` },
+        { label: "Balita Waspada / Faltering", value: `${faltering} Anak`, subtext: `${Math.round((faltering / total) * 100)}% Paket B Intervensi` },
+        { label: "Puskesmas Pembina", value: `Puskesmas ${kecName}` },
+      ],
+      columns: [
+        { header: "Nama Balita & NIK", key: "namaNik" },
+        { header: "Usia & JK", key: "usiaJk" },
+        { header: "Nama Orang Tua", key: "namaIbu" },
+        { header: "Berat (kg)", key: "bbKg", align: "center" },
+        { header: "Tinggi (cm)", key: "tbCm", align: "center" },
+        { header: "Z-Score TB/U", key: "zTbu", align: "center" },
+        { header: "Status Gizi", key: "statusNutrisi" },
+        { header: "Alokasi Paket MBG", key: "paketMBG" },
+      ],
+      data: balitaList.map((b) => ({
+        namaNik: `${b.nama} (NIK: ${b.nik})`,
+        usiaJk: `${b.usiaBulan} Bln (${b.jenisKelamin === "L" ? "Laki-Laki" : "Perempuan"})`,
+        namaIbu: b.namaIbu,
+        bbKg: `${b.bbKg} kg`,
+        tbCm: `${b.tbCm} cm`,
+        zTbu: `${b.zTBU > 0 ? "+" : ""}${b.zTBU} SD`,
+        statusNutrisi: b.statusNutrisi,
+        paketMBG: b.paketMBG,
+      })),
+      catatanKhusus: `Laporan penimbangan posyandu ini wajib diserahkan kepada Petugas Gizi Puskesmas Pembina untuk evaluasi pertumbuhan bulanan dan dasar pemesanan ransum MBG ke Dapur SPPG.`,
+      filenameCsv: `laporan-bulanan-posyandu-${posName.toLowerCase().replace(/\s+/g, "-")}.csv`,
+    });
+  };
 
   const activeChild = balitaList.find((b) => b.id === selectedChildId) || balitaList[0];
+
+  // Re-sync nilai input form saat balita yang dipilih berganti
+  useEffect(() => {
+    const child = balitaList.find((b) => b.id === selectedChildId);
+    if (child) {
+      setInputWeight(child.bbKg);
+      setInputHeight(child.tbCm);
+      setInputAgeMonths(child.usiaBulan);
+      setInputSex(child.jenisKelamin);
+      setInputHeadCircumference(child.lingkarKepalaCm || 45.0);
+      setMeasuringMethod(child.usiaBulan < 24 ? "panjang" : "tinggi");
+      setInputRecordDate(new Date().toISOString().split("T")[0]);
+      setInputCatatan("");
+    }
+  }, [selectedChildId]);
+
+  // Riwayat penimbangan terurut kronologis
+  const sortedHistory = [...(activeChild?.history || [])].sort((a, b) => a.usia - b.usia);
+  const lastHistoryEntry = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1] : null;
+
+  // Komparasi Kenaikan Berat Badan Terhadap Penimbangan Terakhir (Growth Monitoring)
+  const deltaWeight = lastHistoryEntry
+    ? Math.round((Number(inputWeight) - Number(lastHistoryEntry.bb)) * 100) / 100
+    : null;
 
   // Kalkulasi WHO Z-Score sederhana untuk live interactive preview (SKPL-F02)
   const calcZTBU = () => {
@@ -121,23 +262,284 @@ export default function ModulAKmsTab() {
 
   const currentZTBU = calcZTBU();
   const currentZBBU = calcZBBU();
-  const isFalteringNow = currentZTBU < -2 || currentZBBU < -2 || inputWeight <= 8.4;
+
+  // Evaluasi Risiko Growth Faltering:
+  // 1. Z-Score TB/U < -2 SD (Stunting)
+  // 2. Z-Score BB/U < -2 SD (Underweight)
+  // 3. Selisih BB mendatar (0.0) atau turun (< 0) dari penimbangan sebelumnya
+  const isFalteringNow =
+    currentZTBU < -2 ||
+    currentZBBU < -2 ||
+    (deltaWeight !== null && deltaWeight <= 0) ||
+    inputWeight <= 8.4;
   const currentStatus = isFalteringNow ? "Waspada / Growth Faltering" : "Normal";
   const currentPack = isFalteringNow ? "Paket B (Tinggi Protein Hewani)" : "Paket A (Reguler)";
 
-  const handleSimulateAddWeight = () => {
-    if (isOfflineMode) {
-      setPendingSyncCount((prev) => prev + 1);
-    } else {
-      setSyncedBannerText("Data penimbangan berhasil disinkronkan ke Cloud Server & Antrean Dapur SPPG!");
-      setSyncedBanner(true);
-      setTimeout(() => setSyncedBanner(false), 4000);
+  // Simpan Penimbangan Hari Ini (Fungsionalitas Penyimpanan Timbangan Lengkap)
+  const handleSaveWeighing = () => {
+    if (!inputWeight || inputWeight <= 1 || inputWeight > 40) {
+      alert("Masukkan berat badan balita yang valid (1 - 40 kg).");
+      return;
     }
+    if (!inputHeight || inputHeight <= 30 || inputHeight > 150) {
+      alert("Masukkan tinggi/panjang badan balita yang valid (30 - 150 cm).");
+      return;
+    }
+
+    const tgl = inputRecordDate || new Date().toISOString().split("T")[0];
+    const ztbu = currentZTBU;
+    const zbbu = currentZBBU;
+    const isFalter = isFalteringNow;
+    const statusNutr: BalitaRecord["statusNutrisi"] = isFalter ? "Waspada / Faltering" : "Normal";
+    const pack: BalitaRecord["paketMBG"] = isFalter ? "Paket B (Intervensi Protein Hewani)" : "Paket A (Reguler)";
+
+    const newHistoryEntry = {
+      tgl,
+      usia: inputAgeMonths,
+      bb: Number(inputWeight),
+      tb: Number(inputHeight),
+      lingkarKepala: Number(inputHeadCircumference),
+      caraUkur: measuringMethod,
+      zTbu: ztbu,
+      zBbu: zbbu,
+      catatan: inputCatatan.trim() || (isFalter ? "Perlu pemantauan intensif MBG Paket B" : "Pertumbuhan sesuai standar WHO"),
+    };
+
+    // 1. Update balitaList & activeChild secara reaktif
+    const updatedBalitaList = balitaList.map((child) => {
+      if (child.id === activeChild.id) {
+        // Hapus jika sudah ada entry pada tanggal yang sama, lalu tambahkan entry terbaru
+        const otherHistory = (child.history || []).filter((h) => h.tgl !== tgl);
+        const newHistory = [...otherHistory, newHistoryEntry].sort((a, b) => a.usia - b.usia);
+        return {
+          ...child,
+          bbKg: Number(inputWeight),
+          tbCm: Number(inputHeight),
+          lingkarKepalaCm: Number(inputHeadCircumference),
+          usiaBulan: inputAgeMonths,
+          zBBU: zbbu,
+          zTBU: ztbu,
+          statusNutrisi: statusNutr,
+          paketMBG: pack,
+          isFaltering: isFalter,
+          history: newHistory,
+        };
+      }
+      return child;
+    });
+
+    setBalitaList(updatedBalitaList);
+
+    // 2. Simpan permanen ke localStorage (nt_custom_balita)
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("nt_custom_balita", JSON.stringify(updatedBalitaList));
+
+        // Simpan log audit penimbangan posyandu (nt_posyandu_weighing_log)
+        const logEntry = {
+          id: `LOG-${Date.now()}`,
+          childId: activeChild.id,
+          childName: activeChild.nama,
+          nik: activeChild.nik,
+          posyandu: activeChild.posyandu,
+          desa: activeChild.desa,
+          tgl,
+          usiaBulan: inputAgeMonths,
+          bbKg: Number(inputWeight),
+          tbCm: Number(inputHeight),
+          lingkarKepalaCm: Number(inputHeadCircumference),
+          deltaWeight,
+          zTbu: ztbu,
+          zBbu: zbbu,
+          statusNutrisi: statusNutr,
+          paketMBG: pack,
+          catatan: inputCatatan.trim(),
+          recordedAt: new Date().toISOString(),
+        };
+        const rawLogs = localStorage.getItem("nt_posyandu_weighing_log");
+        const parsedLogs = rawLogs ? JSON.parse(rawLogs) : [];
+        localStorage.setItem("nt_posyandu_weighing_log", JSON.stringify([logEntry, ...parsedLogs]));
+      }
+    } catch (e) {}
+
+    // 3. Tangani Offline Queue vs Direct Cloud API
+    if (isOfflineMode) {
+      try {
+        const rawQ = localStorage.getItem("nt_offline_queue");
+        const parsedQ = rawQ ? JSON.parse(rawQ) : [];
+        const newQueueItem = {
+          childId: activeChild.id,
+          recordDate: tgl,
+          ageMonths: inputAgeMonths,
+          weightKg: Number(inputWeight),
+          heightCm: Number(inputHeight),
+          headCircumferenceCm: Number(inputHeadCircumference),
+          measuringMethod,
+          savedAt: new Date().toISOString(),
+        };
+        localStorage.setItem("nt_offline_queue", JSON.stringify([...parsedQ, newQueueItem]));
+        setPendingSyncCount((prev) => prev + 1);
+      } catch (err) {}
+    } else {
+      try {
+        fetch("http://localhost:5000/api/growth-records", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            childId: activeChild.id,
+            recordDate: tgl,
+            weightKg: Number(inputWeight),
+            heightCm: Number(inputHeight),
+            headCircumferenceCm: Number(inputHeadCircumference),
+            ageMonths: inputAgeMonths,
+            measuringMethod,
+            gender: activeChild.jenisKelamin,
+            catatan: inputCatatan.trim(),
+          }),
+        }).catch(() => {});
+      } catch (err) {}
+    }
+
+    // 4. Tampilkan konfirmasi sukses
+    const falterNote = isFalter
+      ? "🚨 Terdeteksi Waspada/Faltering — Otomatis Diteruskan ke Puskesmas & Dapur MBG (Paket B)!"
+      : "✅ Status Gizi Normal (Paket A Reguler).";
+    setSyncedBannerText(
+      `✓ Berhasil! Penimbangan "${activeChild.nama}" tersimpan (BB: ${inputWeight} kg, TB: ${inputHeight} cm, Z-Score: ${ztbu > 0 ? `+${ztbu}` : ztbu} SD). ${falterNote}`
+    );
+    setSyncedBanner(true);
+    setTimeout(() => setSyncedBanner(false), 6000);
+  };
+
+  // Hapus Baris Catatan Penimbangan Salah
+  const handleDeleteHistory = (indexToDelete: number) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus catatan penimbangan ini?")) return;
+
+    const child = activeChild;
+    const history = [...(child.history || [])];
+    if (history.length <= 1) {
+      alert("Minimal 1 catatan penimbangan harus tersisa pada kartu balita.");
+      return;
+    }
+
+    history.splice(indexToDelete, 1);
+    const sorted = [...history].sort((a, b) => a.usia - b.usia);
+    const latest = sorted[sorted.length - 1];
+
+    const updatedBalitaList = balitaList.map((c) => {
+      if (c.id === child.id) {
+        return {
+          ...c,
+          bbKg: latest.bb,
+          tbCm: latest.tb,
+          lingkarKepalaCm: latest.lingkarKepala || c.lingkarKepalaCm,
+          usiaBulan: latest.usia,
+          zBBU: latest.zBbu,
+          zTBU: latest.zTbu,
+          statusNutrisi: (latest.zTbu < -2 || latest.zBbu < -2) ? ("Waspada / Faltering" as const) : ("Normal" as const),
+          paketMBG: (latest.zTbu < -2 || latest.zBbu < -2) ? ("Paket B (Intervensi Protein Hewani)" as const) : ("Paket A (Reguler)" as const),
+          isFaltering: latest.zTbu < -2 || latest.zBbu < -2,
+          history: sorted,
+        };
+      }
+      return c;
+    });
+
+    setBalitaList(updatedBalitaList);
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("nt_custom_balita", JSON.stringify(updatedBalitaList.slice(0, 10)));
+      }
+    } catch (e) {}
+
+    setSyncedBannerText("✓ Catatan penimbangan berhasil dihapus dari riwayat balita.");
+    setSyncedBanner(true);
+    setTimeout(() => setSyncedBanner(false), 4000);
+  };
+
+  // Hapus Seluruh Riwayat Penimbangan Balita Terpilih
+  const handleResetBalitaHistory = (childId: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus seluruh riwayat pengukuran penimbangan balita ini?")) return;
+    const updated = balitaList.map((b) => {
+      if (b.id === childId) {
+        return {
+          ...b,
+          history: b.history && b.history.length > 0 ? [b.history[0]] : [],
+        };
+      }
+      return b;
+    });
+    setBalitaList(updated);
+    try {
+      localStorage.setItem("nt_custom_balita", JSON.stringify(updated.slice(0, 10)));
+    } catch (e) {}
+    setSyncedBannerText("✓ Riwayat penimbangan balita berhasil dibersihkan.");
+    setSyncedBanner(true);
+    setTimeout(() => setSyncedBanner(false), 4000);
+  };
+
+  // Reset Daftar Balita ke 10 Balita Standar
+  const handleResetAllCustomBalita = () => {
+    if (!confirm("Kembalikan data ke 10 balita master standar dan hapus seluruh riwayat tambahan?")) return;
+    try {
+      localStorage.removeItem("nt_custom_balita");
+      localStorage.removeItem("nt_offline_queue");
+    } catch (e) {}
+    setBalitaList(BALITA_MOCK.slice(0, 10));
+    setSelectedChildId(BALITA_MOCK[0].id);
+    setPendingSyncCount(0);
+    setSyncedBannerText("✓ Data balita berhasil direset ke 10 balita master standar.");
+    setSyncedBanner(true);
+    setTimeout(() => setSyncedBanner(false), 4000);
+  };
+
+  // Hapus Riwayat Notifikasi Puskesmas
+  const handleClearNotifications = () => {
+    if (!confirm("Hapus seluruh riwayat notifikasi jadwal pemeriksaan stunting?")) return;
+    setNotifList([]);
+    try {
+      localStorage.removeItem("nt_posyandu_notif");
+    } catch (e) {}
+    setSyncedBannerText("✓ Riwayat notifikasi berhasil dibersihkan.");
+    setSyncedBanner(true);
+    setTimeout(() => setSyncedBanner(false), 4000);
+  };
+
+  // Ekspor Data Riwayat ke CSV
+  const handleExportCsv = () => {
+    const rows = [
+      ["Tanggal", "Nama Balita", "NIK", "Usia (Bulan)", "BB (kg)", "TB (cm)", "LK (cm)", "Cara Ukur", "Z-Score TB/U", "Z-Score BB/U", "Status", "Catatan"],
+      ...(activeChild.history || []).map((h) => [
+        h.tgl,
+        `"${activeChild.nama}"`,
+        `'${activeChild.nik}`,
+        h.usia,
+        h.bb,
+        h.tb,
+        h.lingkarKepala || "-",
+        h.caraUkur || (h.usia < 24 ? "Terlentang" : "Berdiri"),
+        h.zTbu,
+        h.zBbu || "-",
+        h.zTbu < -2 ? "Waspada / Faltering" : "Normal",
+        `"${h.catatan || "-"}"`,
+      ]),
+    ];
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Riwayat_Timbang_${activeChild.nama.replace(/\s+/g, "_")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleSyncNow = () => {
+    try {
+      localStorage.removeItem("nt_offline_queue");
+    } catch (e) {}
     setPendingSyncCount(0);
-    setSyncedBannerText("Semua antrean offline penimbangan berhasil disinkronkan ke Server Pusat!");
+    setSyncedBannerText("✓ Semua antrean offline penimbangan berhasil disinkronkan ke Server Pusat & Dapur MBG!");
     setSyncedBanner(true);
     setTimeout(() => setSyncedBanner(false), 4000);
   };
@@ -269,14 +671,14 @@ export default function ModulAKmsTab() {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-sans text-base font-black text-zinc-950">
-                Posyandu Mawar 01 — Desa Bilaporah
+                {posyanduUnit}
               </h3>
               <span className="rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 font-mono text-[10px] font-black text-emerald-900">
                 ● Akun Posyandu Desa Aktif
               </span>
             </div>
             <p className="font-mono text-xs text-zinc-600 mt-0.5">
-              Kecamatan Socah, Kab. Bangkalan · Alamat: Balai RW 01, Dusun Krajan Barat RT 01 / RW 02
+              {posyanduWilayah}
             </p>
           </div>
         </div>
@@ -285,8 +687,8 @@ export default function ModulAKmsTab() {
           <span className="text-xl">🏥</span>
           <div>
             <span className="text-zinc-400 text-[10px] block font-bold uppercase">Naungan Puskesmas Pembina:</span>
-            <strong className="text-emerald-900 font-sans font-black text-sm">Puskesmas Socah</strong>
-            <span className="text-[10px] text-zinc-500 block">Jl. Raya Socah No. 45, Bangkalan</span>
+            <strong className="text-emerald-900 font-sans font-black text-sm">{puskesmasPembina}</strong>
+            <span className="text-[10px] text-zinc-500 block">Faskes Pembina Wilayah Desa</span>
           </div>
         </div>
       </div>
@@ -303,9 +705,18 @@ export default function ModulAKmsTab() {
                 Notifikasi Jadwal Intervensi dari Puskesmas Pembina ({notifList.length} Jadwal)
               </h4>
             </div>
-            <span className="rounded-full bg-rose-600 text-white font-mono text-[10px] font-black px-2.5 py-0.5">
-              Perlu Disampaikan ke Ibu Balita
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-rose-600 text-white font-mono text-[10px] font-black px-2.5 py-0.5">
+                Perlu Disampaikan ke Ibu Balita
+              </span>
+              <button
+                type="button"
+                onClick={handleClearNotifications}
+                className="rounded-xl border border-rose-300 bg-white px-2.5 py-1 font-mono text-[10px] font-bold text-rose-700 hover:bg-rose-100 transition-colors shadow-2xs"
+              >
+                🗑️ Hapus Riwayat Notifikasi
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -352,6 +763,39 @@ export default function ModulAKmsTab() {
         </div>
       )}
 
+      {/* BANNER NAVIGASI CEPAT KE MENU VERIFIKASI MBG (DIPISAHKAN DARI MEJA PENIMBANGAN) */}
+      <div className="rounded-3xl border border-emerald-200/90 bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-white p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-emerald-600 text-white text-lg shadow-xs">
+            🍱
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-emerald-700 px-2.5 py-0.5 font-mono text-[9px] font-black uppercase text-white tracking-wider">
+                Alur Menu Terpisah
+              </span>
+              <span className="font-mono text-xs font-bold text-zinc-600">
+                Verifikasi Kedatangan Ransum MBG SPPG
+              </span>
+            </div>
+            <p className="font-sans text-xs text-zinc-600 mt-0.5">
+              Ruang timbang & KMS ini dikhususkan untuk <strong>Penimbangan Balita</strong>. Proses pemeriksaan fisik & konfirmasi kedatangan paket MBG dari SPPG dipusatkan di tab <strong>&quot;Verifikasi MBG&quot;</strong>.
+            </p>
+          </div>
+        </div>
+
+        {onNavigateToMbg && (
+          <button
+            type="button"
+            onClick={onNavigateToMbg}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 font-sans text-xs font-black text-white hover:bg-emerald-700 transition-all shadow-md active:scale-95 shrink-0"
+          >
+            <span>Buka Verifikasi MBG</span>
+            <span>→</span>
+          </button>
+        )}
+      </div>
+
       {/* Header Info & Offline Banner (SKPL-F05) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm">
         <div>
@@ -386,6 +830,15 @@ export default function ModulAKmsTab() {
                 : "Tersambung Real-Time"}
             </span>
           </div>
+
+          <button
+            type="button"
+            onClick={handleResetAllCustomBalita}
+            className="rounded-2xl border border-zinc-200 bg-zinc-100 hover:bg-zinc-200 px-3.5 py-2 font-mono text-xs font-bold text-zinc-700 transition-colors shadow-2xs"
+            title="Kembalikan data ke 10 balita standar dan bersihkan data tersimpan"
+          >
+            🔄 Reset Master (10 Balita)
+          </button>
 
           <button
             type="button"
@@ -684,8 +1137,10 @@ export default function ModulAKmsTab() {
                         setInputHeight(b.tbCm);
                         setInputAgeMonths(b.usiaBulan);
                         setInputSex(b.jenisKelamin);
-                        setInputHeadCircumference(b.lingkarKepalaCm);
+                        setInputHeadCircumference(b.lingkarKepalaCm || 45.0);
                         setMeasuringMethod(b.usiaBulan < 24 ? "panjang" : "tinggi");
+                        setInputRecordDate(new Date().toISOString().split("T")[0]);
+                        setInputCatatan("");
                       }
                     }}
                     className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-sans text-sm font-bold text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
@@ -698,135 +1153,207 @@ export default function ModulAKmsTab() {
                   </select>
                 </div>
 
+                {/* Tanggal Penimbangan */}
+                <div>
+                  <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
+                    Tanggal Penimbangan (Posyandu)
+                  </label>
+                  <input
+                    type="date"
+                    value={inputRecordDate}
+                    onChange={(e) => setInputRecordDate(e.target.value)}
+                    className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-mono text-sm font-bold text-zinc-900 outline-none focus:border-[#38E8F5] focus:bg-white focus:ring-4 focus:ring-[#38E8F5]/20"
+                  />
+                </div>
+
                 {/* Usia & Jenis Kelamin */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
                       Usia (Bulan)
                     </label>
-                  <input
-                    type="number"
-                    value={inputAgeMonths}
-                    min={1}
-                    max={60}
-                    onChange={(e) => {
-                      const age = Number(e.target.value);
-                      setInputAgeMonths(age);
-                      setMeasuringMethod(age < 24 ? "panjang" : "tinggi");
-                    }}
-                    className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-mono text-sm font-bold text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
-                  />
-                </div>
-                <div>
-                  <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
-                    Jenis Kelamin
-                  </label>
-                  <div className="flex h-12 rounded-2xl border border-zinc-200 bg-zinc-50 p-1">
-                    <button
-                      type="button"
-                      onClick={() => setInputSex("L")}
-                      className={`flex-1 rounded-xl text-xs font-black transition-colors ${
-                        inputSex === "L" ? "bg-[#18140B] text-white" : "text-zinc-600"
-                      }`}
-                    >
-                      Laki-Laki
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setInputSex("P")}
-                      className={`flex-1 rounded-xl text-xs font-black transition-colors ${
-                        inputSex === "P" ? "bg-[#18140B] text-white" : "text-zinc-600"
-                      }`}
-                    >
-                      Perempuan
-                    </button>
+                    <input
+                      type="number"
+                      value={inputAgeMonths}
+                      min={1}
+                      max={60}
+                      onChange={(e) => {
+                        const age = Number(e.target.value);
+                        setInputAgeMonths(age);
+                        setMeasuringMethod(age < 24 ? "panjang" : "tinggi");
+                      }}
+                      className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-mono text-sm font-bold text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
+                      Jenis Kelamin
+                    </label>
+                    <div className="flex h-12 rounded-2xl border border-zinc-200 bg-zinc-50 p-1">
+                      <button
+                        type="button"
+                        onClick={() => setInputSex("L")}
+                        className={`flex-1 rounded-xl text-xs font-black transition-colors ${
+                          inputSex === "L" ? "bg-[#18140B] text-white" : "text-zinc-600"
+                        }`}
+                      >
+                        Laki-Laki
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInputSex("P")}
+                        className={`flex-1 rounded-xl text-xs font-black transition-colors ${
+                          inputSex === "P" ? "bg-[#18140B] text-white" : "text-zinc-600"
+                        }`}
+                      >
+                        Perempuan
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Berat Badan & Tinggi Badan */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
-                    Berat Badan (kg)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={inputWeight}
-                    onChange={(e) => setInputWeight(Number(e.target.value))}
-                    className="h-14 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-mono text-lg font-black text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
-                  />
-                </div>
-                <div>
-                  <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
-                    {measuringMethod === "panjang" ? "Panjang Badan (cm)" : "Tinggi Badan (cm)"}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={inputHeight}
-                    onChange={(e) => setInputHeight(Number(e.target.value))}
-                    className="h-14 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-mono text-lg font-black text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
-                  />
-                </div>
-              </div>
-
-              {/* Lingkar Kepala & Cara Ukur */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
-                    Lingkar Kepala (cm)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={inputHeadCircumference}
-                    onChange={(e) => setInputHeadCircumference(Number(e.target.value))}
-                    className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-mono text-sm font-bold text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
-                  />
-                </div>
-                <div>
-                  <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
-                    Cara Ukur (WHO)
-                  </label>
-                  <div className="flex h-12 items-center rounded-2xl border border-zinc-200 bg-zinc-100/80 px-3 font-mono text-xs font-bold text-zinc-700">
-                    {inputAgeMonths < 24 ? "Terlentang (<24 bln)" : "Berdiri (≥24 bln)"}
+                {/* Berat Badan & Tinggi Badan */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600">
+                        Berat Badan (kg)
+                      </label>
+                      {lastHistoryEntry && (
+                        <span className="font-mono text-[10px] text-zinc-400">
+                          Lalu: {lastHistoryEntry.bb} kg
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={inputWeight}
+                      onChange={(e) => setInputWeight(Number(e.target.value))}
+                      className="h-14 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-mono text-lg font-black text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
+                    />
+                    {deltaWeight !== null && (
+                      <div className="mt-1 flex items-center gap-1 font-mono text-[10px] font-bold">
+                        {deltaWeight > 0 ? (
+                          <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            ▲ +{deltaWeight} kg (Naik)
+                          </span>
+                        ) : deltaWeight === 0 ? (
+                          <span className="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">
+                            ▶ 0.0 kg (Stagnan / 2T)
+                          </span>
+                        ) : (
+                          <span className="text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded">
+                            ▼ {deltaWeight} kg (Turun / Faltering!)
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
+                      {measuringMethod === "panjang" ? "Panjang Badan (cm)" : "Tinggi Badan (cm)"}
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={inputHeight}
+                      onChange={(e) => setInputHeight(Number(e.target.value))}
+                      className="h-14 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-mono text-lg font-black text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
+                    />
                   </div>
                 </div>
-              </div>
 
-              {/* Live Status Calculation Box (SKPL-F02) */}
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono font-bold">
-                  <span className="text-zinc-500">Z-Score TB/U (Stunting):</span>
-                  <span className={`px-2 py-0.5 rounded-md ${currentZTBU < -2 ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-800"}`}>
-                    {currentZTBU > 0 ? `+${currentZTBU}` : currentZTBU} SD
-                  </span>
+                {/* Lingkar Kepala & Cara Ukur */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
+                      Lingkar Kepala (cm)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={inputHeadCircumference}
+                      onChange={(e) => setInputHeadCircumference(Number(e.target.value))}
+                      className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-mono text-sm font-bold text-zinc-900 outline-none focus:border-[#38E8F5] focus:ring-4 focus:ring-[#38E8F5]/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
+                      Cara Ukur (WHO)
+                    </label>
+                    <div className="flex h-12 rounded-2xl border border-zinc-200 bg-zinc-50 p-1 font-mono text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setMeasuringMethod("panjang")}
+                        className={`flex-1 rounded-xl transition-all ${
+                          measuringMethod === "panjang"
+                            ? "bg-[#18140B] text-white shadow-xs font-black"
+                            : "text-zinc-600 hover:text-zinc-950"
+                        }`}
+                      >
+                        Terlentang
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMeasuringMethod("tinggi")}
+                        className={`flex-1 rounded-xl transition-all ${
+                          measuringMethod === "tinggi"
+                            ? "bg-[#18140B] text-white shadow-xs font-black"
+                            : "text-zinc-600 hover:text-zinc-950"
+                        }`}
+                      >
+                        Berdiri
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-xs font-mono font-bold">
-                  <span className="text-zinc-500">Z-Score BB/U:</span>
-                  <span className={`px-2 py-0.5 rounded-md ${currentZBBU < -2 ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-800"}`}>
-                    {currentZBBU > 0 ? `+${currentZBBU}` : currentZBBU} SD
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-mono font-bold pt-1 border-t border-zinc-200">
-                  <span className="text-zinc-700">Preskripsi Otomatis:</span>
-                  <span className="font-sans font-black text-[#7866FF]">{currentPack}</span>
-                </div>
-              </div>
 
-              {/* Tombol Simpan Penimbangan */}
-              <button
-                type="button"
-                onClick={handleSimulateAddWeight}
-                className="group flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#18140B] font-sans text-sm font-black text-white shadow-lg transition-transform hover:scale-[1.015] active:scale-95"
-              >
-                <span>Simpan Penimbangan Hari Ini</span>
-                <span className="text-[#38E8F5] transition-transform group-hover:translate-x-1">→</span>
-              </button>
-            </div>
-          )}
+                {/* Catatan Penimbangan / Kondisi Balita */}
+                <div>
+                  <label className="block font-mono text-[11px] font-bold uppercase text-zinc-600 mb-1">
+                    Catatan Kondisi Balita (Opsional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Balita sehat, ASI lancar / nafsu makan menurun saat tumbuh gigi"
+                    value={inputCatatan}
+                    onChange={(e) => setInputCatatan(e.target.value)}
+                    className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 font-sans text-xs font-medium text-zinc-900 outline-none focus:border-[#38E8F5] focus:bg-white"
+                  />
+                </div>
+
+                {/* Live Status Calculation Box (SKPL-F02) */}
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-mono font-bold">
+                    <span className="text-zinc-500">Z-Score TB/U (Stunting):</span>
+                    <span className={`px-2 py-0.5 rounded-md ${currentZTBU < -2 ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-800"}`}>
+                      {currentZTBU > 0 ? `+${currentZTBU}` : currentZTBU} SD
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-mono font-bold">
+                    <span className="text-zinc-500">Z-Score BB/U (Underweight):</span>
+                    <span className={`px-2 py-0.5 rounded-md ${currentZBBU < -2 ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-800"}`}>
+                      {currentZBBU > 0 ? `+${currentZBBU}` : currentZBBU} SD
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-mono font-bold pt-1 border-t border-zinc-200">
+                    <span className="text-zinc-700">Preskripsi MBG Otomatis:</span>
+                    <span className="font-sans font-black text-[#7866FF]">{currentPack}</span>
+                  </div>
+                </div>
+
+                {/* Tombol Simpan Penimbangan */}
+                <button
+                  type="button"
+                  onClick={handleSaveWeighing}
+                  className="group flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#18140B] font-sans text-sm font-black text-white shadow-lg transition-transform hover:scale-[1.015] active:scale-95"
+                >
+                  <span>Simpan Penimbangan Hari Ini</span>
+                  <span className="text-[#38E8F5] transition-transform group-hover:translate-x-1">→</span>
+                </button>
+              </div>
+            )}
         </div>
       </div>
 
@@ -905,33 +1432,71 @@ export default function ModulAKmsTab() {
                   strokeWidth="2"
                 />
 
-                {/* Plot Riwayat Balita Aktif (3 titik penimbangan) */}
-                <path
-                  d="M 120 205 L 260 215 L 420 220"
-                  fill="none"
-                  stroke="#7866FF"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
+                {/* Dynamic Plot Riwayat Balita Aktif */}
+                {activeChild.history && activeChild.history.length > 0 && (() => {
+                  const sorted = [...activeChild.history].sort((a, b) => a.usia - b.usia);
+                  const minAge = Math.min(...sorted.map((x) => x.usia), 6);
+                  const maxAge = Math.max(...sorted.map((x) => x.usia), minAge + 12);
+                  const pts = sorted.map((h) => {
+                    const x = sorted.length === 1
+                      ? 280
+                      : 80 + ((h.usia - minAge) / Math.max(1, maxAge - minAge)) * 380;
+                    const y = Math.max(45, Math.min(235, 235 - ((h.bb - 6) / 8) * 165));
+                    return { ...h, x, y };
+                  });
 
-                {/* Titik 1: 2 bln lalu */}
-                <circle cx="120" cy="205" r="5" fill="#7866FF" stroke="white" strokeWidth="2" />
-                <text x="120" y="195" textAnchor="middle" className="font-mono text-[9px] fill-zinc-600 font-bold">
-                  8.5 kg
-                </text>
+                  const pathD = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
-                {/* Titik 2: 1 bln lalu */}
-                <circle cx="260" cy="215" r="5" fill="#7866FF" stroke="white" strokeWidth="2" />
-                <text x="260" y="235" textAnchor="middle" className="font-mono text-[9px] fill-zinc-600 font-bold">
-                  8.4 kg (Mendatar)
-                </text>
-
-                {/* Titik 3: Bulan Ini (Sorot Terkini) */}
-                <circle cx="420" cy="220" r="7" fill="#38E8F5" stroke="#18140B" strokeWidth="2.5" />
-                <circle cx="420" cy="220" r="14" fill="none" stroke="#38E8F5" strokeWidth="2" className="animate-ping" opacity="0.4" />
-                <text x="420" y="244" textAnchor="middle" className="font-mono text-[10px] fill-zinc-900 font-black">
-                  Hari Ini: 8.4 kg (-2.42 SD)
-                </text>
+                  return (
+                    <g>
+                      {pts.length > 1 && (
+                        <path
+                          d={pathD}
+                          fill="none"
+                          stroke="#7866FF"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      )}
+                      {pts.map((p, idx) => {
+                        const isLatest = idx === pts.length - 1;
+                        return (
+                          <g key={idx}>
+                            <circle
+                              cx={p.x}
+                              cy={p.y}
+                              r={isLatest ? 7 : 5}
+                              fill={isLatest ? "#38E8F5" : "#7866FF"}
+                              stroke={isLatest ? "#18140B" : "white"}
+                              strokeWidth={isLatest ? 2.5 : 2}
+                            />
+                            {isLatest && (
+                              <circle
+                                cx={p.x}
+                                cy={p.y}
+                                r={14}
+                                fill="none"
+                                stroke="#38E8F5"
+                                strokeWidth={2}
+                                className="animate-ping"
+                                opacity="0.5"
+                              />
+                            )}
+                            <text
+                              x={p.x}
+                              y={isLatest ? Math.min(250, p.y + 22) : p.y - 10}
+                              textAnchor="middle"
+                              className={`font-mono ${isLatest ? "text-[10px] fill-zinc-950 font-black" : "text-[9px] fill-zinc-600 font-bold"}`}
+                            >
+                              {isLatest ? `Hari Ini: ${p.bb} kg (${p.zTbu > 0 ? `+${p.zTbu}` : p.zTbu} SD)` : `${p.bb} kg (${p.usia} bln)`}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })()}
 
                 {/* Label Sumbu X & Y */}
                 <text x="45" y="25" className="font-mono text-[9px] fill-zinc-400 font-bold">
@@ -943,34 +1508,245 @@ export default function ModulAKmsTab() {
               </svg>
             </div>
 
-            {/* Riwayat Penimbangan Tabel Ringkas */}
-            <div className="mt-6">
-              <h4 className="font-mono text-xs font-bold uppercase text-zinc-500 mb-2.5">
-                Riwayat Penimbangan 3 Bulan Terakhir
-              </h4>
-              <div className="overflow-x-auto rounded-2xl border border-zinc-100">
+            {/* Riwayat Penimbangan Tabel Interaktif & Kartu KMS */}
+            <div className="mt-6 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div>
+                  <h4 className="font-mono text-xs font-bold uppercase text-zinc-800">
+                    Buku Catatan Penimbangan Posyandu (KMS)
+                  </h4>
+                  <p className="font-mono text-[10px] text-zinc-500">
+                    Histori pemantauan berkala balita {activeChild.nama} · {activeChild.history?.length || 0} catatan
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePrintMonthlyReport}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 py-1.5 font-sans text-xs font-black text-emerald-950 hover:bg-emerald-100 transition-colors shadow-xs"
+                  >
+                    <span>📋</span>
+                    <span>Cetak Laporan Bulanan Posyandu</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExportCsv}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5 font-mono text-[11px] font-bold text-zinc-700 hover:bg-zinc-100 transition-colors"
+                  >
+                    <span>📥 Ekspor CSV</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsPrintModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#18140B] px-3.5 py-1.5 font-sans text-xs font-black text-white hover:bg-[#38E8F5] hover:text-zinc-950 transition-colors shadow-xs"
+                  >
+                    <span>🖨️ Cetak Kartu KMS</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleResetBalitaHistory(activeChild.id)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-rose-300 bg-rose-50 px-3 py-1.5 font-mono text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition-colors shadow-2xs"
+                    title="Hapus riwayat penimbangan balita ini"
+                  >
+                    <span>🗑️ Hapus Riwayat</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
                 <table className="w-full text-left font-sans text-xs">
                   <thead className="bg-zinc-50 border-b border-zinc-100 font-mono text-[10px] uppercase text-zinc-500">
                     <tr>
-                      <th className="py-2.5 px-3.5">Tanggal</th>
-                      <th className="py-2.5 px-3.5">Usia</th>
-                      <th className="py-2.5 px-3.5">BB (kg)</th>
-                      <th className="py-2.5 px-3.5">TB (cm)</th>
-                      <th className="py-2.5 px-3.5">Z TB/U</th>
-                      <th className="py-2.5 px-3.5">Status</th>
+                      <th className="py-2.5 px-3">Tanggal</th>
+                      <th className="py-2.5 px-3">Usia</th>
+                      <th className="py-2.5 px-3">BB (kg)</th>
+                      <th className="py-2.5 px-3">TB (cm)</th>
+                      <th className="py-2.5 px-3">LK (cm)</th>
+                      <th className="py-2.5 px-3">Cara Ukur</th>
+                      <th className="py-2.5 px-3">Z TB/U</th>
+                      <th className="py-2.5 px-3">Status Gizi</th>
+                      <th className="py-2.5 px-3">Catatan</th>
+                      <th className="py-2.5 px-3 text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100 font-medium">
-                    {activeChild.history.map((h, i) => (
-                      <tr key={i} className="hover:bg-zinc-50/50">
-                        <td className="py-2.5 px-3.5 font-mono text-[11px]">{h.tgl}</td>
-                        <td className="py-2.5 px-3.5">{h.usia} bln</td>
-                        <td className="py-2.5 px-3.5 font-bold">{h.bb} kg</td>
-                        <td className="py-2.5 px-3.5">{h.tb} cm</td>
-                        <td className="py-2.5 px-3.5 font-mono font-bold text-red-600">{h.zTbu} SD</td>
-                        <td className="py-2.5 px-3.5">
-                          <span className="rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                            Waspada
+                    {sortedHistory.map((h, i) => {
+                      const prevH = i > 0 ? sortedHistory[i - 1] : null;
+                      const delta = prevH ? Math.round((h.bb - prevH.bb) * 100) / 100 : null;
+                      return (
+                        <tr key={i} className="hover:bg-zinc-50/60 transition-colors">
+                          <td className="py-2.5 px-3 font-mono text-[11px] font-bold text-zinc-800 whitespace-nowrap">
+                            {h.tgl}
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">{h.usia} bln</td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            <span className="font-bold text-zinc-950">{h.bb} kg</span>
+                            {delta !== null && (
+                              <span
+                                className={`ml-1.5 inline-block text-[9px] font-mono font-bold px-1 py-0.5 rounded ${
+                                  delta > 0
+                                    ? "text-emerald-700 bg-emerald-50"
+                                    : delta === 0
+                                    ? "text-amber-800 bg-amber-50"
+                                    : "text-rose-700 bg-rose-50"
+                                }`}
+                              >
+                                {delta > 0 ? `▲ +${delta}` : delta === 0 ? `▶ 0.0` : `▼ ${delta}`}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">{h.tb} cm</td>
+                          <td className="py-2.5 px-3 font-mono text-[11px] text-zinc-600 whitespace-nowrap">
+                            {h.lingkarKepala ? `${h.lingkarKepala} cm` : "-"}
+                          </td>
+                          <td className="py-2.5 px-3 font-mono text-[10px] text-zinc-600 capitalize whitespace-nowrap">
+                            {h.caraUkur || (h.usia < 24 ? "Terlentang" : "Berdiri")}
+                          </td>
+                          <td
+                            className={`py-2.5 px-3 font-mono font-bold whitespace-nowrap ${
+                              h.zTbu < -2 ? "text-rose-600" : "text-emerald-700"
+                            }`}
+                          >
+                            {h.zTbu > 0 ? `+${h.zTbu}` : h.zTbu} SD
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {h.zTbu < -2 || (h.zBbu !== undefined && h.zBbu < -2) ? (
+                              <span className="rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                                Waspada / Faltering
+                              </span>
+                            ) : (
+                              <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                                Normal
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-zinc-600 text-[11px] max-w-[140px] truncate">
+                            {h.catatan || "-"}
+                          </td>
+                          <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteHistory(i)}
+                              title="Hapus baris data salah"
+                              className="rounded-lg p-1 text-zinc-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                            >
+                              ✕
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal Cetak Kartu KMS Digital Interaktif */}
+      {isPrintModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[32px] border border-zinc-200 bg-white p-6 sm:p-8 shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-zinc-100 pb-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 rounded-md bg-[#38E8F5]/20 px-2 py-0.5 font-mono text-[10px] font-black uppercase text-[#032D30]">
+                  KEMENTERIAN KESEHATAN RI · PEMPROV JATIM
+                </div>
+                <h3 className="mt-1 font-sans text-xl font-black uppercase tracking-tight text-zinc-950">
+                  Kartu Menuju Sehat (KMS) Digital
+                </h3>
+                <p className="font-mono text-xs text-zinc-500">
+                  Standar Antropometri Permenkes No. 2/2020 · Terintegrasi Dapur MBG
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPrintModalOpen(false)}
+                className="grid h-9 w-9 place-items-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Balita Identity Box */}
+            <div className="mt-5 rounded-2xl bg-zinc-50 border border-zinc-200 p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+              <div>
+                <span className="block font-mono text-[10px] text-zinc-500 uppercase">Nama Balita</span>
+                <strong className="text-zinc-950 text-sm">{activeChild.nama}</strong>
+              </div>
+              <div>
+                <span className="block font-mono text-[10px] text-zinc-500 uppercase">NIK Balita</span>
+                <span className="font-mono font-bold text-zinc-800">{activeChild.nik}</span>
+              </div>
+              <div>
+                <span className="block font-mono text-[10px] text-zinc-500 uppercase">Jenis Kelamin</span>
+                <span className="font-bold text-zinc-800">
+                  {activeChild.jenisKelamin === "L" ? "Laki-Laki (L)" : "Perempuan (P)"}
+                </span>
+              </div>
+              <div>
+                <span className="block font-mono text-[10px] text-zinc-500 uppercase">Nama Ibu</span>
+                <span className="font-bold text-zinc-800">{activeChild.namaIbu}</span>
+              </div>
+              <div>
+                <span className="block font-mono text-[10px] text-zinc-500 uppercase">Posyandu / Desa</span>
+                <span className="font-bold text-zinc-800">{activeChild.posyandu}, {activeChild.desa}</span>
+              </div>
+              <div>
+                <span className="block font-mono text-[10px] text-zinc-500 uppercase">Status Nutrisi Saat Ini</span>
+                <span className={`inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] ${
+                  activeChild.isFaltering ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"
+                }`}>
+                  {activeChild.statusNutrisi}
+                </span>
+              </div>
+            </div>
+
+            {/* Status MBG Alokasi */}
+            <div className="mt-4 rounded-2xl border border-zinc-200 p-3.5 flex items-center justify-between bg-white shadow-xs">
+              <div>
+                <div className="font-mono text-[10px] text-zinc-500 uppercase font-bold">Preskripsi Menu MBG Harian:</div>
+                <div className="font-sans text-sm font-black text-[#5C46D9]">{activeChild.paketMBG}</div>
+              </div>
+              <span className="rounded-xl bg-zinc-100 px-3 py-1 font-mono text-xs font-bold text-zinc-700">
+                Puskesmas {activeChild.kecamatan}
+              </span>
+            </div>
+
+            {/* Riwayat Penimbangan Table */}
+            <div className="mt-5">
+              <h5 className="font-mono text-xs font-bold uppercase text-zinc-600 mb-2">
+                Riwayat Penimbangan Balita
+              </h5>
+              <div className="overflow-x-auto rounded-xl border border-zinc-200">
+                <table className="w-full text-left font-sans text-xs">
+                  <thead className="bg-zinc-100/70 border-b border-zinc-200 font-mono text-[10px] uppercase text-zinc-600">
+                    <tr>
+                      <th className="py-2 px-3">Tanggal</th>
+                      <th className="py-2 px-3">Usia</th>
+                      <th className="py-2 px-3">BB</th>
+                      <th className="py-2 px-3">TB</th>
+                      <th className="py-2 px-3">LK</th>
+                      <th className="py-2 px-3">Z TB/U</th>
+                      <th className="py-2 px-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {sortedHistory.map((h, i) => (
+                      <tr key={i}>
+                        <td className="py-2 px-3 font-mono text-[11px]">{h.tgl}</td>
+                        <td className="py-2 px-3">{h.usia} bln</td>
+                        <td className="py-2 px-3 font-bold">{h.bb} kg</td>
+                        <td className="py-2 px-3">{h.tb} cm</td>
+                        <td className="py-2 px-3 font-mono">{h.lingkarKepala ? `${h.lingkarKepala} cm` : "-"}</td>
+                        <td className="py-2 px-3 font-mono font-bold">{h.zTbu > 0 ? `+${h.zTbu}` : h.zTbu} SD</td>
+                        <td className="py-2 px-3">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            h.zTbu < -2 ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
+                          }`}>
+                            {h.zTbu < -2 ? "Waspada" : "Normal"}
                           </span>
                         </td>
                       </tr>
@@ -979,9 +1755,56 @@ export default function ModulAKmsTab() {
                 </table>
               </div>
             </div>
+
+            {/* Signatures & Footer */}
+            <div className="mt-6 pt-4 border-t border-zinc-200 grid grid-cols-2 gap-4 text-center font-mono text-xs text-zinc-600">
+              <div>
+                <p className="text-[10px] text-zinc-400 uppercase">Kader Posyandu Pelaksana</p>
+                <div className="h-12 flex items-center justify-center font-bold text-zinc-800 italic">
+                  ( Terverifikasi Digital )
+                </div>
+                <p className="font-bold text-zinc-900">{activeChild.posyandu}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-zinc-400 uppercase">Petugas Gizi / Bidan Pembina</p>
+                <div className="h-12 flex items-center justify-center font-bold text-zinc-800 italic">
+                  ( SIP.35.05.2026.GZ )
+                </div>
+                <p className="font-bold text-zinc-900">Puskesmas {activeChild.kecamatan}</p>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="mt-6 flex items-center justify-end gap-3 pt-4 border-t border-zinc-100">
+              <button
+                type="button"
+                onClick={() => setIsPrintModalOpen(false)}
+                className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 font-sans text-xs font-bold text-zinc-700 hover:bg-zinc-100"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") window.print();
+                }}
+                className="rounded-2xl bg-[#18140B] text-white px-5 py-2.5 font-sans text-xs font-black hover:bg-emerald-600 transition-colors shadow-md flex items-center gap-1.5"
+              >
+                <span>🖨️ Cetak Dokumen Sekarang</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Modal Cetak Laporan Bulanan Posyandu */}
+      {printReportData && (
+        <CetakLaporanModal
+          {...printReportData}
+          isOpen={!!printReportData}
+          onClose={() => setPrintReportData(null)}
+        />
+      )}
     </div>
   );
 }

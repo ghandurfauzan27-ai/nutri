@@ -31,10 +31,10 @@ export default function Reveal({ children, as: Tag = "div", variant = "up", dela
             : { y: 24, opacity: 0 };
       gsap.from(el, {
         ...from,
-        duration: 1,
-        delay,
-        ease: "power3.out",
-        scrollTrigger: { trigger: el, start: "top 88%", once: true },
+        duration: 0.45,
+        delay: Math.min(delay, 0.15),
+        ease: "power2.out",
+        scrollTrigger: { trigger: el, start: "top 95%", once: true },
       });
     }, el);
     return () => ctx.revert();

@@ -7,16 +7,18 @@ import {
   authRoles,
   type AuthRole,
   MASTER_PUSKESMAS_ACCOUNTS,
+  MASTER_SPPG_ACCOUNTS,
+  MASTER_POSYANDU_ACCOUNTS,
   DEMO_ACCOUNTS,
+  getAccountPassword,
 } from "@/lib/auth-data";
 import { item, stagger } from "./motion";
 import { Checkbox, FloatingField, PasswordField, RoleSegmented, SubmitButton, type SubmitStatus } from "./fields";
 
 export default function LoginForm({ delay }: { delay: number }) {
   const [role, setRole] = useState<AuthRole>("posyandu");
-  const [id, setId] = useState("");
-  const [pw, setPw] = useState("");
-  const [selectedPuskesmasIndex, setSelectedPuskesmasIndex] = useState<number>(0);
+  const [id, setId] = useState("posyandu.mawar01@jatim.go.id");
+  const [pw, setPw] = useState("Password123!");
   const [remember, setRemember] = useState(true);
   const [errors, setErrors] = useState<{ id?: string; pw?: string }>({});
   const [status, setStatus] = useState<SubmitStatus>("idle");
@@ -26,45 +28,54 @@ export default function LoginForm({ delay }: { delay: number }) {
 
   useEffect(() => {
     // Set default credentials saat peran berganti
+    let defaultEmail = "posyandu.mawar01@jatim.go.id";
     if (role === "puskesmas") {
-      const p = MASTER_PUSKESMAS_ACCOUNTS[selectedPuskesmasIndex];
-      setId(p.email);
-      setPw("Password123!");
+      defaultEmail = "puskesmas.socah@jatim.go.id";
     } else if (role === "posyandu") {
-      setId("posyandu.bilaporah@jatim.go.id");
-      setPw("Password123!");
+      defaultEmail = "posyandu.mawar01@jatim.go.id";
     } else if (role === "dapur") {
-      setId("dapur.sppg@jatim.go.id");
-      setPw("Password123!");
+      defaultEmail = "sppg.socah@jatim.go.id";
     } else if (role === "dinkes") {
-      setId("dinkes.jatim@jatimprov.go.id");
-      setPw("Password123!");
+      defaultEmail = "dinkes.jatim@jatimprov.go.id";
     }
+    setId(defaultEmail);
+    setPw(getAccountPassword(defaultEmail));
     setErrors({});
     setStatus("idle");
-  }, [role, selectedPuskesmasIndex]);
+  }, [role]);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-
-  const handlePuskesmasSelect = (idx: number) => {
-    setSelectedPuskesmasIndex(idx);
-    const p = MASTER_PUSKESMAS_ACCOUNTS[idx];
-    setId(p.email);
-    setPw("Password123!");
-  };
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     const next: { id?: string; pw?: string } = {};
     if (!id.trim()) next.id = "Isi identitas akunmu dulu.";
     if (!pw) next.pw = "Kata sandi belum diisi.";
+
+    // Validasi kata sandi aktif akun
+    if (id.trim() && pw) {
+      const activePassword = getAccountPassword(id.trim());
+      if (pw !== activePassword) {
+        next.pw = "Kata sandi salah. Silakan periksa kembali kata sandi akun Anda.";
+      }
+    }
+
     setErrors(next);
     if (next.id || next.pw) return;
 
     setStatus("loading");
 
     // Tentukan data sesi otentikasi
-    let sessionData = {
+    let sessionData: {
+      role: AuthRole;
+      name: string;
+      email: string;
+      unit: string;
+      wilayah: string;
+      faskesCode: string;
+      puskesmasPembina: string;
+      sppgId?: string;
+    } = {
       role: role === "kader" ? "posyandu" : role,
       name: "Pengguna NutriTrack",
       email: id,
@@ -75,8 +86,9 @@ export default function LoginForm({ delay }: { delay: number }) {
     };
 
     if (role === "puskesmas") {
-      const matched = MASTER_PUSKESMAS_ACCOUNTS.find((p) => p.email.toLowerCase() === id.toLowerCase()) ||
-        MASTER_PUSKESMAS_ACCOUNTS[selectedPuskesmasIndex];
+      const matched =
+        MASTER_PUSKESMAS_ACCOUNTS.find((p) => p.email.toLowerCase() === id.toLowerCase()) ||
+        MASTER_PUSKESMAS_ACCOUNTS[0];
       sessionData = {
         role: "puskesmas",
         name: matched.name,
@@ -87,24 +99,31 @@ export default function LoginForm({ delay }: { delay: number }) {
         puskesmasPembina: matched.unit,
       };
     } else if (role === "posyandu" || (role as string) === "kader") {
+      const matched =
+        MASTER_POSYANDU_ACCOUNTS.find((p) => p.email.toLowerCase() === id.toLowerCase()) ||
+        MASTER_POSYANDU_ACCOUNTS[0];
       sessionData = {
         role: "posyandu",
-        name: "Siti Rahmawati, S.Pd (Petugas Posyandu)",
-        email: id,
-        unit: "Posyandu Mawar 01 — Desa Bilaporah",
-        wilayah: "Kecamatan Socah, Kab. Bangkalan",
+        name: matched.name,
+        email: matched.email,
+        unit: `${matched.unit} — ${matched.wilayah.split(",")[0].trim()}`,
+        wilayah: matched.wilayah,
         faskesCode: "",
-        puskesmasPembina: "Puskesmas Socah",
+        puskesmasPembina: matched.puskesmasPembina || "Puskesmas Socah",
       };
     } else if (role === "dapur") {
+      const matched =
+        MASTER_SPPG_ACCOUNTS.find((s) => s.email.toLowerCase() === id.toLowerCase()) ||
+        MASTER_SPPG_ACCOUNTS[0];
       sessionData = {
         role: "dapur",
-        name: "H. Mustofa Kamal (Kepala Dapur)",
-        email: id,
-        unit: "SPPG Dapur Sehat Socah Mandiri",
-        wilayah: "Wilayah Layanan: 9 Posyandu Kec. Socah, Bangkalan",
+        name: matched.name,
+        email: matched.email,
+        unit: matched.unit,
+        wilayah: matched.wilayah,
         faskesCode: "",
         puskesmasPembina: "",
+        sppgId: matched.sppgId || "SPPG-BKL-01",
       };
     } else if (role === "dinkes") {
       sessionData = {
@@ -125,7 +144,7 @@ export default function LoginForm({ delay }: { delay: number }) {
     timer.current = setTimeout(() => {
       setStatus("done");
       setTimeout(() => {
-        const targetRole = role === "posyandu" || (role as string) === "kader" ? "kader" : role;
+        const targetRole = role === "kader" ? "posyandu" : role;
         window.location.href = `/app?role=${targetRole}`;
       }, 500);
     }, 600);
@@ -134,13 +153,15 @@ export default function LoginForm({ delay }: { delay: number }) {
   const fillDemo = () => {
     setStatus("loading");
     const demo = DEMO_ACCOUNTS.find((d) => d.role === role) || DEMO_ACCOUNTS[0];
+    setId(demo.email);
+    setPw(getAccountPassword(demo.email));
     if (typeof window !== "undefined") {
       localStorage.setItem("nt_current_session", JSON.stringify(demo));
     }
     timer.current = setTimeout(() => {
       setStatus("done");
       setTimeout(() => {
-        const targetRole = role === "posyandu" || (role as string) === "kader" ? "kader" : role;
+        const targetRole = role === "kader" ? "posyandu" : role;
         window.location.href = `/app?role=${targetRole}`;
       }, 400);
     }, 500);
@@ -179,34 +200,6 @@ export default function LoginForm({ delay }: { delay: number }) {
         <motion.div variants={item} className="rounded-2xl border border-sky-200 bg-sky-50/60 p-3.5 text-xs text-sky-950 font-medium leading-relaxed">
           💡 <strong>{info.name}:</strong> {info.deskripsi}
         </motion.div>
-
-        {/* KHUSUS PUSKESMAS: Selector Puskesmas se-Jatim (Akun Sudah Dibuatkan Semua Langsung!) */}
-        {role === "puskesmas" && (
-          <motion.div variants={item} className="space-y-2 rounded-2xl border border-emerald-300 bg-emerald-50/70 p-4">
-            <div className="flex items-center justify-between">
-              <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-950">
-                🏥 Pilih Puskesmas Pembina (se-Jawa Timur)
-              </label>
-              <span className="rounded-full bg-emerald-600 px-2 py-0.5 font-mono text-[9px] font-black text-white">
-                Tersedia Otomatis
-              </span>
-            </div>
-            <select
-              value={selectedPuskesmasIndex}
-              onChange={(e) => handlePuskesmasSelect(Number(e.target.value))}
-              className="h-12 w-full rounded-xl border border-emerald-300 bg-white px-3 font-sans text-xs font-bold text-zinc-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
-            >
-              {MASTER_PUSKESMAS_ACCOUNTS.map((p, idx) => (
-                <option key={p.email} value={idx}>
-                  {p.unit} — {p.wilayah} ({p.name})
-                </option>
-              ))}
-            </select>
-            <p className="font-mono text-[10px] text-emerald-900">
-              *Seluruh Puskesmas di Jawa Timur sudah dibuatkan akunnya langsung oleh Dinas Kesehatan Provinsi. Password default: <code className="bg-emerald-200/70 px-1 py-0.5 rounded font-black">Password123!</code>
-            </p>
-          </motion.div>
-        )}
 
         <motion.div variants={item}>
           <FloatingField id="login-id" label={info.loginIdLabel} value={id} onChange={setId} error={errors.id} autoComplete="username" />

@@ -13,6 +13,8 @@ import ModulCKonsumsiTab from "./ModulCKonsumsiTab";
 import ModulDAnalitikTab from "./ModulDAnalitikTab";
 import PuskesmasTab from "./PuskesmasTab";
 import CaraKerjaRoleTab from "./CaraKerjaRoleTab";
+import DinkesKelolaFaskesTab from "./DinkesKelolaFaskesTab";
+import ProfilAkunTab from "./ProfilAkunTab";
 
 export type DashboardTab =
   | "ringkasan"
@@ -21,7 +23,9 @@ export type DashboardTab =
   | "konsumsi"
   | "analitik"
   | "puskesmas"
-  | "carakerja";
+  | "kelola_faskes"
+  | "carakerja"
+  | "profil";
 
 interface ActiveSession {
   role: AuthRole;
@@ -72,19 +76,25 @@ export default function AppShell() {
 
   // Baca sesi otentikasi login dari localStorage
   useEffect(() => {
-    try {
-      if (typeof window !== "undefined") {
-        const raw = localStorage.getItem("nt_current_session");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          setSession(parsed);
-          if (parsed.wilayah && parsed.wilayah.includes("Kab.")) {
-            const matchedKab = jatimRegions.find((k) => parsed.wilayah.includes(k));
-            if (matchedKab) setSelectedRegion(matchedKab);
+    const loadSession = () => {
+      try {
+        if (typeof window !== "undefined") {
+          const raw = localStorage.getItem("nt_current_session");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            setSession(parsed);
+            if (parsed.wilayah && parsed.wilayah.includes("Kab.")) {
+              const matchedKab = jatimRegions.find((k) => parsed.wilayah.includes(k));
+              if (matchedKab) setSelectedRegion(matchedKab);
+            }
           }
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
+    };
+
+    loadSession();
+    window.addEventListener("nt_session_updated", loadSession);
+    return () => window.removeEventListener("nt_session_updated", loadSession);
   }, [activeRole]);
 
   useEffect(() => {
@@ -149,12 +159,27 @@ export default function AppShell() {
         ),
         badge: "Eksekutif",
       },
+      {
+        key: "kelola_faskes" as DashboardTab,
+        label: "Registrasi Puskesmas & Dapur MBG",
+        desc: "Otorisasi Faskes & Sentra SPPG",
+        roles: ["dinkes"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <line x1="19" x2="19" y1="8" y2="14" />
+            <line x1="22" x2="16" y1="11" y2="11" />
+          </svg>
+        ),
+        badge: "Otoritas Dinkes",
+      },
 
-      // 2. POSYANDU DESA (PENCATATAN BALITA, NOTIF JADWAL DOKTER & KONFIRMASI MBG)
+      // 2. POSYANDU DESA (TERPISAH TEGAS: MEJA PENIMBANGAN vs VERIFIKASI MBG)
       {
         key: "kms" as DashboardTab,
-        label: "Pencatatan Balita & KMS",
-        desc: "Input Balita, Timbang & Notif Puskesmas",
+        label: "Penimbangan & KMS Balita",
+        desc: "Pendaftaran Anak, Timbang BB/TB & Grafik WHO",
         roles: ["posyandu", "kader"],
         icon: (
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -163,12 +188,12 @@ export default function AppShell() {
             <circle cx="8" cy="12" r="2" />
           </svg>
         ),
-        badge: "Tugas Utama",
+        badge: "Meja Timbang",
       },
       {
         key: "konsumsi" as DashboardTab,
-        label: "Konfirmasi Penerimaan MBG",
-        desc: "Checklist Harian Paket Gizi per Anak",
+        label: "Verifikasi & Penerimaan MBG",
+        desc: "Terima Paket SPPG & Checklist Ransum Anak",
         roles: ["posyandu", "kader"],
         icon: (
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -176,7 +201,7 @@ export default function AppShell() {
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
           </svg>
         ),
-        badge: "Harian",
+        badge: "Verifikasi MBG",
       },
 
       // 3. PUSKESMAS PEMBINA (WILAYAH BINAAN, JADWAL PERTEMUAN STUNTING & VERIFIKASI)
@@ -223,6 +248,21 @@ export default function AppShell() {
         ),
         badge: "SOP Resmi",
       },
+
+      // LIHAT DETAIL AKUN & UBAH KATA SANDI (UNTUK SEMUA PERAN)
+      {
+        key: "profil" as DashboardTab,
+        label: "Profil & Keamanan Akun",
+        desc: "Detail Identitas & Ubah Kata Sandi",
+        roles: ["posyandu", "kader", "dapur", "puskesmas", "dinkes"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        ),
+        badge: "Akun & Sandi",
+      },
     ];
 
     return allItems.filter((item) =>
@@ -232,30 +272,34 @@ export default function AppShell() {
 
   const navItems = getNavItemsForRole(activeRole);
 
-  const displayName = session?.name || (
-    activeRole === "puskesmas"
-      ? "dr. H. Achmad Syafi'i (Kepala Faskes)"
-      : activeRole === "posyandu" || activeRole === "kader"
-      ? "Siti Rahmawati, S.Pd (Petugas Posyandu)"
-      : activeRole === "dapur"
-      ? "H. Mustofa Kamal (Pengelola Dapur)"
-      : "dr. Erwin Astha Triyono, Sp.PD (Kadinkes Jatim)"
-  );
+  const isPosyanduRole = activeRole === "posyandu" || activeRole === "kader";
 
-  const displayUnit = session?.unit || (
-    activeRole === "puskesmas"
-      ? "Puskesmas Socah"
-      : activeRole === "posyandu" || activeRole === "kader"
-      ? "Posyandu Mawar 01 — Desa Bilaporah"
-      : activeRole === "dapur"
-      ? "SPPG Dapur Sehat Socah Mandiri"
-      : "Dinas Kesehatan Provinsi Jawa Timur"
-  );
+  const displayName = isPosyanduRole
+    ? (session?.name && !session.name.includes("Siti Rahmawati") && session.name.toLowerCase().includes("posyandu")
+        ? session.name
+        : "Posyandu Mawar 01 (Desa Bilaporah)")
+    : (session?.name || (
+        activeRole === "puskesmas"
+          ? "dr. H. Achmad Syafi'i (Kepala Faskes)"
+          : activeRole === "dapur"
+          ? "SPPG Dapur Sehat Socah Mandiri"
+          : "Dinas Kesehatan Provinsi Jawa Timur"
+      ));
+
+  const displayUnit = isPosyanduRole
+    ? (session?.unit && !session.unit.includes("Siti Rahmawati") ? session.unit : "Posyandu Mawar 01 — Desa Bilaporah")
+    : (session?.unit || (
+        activeRole === "puskesmas"
+          ? "Puskesmas Socah"
+          : activeRole === "dapur"
+          ? "SPPG Dapur Sehat Socah Mandiri"
+          : "Dinas Kesehatan Provinsi Jawa Timur"
+      ));
 
   const displayWilayah = session?.wilayah || (
     activeRole === "puskesmas"
       ? "Kecamatan Socah, Kab. Bangkalan"
-      : activeRole === "posyandu" || activeRole === "kader"
+      : isPosyanduRole
       ? "Kec. Socah, Kab. Bangkalan (Naungan: Puskesmas Socah)"
       : activeRole === "dapur"
       ? "Wilayah Layanan: 9 Posyandu Kec. Socah, Bangkalan"
@@ -316,6 +360,19 @@ export default function AppShell() {
               </p>
             </div>
           </div>
+
+          {/* Tombol Cepat Buka Profil & Ubah Sandi */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("profil");
+              setMobileMenuOpen(false);
+            }}
+            className="w-full mt-2 py-1.5 px-3 rounded-xl border border-zinc-200/90 bg-white hover:bg-zinc-100 text-zinc-700 font-sans text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs"
+          >
+            <span>🔑</span>
+            <span>Lihat Akun & Ubah Sandi</span>
+          </button>
         </div>
 
         {/* Navigasi Sub-Modul */}
@@ -486,11 +543,23 @@ export default function AppShell() {
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <div className="hidden sm:block text-right">
                 <span className="text-xs font-black text-zinc-900 block">{displayName}</span>
                 <span className="text-[10px] font-mono text-zinc-500">{displayUnit}</span>
               </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab("profil")}
+                className={`rounded-xl border px-3 py-1.5 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs ${
+                  activeTab === "profil"
+                    ? "bg-[#18140B] text-white border-[#18140B]"
+                    : "border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-100"
+                }`}
+              >
+                <span>👤</span>
+                <span>Profil & Sandi</span>
+              </button>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -512,7 +581,7 @@ export default function AppShell() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.2 }}
               >
-                <OverviewTab />
+                <OverviewTab onSelectTab={(tab) => setActiveTab(tab)} />
               </motion.div>
             )}
 
@@ -524,7 +593,7 @@ export default function AppShell() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.2 }}
               >
-                <ModulAKmsTab />
+                <ModulAKmsTab onNavigateToMbg={() => setActiveTab("konsumsi")} />
               </motion.div>
             )}
 
@@ -576,6 +645,18 @@ export default function AppShell() {
               </motion.div>
             )}
 
+            {activeTab === "kelola_faskes" && (
+              <motion.div
+                key="kelola_faskes"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.2 }}
+              >
+                <DinkesKelolaFaskesTab />
+              </motion.div>
+            )}
+
             {activeTab === "carakerja" && (
               <motion.div
                 key="carakerja"
@@ -585,6 +666,18 @@ export default function AppShell() {
                 transition={{ duration: 0.2 }}
               >
                 <CaraKerjaRoleTab role={activeRole} />
+              </motion.div>
+            )}
+
+            {activeTab === "profil" && (
+              <motion.div
+                key="profil"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ProfilAkunTab />
               </motion.div>
             )}
           </AnimatePresence>

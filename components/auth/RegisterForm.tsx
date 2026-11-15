@@ -9,6 +9,7 @@ import {
   DESA_PER_KECAMATAN,
   getPuskesmasNameByKecamatan,
   getPuskesmasAddressByKecamatan,
+  getClosestSppgForWilayah,
 } from "@/lib/puskesmas-data";
 import { EASE_OUT, item, stagger } from "./motion";
 import {
@@ -43,7 +44,7 @@ export default function RegisterForm({ delay }: { delay: number }) {
   const [step, setStep] = useState<0 | 1>(0);
   const [dir, setDir] = useState(1);
   const [name, setName] = useState("");
-  const [role, setRole] = useState<AuthRole>("kader");
+  const [role, setRole] = useState<AuthRole>("posyandu");
   const [contact, setContact] = useState("");
   const [pw, setPw] = useState("");
 
@@ -59,7 +60,7 @@ export default function RegisterForm({ delay }: { delay: number }) {
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<SubmitStatus>("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const info = authRoles.find((r) => r.key === role)!;
+  const info = authRoles.find((r) => r.key === role) || authRoles[0];
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
@@ -97,6 +98,7 @@ export default function RegisterForm({ delay }: { delay: number }) {
   };
 
   const puskesmasPembina = getPuskesmasNameByKecamatan(kecamatan);
+  const closestSppg = getClosestSppgForWilayah(region, kecamatan);
 
   const submit = (ev: FormEvent) => {
     ev.preventDefault();
@@ -104,13 +106,9 @@ export default function RegisterForm({ delay }: { delay: number }) {
     const e: Errors = {};
     if (!region) e.region = "Pilih kabupaten/kota wilayah kerja.";
 
-    if (role === "kader") {
-      if (!desa.trim()) e.desa = "Pilih atau tulis nama desa tempat posyandu berada.";
-      if (!posyanduName.trim()) e.posyanduName = "Nama posyandu wajib diisi (misal: Posyandu Mawar 01).";
-      if (!alamatPosyandu.trim()) e.alamatPosyandu = "Alamat lengkap lokasi posyandu / balai RW wajib diisi.";
-    } else {
-      if (!unit.trim()) e.unit = `${info.unitLabel} wajib diisi.`;
-    }
+    if (!desa.trim()) e.desa = "Pilih atau tulis nama desa tempat posyandu berada.";
+    if (!posyanduName.trim()) e.posyanduName = "Nama posyandu wajib diisi (misal: Posyandu Mawar 01).";
+    if (!alamatPosyandu.trim()) e.alamatPosyandu = "Alamat lengkap lokasi posyandu / balai RW wajib diisi.";
 
     if (!consent) e.consent = "Persetujuan diperlukan untuk melanjutkan.";
     setErrors(e);
@@ -118,7 +116,7 @@ export default function RegisterForm({ delay }: { delay: number }) {
 
     setStatus("loading");
 
-    // Simpan pendaftaran akun Posyandu Desa ke localStorage agar langsung masuk ke Puskesmas Pembina
+    // Simpan pendaftaran akun Posyandu Desa ke localStorage agar langsung masuk ke Puskesmas Pembina & SPPG
     try {
       if (typeof window !== "undefined") {
         const existingRaw = localStorage.getItem("nt_registered_posyandu");
@@ -132,10 +130,12 @@ export default function RegisterForm({ delay }: { delay: number }) {
           kabupaten: region,
           puskesmas: puskesmasPembina,
           alamatPuskesmas: getPuskesmasAddressByKecamatan(kecamatan),
+          sppgDituju: closestSppg.namaDapur,
+          sppgId: closestSppg.id,
           kaderPenanggungJawab: name,
           noHpKader: contact,
           emailAkun: `${posyanduName.toLowerCase().replace(/[^a-z0-9]/g, "")}@posyandu.id`,
-          statusAkun: "Menunggu Verifikasi",
+          statusAkun: "Disetujui",
           tglDaftar: "Hari ini (Baru Daftar)",
           totalBalita: 0,
           sehatCount: 0,
@@ -151,6 +151,7 @@ export default function RegisterForm({ delay }: { delay: number }) {
         };
         existing.push(newPosyanduEntry);
         localStorage.setItem("nt_registered_posyandu", JSON.stringify(existing));
+        window.dispatchEvent(new Event("nt_posyandu_registered"));
 
         // Simpan sesi login posyandu aktif
         localStorage.setItem(
@@ -162,9 +163,12 @@ export default function RegisterForm({ delay }: { delay: number }) {
             unit: `${posyanduName} — ${desa}`,
             wilayah: `Kecamatan ${kecamatan}, ${region}`,
             puskesmasPembina: puskesmasPembina,
+            sppgDituju: closestSppg.namaDapur,
+            sppgId: closestSppg.id,
             alamatPosyandu: alamatPosyandu,
           })
         );
+        window.dispatchEvent(new Event("nt_session_updated"));
       }
     } catch (err) {}
 
@@ -206,10 +210,15 @@ export default function RegisterForm({ delay }: { delay: number }) {
           >
             {step === 0 ? (
               <>
-                <FloatingField id="reg-name" label={role === "kader" ? "Nama Ketua / Kader Posyandu" : "Nama Lengkap Penanggung Jawab"} value={name} onChange={setName} error={errors.name} autoComplete="name" />
-                <div>
-                  <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-zinc-500">Pilih Jenis Akun</p>
-                  <RoleSegmented value={role} onChange={setRole} roles={authRoles} layoutId="reg-role" />
+                <FloatingField id="reg-name" label={role === "posyandu" || (role as string) === "kader" ? "Nama Ketua / Petugas Posyandu" : "Nama Lengkap Penanggung Jawab"} value={name} onChange={setName} error={errors.name} autoComplete="name" />
+                <div className="rounded-2xl border border-sky-300 bg-sky-50/70 p-3.5 text-xs text-sky-950 font-medium space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-sky-900">
+                    <span className="h-2 w-2 rounded-full bg-sky-600 animate-pulse" />
+                    Pendaftaran Mandiri: Khusus Akun Posyandu Desa
+                  </div>
+                  <p className="text-[11px] text-sky-800 leading-relaxed font-sans">
+                    Form registrasi ini diperuntukkan bagi <strong>Kader & Petugas Posyandu Desa</strong> se-Jawa Timur. Puskesmas Pembina dan Dapur MBG (SPPG) didaftarkan dan diotorisasi resmi oleh Dinas Kesehatan Provinsi Jawa Timur.
+                  </p>
                 </div>
                 <FloatingField id="reg-contact" label={info.contactLabel} value={contact} onChange={setContact} error={errors.contact} autoComplete="username" />
                 <div className="space-y-2">
@@ -251,20 +260,42 @@ export default function RegisterForm({ delay }: { delay: number }) {
                   </div>
                 </div>
 
-                {/* 2. Informasi Otomatis Naungan Puskesmas Pembina */}
+                {/* 2. Informasi Otomatis Naungan Puskesmas Pembina Terdekat */}
                 <div className="rounded-2xl border border-emerald-300 bg-emerald-50/70 p-3.5 font-mono text-xs text-emerald-950 flex items-start gap-2.5">
                   <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-emerald-600 text-white text-xs">
                     🏥
                   </span>
                   <div>
-                    <div className="font-bold">Naungan Puskesmas Pembina:</div>
+                    <div className="font-bold flex items-center gap-1.5">
+                      <span>Puskesmas Pembina:</span>
+                      <span className="rounded bg-emerald-700 px-1.5 py-0.5 text-[9px] font-black text-white font-mono">
+                        Otomatis Terhubung
+                      </span>
+                    </div>
                     <div className="text-emerald-900 font-sans font-black text-sm">{puskesmasPembina}</div>
                     <div className="text-[11px] text-emerald-800/80">{getPuskesmasAddressByKecamatan(kecamatan)}</div>
                   </div>
                 </div>
 
+                {/* 3. Informasi Otomatis Alokasi Sentra Dapur MBG (SPPG) Terdekat */}
+                <div className="rounded-2xl border border-purple-300 bg-purple-50/70 p-3.5 font-mono text-xs text-purple-950 flex items-start gap-2.5">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-[#7866FF] text-white text-xs">
+                    🍲
+                  </span>
+                  <div>
+                    <div className="font-bold flex items-center gap-1.5">
+                      <span>Sentra Dapur MBG (SPPG) Terdekat:</span>
+                      <span className="rounded bg-[#7866FF] px-1.5 py-0.5 text-[9px] font-black text-white font-mono">
+                        Otomatis Teralokasi
+                      </span>
+                    </div>
+                    <div className="text-purple-900 font-sans font-black text-sm">{closestSppg.namaDapur}</div>
+                    <div className="text-[11px] text-purple-800/80">Kapasitas: {closestSppg.kapasitasHarian} porsi/hari · {closestSppg.alamatDapur}</div>
+                  </div>
+                </div>
+
                 {/* 3. Khusus Akun Posyandu Desa */}
-                {role === "kader" ? (
+                {role === "posyandu" || (role as string) === "kader" ? (
                   <div className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                       Rincian Identitas Posyandu di Desa
@@ -337,7 +368,7 @@ export default function RegisterForm({ delay }: { delay: number }) {
                   </button>
                   <div className="flex-1">
                     <SubmitButton status={status} doneLabel="Akun Berhasil Didaftarkan">
-                      {role === "kader" ? "Daftarkan Posyandu Desa" : "Buat Akun Resmi"}
+                      {role === "posyandu" || (role as string) === "kader" ? "Daftarkan Posyandu Desa" : "Buat Akun Resmi"}
                     </SubmitButton>
                   </div>
                 </div>
@@ -347,13 +378,13 @@ export default function RegisterForm({ delay }: { delay: number }) {
                     <div className="flex items-center gap-2 font-bold text-emerald-800">
                       <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-600 text-white text-[10px]">✓</span>
                       <span>
-                        {role === "kader"
+                        {role === "posyandu" || (role as string) === "kader"
                           ? `Akun ${posyanduName} (${desa}, Kec. ${kecamatan}) Terdaftar!`
                           : "Akun resmi berhasil didaftarkan!"}
                       </span>
                     </div>
 
-                    {role === "kader" ? (
+                    {role === "posyandu" || (role as string) === "kader" ? (
                       <div className="text-zinc-600 space-y-1">
                         <p>
                           Data posyandu Anda <strong>langsung terhubung ke {puskesmasPembina}</strong>.
@@ -365,10 +396,10 @@ export default function RegisterForm({ delay }: { delay: number }) {
                     ) : null}
 
                     <Link
-                      href={`/app?role=${role}`}
+                      href={`/app?role=${role === "kader" ? "posyandu" : role}`}
                       className="inline-flex items-center justify-center gap-2 rounded-full bg-[#18140B] px-6 py-3 font-sans text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all w-full"
                     >
-                      <span>Masuk ke Dasbor Operasional ({role === "kader" ? posyanduName : info.name})</span>
+                      <span>Masuk ke Dasbor Operasional ({role === "posyandu" || (role as string) === "kader" ? posyanduName : info.name})</span>
                       <span className="text-[#FFCA38]">→</span>
                     </Link>
                   </div>

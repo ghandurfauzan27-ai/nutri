@@ -62,14 +62,14 @@ export const steps: { n: string; title: string; body: string; art: StepIllustrat
   },
   {
     n: "04",
-    title: "Masak pangan lokal & label QR",
-    body: "Menyerap telur Blitar, lele Lamongan, dan daun kelor. Tiap wadah ditempel label QR 128-bit unik.",
+    title: "Masak pangan lokal & wadah higienis",
+    body: "Menyerap telur Blitar, lele Lamongan, dan daun kelor. Tiap wadah tertutup higienis dengan suhu hangat terjaga ≥60°C.",
     art: "telur-blitar",
   },
   {
     n: "05",
-    title: "Scan QR & log daya terima",
-    body: "Keluarga atau kader scan QR saat paket diterima, lalu catat konsumsi: Habis, Sebagian, atau Tolak.",
+    title: "Verifikasi 4 tahap & checklist posyandu",
+    body: "SPPG memverifikasi 4 tahap pesanan (Diterima, Diproses, Diantar, Selesai), lalu kader posyandu konfirmasi serah terima harian anak.",
     art: "kotak-qr",
   },
   {
@@ -102,27 +102,27 @@ export type RoleKey = "kader" | "dapur" | "puskesmas" | "dinkes";
 export const roles: { key: RoleKey; title: string; device: "ponsel" | "tablet" | "desktop"; body: string }[] = [
   {
     key: "kader",
-    title: "Kader Posyandu / Orang Tua",
+    title: "Kader Posyandu / Meja Timbang",
     device: "ponsel",
-    body: "Input cepat antropometri, status Z-score otomatis, kurva KMS digital, dan scan QR verifikasi terima paket MBG.",
+    body: "Meja timbang antropometri & kurva KMS terpisah, ditambah modul verifikasi fisik kedatangan ransum SPPG & checklist serah terima anak.",
   },
   {
     key: "dapur",
     title: "Pengelola Dapur MBG / SPPG",
     device: "tablet",
-    body: "Rekap kuota harian Paket A & B, gramasi kebutuhan bahan lokal, cetak label QR kotak makan, dan nota belanja.",
+    body: "Papan verifikasi 4 tahap pesanan (Diterima → Diproses → Diantar → Selesai), panduan gramasi resep lokal, dan serah terima tuntas ke posyandu.",
   },
   {
     key: "puskesmas",
     title: "Petugas Gizi Puskesmas",
     device: "desktop",
-    body: "Validasi rujukan anak zona merah, rekomendasi terapi gizi lanjutan, dan pantauan desa di wilayah kerja.",
+    body: "Pengawasan posyandu binaan, pemesanan kuota ransum MBG (PO), dan penjadwalan intervensi dokter klinis anak stunting.",
   },
   {
     key: "dinkes",
     title: "Dinas Kesehatan / TPID Daerah",
     device: "desktop",
-    body: "Heatmap prevalensi stunting wilayah, evaluasi RoN siklus 30/60/90 hari, dan unduh laporan audit Bappeda/Dinkes.",
+    body: "Heatmap prevalensi stunting 38 Kab/Kota, evaluasi RoN siklus 30/60/90 hari, dan laporan audit Bappeda/Dinkes.",
   },
 ];
 

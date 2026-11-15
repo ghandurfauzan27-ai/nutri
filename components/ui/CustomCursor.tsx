@@ -21,10 +21,10 @@ export default function CustomCursor() {
 
     gsap.set([dot, ring], { xPercent: -50, yPercent: -50, opacity: 0 });
 
-    const xDot = gsap.quickTo(dot, "x", { duration: 0.1, ease: "power3" });
-    const yDot = gsap.quickTo(dot, "y", { duration: 0.1, ease: "power3" });
-    const xRing = gsap.quickTo(ring, "x", { duration: 0.35, ease: "power3.out" });
-    const yRing = gsap.quickTo(ring, "y", { duration: 0.35, ease: "power3.out" });
+    const xDot = gsap.quickTo(dot, "x", { duration: 0.04, ease: "power3" });
+    const yDot = gsap.quickTo(dot, "y", { duration: 0.04, ease: "power3" });
+    const xRing = gsap.quickTo(ring, "x", { duration: 0.15, ease: "power3.out" });
+    const yRing = gsap.quickTo(ring, "y", { duration: 0.15, ease: "power3.out" });
 
     let isVisible = false;
 

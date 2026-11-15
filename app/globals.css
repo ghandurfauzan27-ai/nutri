@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
   --bg-main: #f7f8f8;
   --text-main: #0c0f0f;
 }
@@ -74,3 +76,56 @@ html.lenis, html.lenis body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   CSS PRINTING & EXPORT LAPORAN RESMI (A4 STANDAR NASIONAL)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm 15mm 15mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10pt !important;
+    line-height: 1.4 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Sembunyikan elemen antarmuka web saat mencetak */
+  header,
+  aside,
+  nav,
+  button,
+  .no-print,
+  .pointer-events-none,
+  [data-lenis-prevent="true"] > div:first-child {
+    display: none !important;
+  }
+
+  /* Kontainer cetak dokumen resmi */
+  .printable-document {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  /* Memastikan pemotongan halaman rapi */
+  tr {
+    page-break-inside: avoid;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
+}
+

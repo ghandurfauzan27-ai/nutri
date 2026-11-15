@@ -20,7 +20,7 @@ export default function Ticker() {
       const loop = gsap.to(track, {
         xPercent: -50,
         ease: "none",
-        duration: 22,
+        duration: 12,
         repeat: -1,
       });
 

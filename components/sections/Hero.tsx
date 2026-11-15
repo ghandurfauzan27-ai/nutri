@@ -621,15 +621,21 @@ export default function Hero() {
                     Status Gizi Balita
                   </span>
                   
-                  <div className="relative flex items-center justify-center my-1">
-                    <svg viewBox="0 0 100 100" className="w-24 h-24 transform -rotate-90">
+                  <div className="relative flex items-center justify-center my-1 w-24 h-24 shrink-0" style={{ width: 96, height: 96 }}>
+                    <svg
+                      viewBox="0 0 100 100"
+                      width="96"
+                      height="96"
+                      style={{ width: "96px", height: "96px", maxWidth: "96px", maxHeight: "96px" }}
+                      className="w-24 h-24 shrink-0 transform -rotate-90 select-none"
+                    >
                       <circle cx="50" cy="50" r="38" stroke="#F4F4F5" strokeWidth="10" fill="none" />
                       {/* Normal 65% - Purple */}
                       <circle cx="50" cy="50" r="38" stroke="#7866FF" strokeWidth="10" fill="none" strokeDasharray="155 240" strokeLinecap="round" />
                       {/* Waspada 25% - Light purple */}
                       <circle cx="50" cy="50" r="38" stroke="#D3CEFC" strokeWidth="10" fill="none" strokeDasharray="60 240" strokeDashoffset="-160" />
                     </svg>
-                    <div className="absolute text-center">
+                    <div className="absolute text-center inset-0 flex flex-col items-center justify-center pointer-events-none">
                       <span className="font-sans text-lg font-black text-zinc-950 block leading-none">
                         14.250
                       </span>
@@ -716,10 +722,10 @@ export default function Hero() {
                       Dapur SPPG
                     </span>
                     <h4 className="font-sans text-xs font-black leading-tight">
-                      Cetak Label QR 128-bit
+                      Verifikasi 4 Tahap SPPG
                     </h4>
                     <p className="mt-1.5 text-[9px] text-zinc-500 leading-snug font-medium">
-                      Pelacakan higienis wadah makanan anak.
+                      Diterima, diproses, diantar & serah terima tuntas.
                     </p>
                   </div>
 

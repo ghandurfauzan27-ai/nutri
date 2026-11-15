@@ -23,7 +23,7 @@ const PILLAR_CONFIG = [
     features: [
       "Memisahkan otomatis kuota Paket A Reguler vs Paket B Intervensi",
       "Kalkulasi gramasi resep langsung ke kebutuhan belanja kg dapur",
-      "Cetak label stiker QR code unik sekali pakai terenkripsi 128-bit",
+      "Verifikasi 4 tahap alur pesanan: Diterima → Diproses → Diantar → Selesai",
     ],
   },
   {
