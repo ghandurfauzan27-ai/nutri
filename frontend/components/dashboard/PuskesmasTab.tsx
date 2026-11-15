@@ -171,22 +171,49 @@ export default function PuskesmasTab() {
                 );
                 if (matched.length === 0) return p;
 
-                const converted: BalitaMikro[] = matched.map((cb: any) => ({
-                  id: cb.id,
-                  nama: cb.nama,
-                  nik: cb.nik || `3505${Date.now()}`,
-                  usiaBulan: cb.usiaBulan || 12,
-                  jenisKelamin: cb.jenisKelamin || "L",
-                  namaIbu: cb.namaIbu || "Ibu Balita",
-                  bbKg: cb.bbKg || 8.0,
-                  tbCm: cb.tbCm || 72.0,
-                  zTbu: cb.zTbu || -1.8,
-                  zBbu: cb.zBbu || -1.4,
-                  statusGizi: cb.statusNutrisi || "Sehat / Normal",
-                  alokasiPaket: cb.paketMBG || "Paket A (Gizi Reguler)",
-                  catatanKlinis: cb.catatan || "Data input manual dari Posyandu Desa.",
-                  statusRujukan: cb.isFaltering ? "Rujukan Aktif ke Dokter Puskesmas" : "Belum Perlu Rujukan",
-                }));
+                const converted: BalitaMikro[] = matched.map((cb: any) => {
+                  const zTbuVal =
+                    typeof cb.zTbu === "number"
+                      ? cb.zTbu
+                      : typeof cb.zTBU === "number"
+                      ? cb.zTBU
+                      : 0.15;
+                  const zBbuVal =
+                    typeof cb.zBbu === "number"
+                      ? cb.zBbu
+                      : typeof cb.zBBU === "number"
+                      ? cb.zBBU
+                      : 0.10;
+                  const isWaspada =
+                    cb.isFaltering ||
+                    (cb.statusNutrisi && (
+                      cb.statusNutrisi.toLowerCase().includes("waspada") ||
+                      cb.statusNutrisi.toLowerCase().includes("faltering") ||
+                      cb.statusNutrisi.toLowerCase().includes("stunting") ||
+                      cb.statusNutrisi.toLowerCase().includes("gizi kurang") ||
+                      cb.statusNutrisi.toLowerCase().includes("merah")
+                    )) ||
+                    zTbuVal < -2.0;
+
+                  return {
+                    id: cb.id,
+                    nama: cb.nama,
+                    nik: cb.nik || `3505${Date.now()}`,
+                    usiaBulan: cb.usiaBulan || 12,
+                    jenisKelamin: cb.jenisKelamin || "L",
+                    namaIbu: cb.namaIbu || "Ibu Balita",
+                    bbKg: cb.bbKg || 8.0,
+                    tbCm: cb.tbCm || 72.0,
+                    zTbu: zTbuVal,
+                    zBbu: zBbuVal,
+                    statusGizi: isWaspada
+                      ? (zTbuVal < -2.0 ? "Stunting Garis Merah" : "Waspada (Faltering)")
+                      : (cb.statusNutrisi || "Sehat / Normal"),
+                    alokasiPaket: isWaspada ? "Paket B (Protein Ganda Jatim)" : (cb.paketMBG || "Paket A (Gizi Reguler)"),
+                    catatanKlinis: cb.catatan || (isWaspada ? "BB stagnan/turun, perlu intervensi dokter Puskesmas." : "Tumbuh kembang optimal sesuai kurva hijau KIA. Ransum Paket A reguler."),
+                    statusRujukan: isWaspada ? "Rujukan Aktif ke Dokter Puskesmas" : "Belum Perlu Rujukan",
+                  };
+                });
 
                 const convertedMap = new Map(converted.map((b) => [b.id, b]));
                 const updatedExisting = p.balitaList.map((b) => convertedMap.get(b.id) || b);
@@ -761,6 +788,18 @@ export default function PuskesmasTab() {
     const paket = (balita.alokasiPaket || "").toLowerCase();
     const rujukan = (balita.statusRujukan || "").toLowerCase();
 
+    // Jika balita berstatus sehat / normal dan zTbu >= -2.0, dipastikan BUKAN kasus rujukan
+    if (
+      (gizi.includes("sehat") || gizi.includes("normal")) &&
+      !gizi.includes("stunting") &&
+      !gizi.includes("waspada") &&
+      !gizi.includes("faltering") &&
+      balita.zTbu >= -2.0 &&
+      !rujukan.includes("rujukan aktif")
+    ) {
+      return false;
+    }
+
     return (
       gizi.includes("stunting") ||
       gizi.includes("faltering") ||
@@ -768,13 +807,10 @@ export default function PuskesmasTab() {
       gizi.includes("gizi buruk") ||
       gizi.includes("gizi kurang") ||
       gizi.includes("merah") ||
-      rujukan.includes("rujuk") ||
-      rujukan.includes("dokter") ||
-      rujukan.includes("faskes") ||
+      rujukan.includes("rujukan aktif") ||
       paket.includes("paket b") ||
       paket.includes("paket c") ||
-      paket.includes("protein") ||
-      balita.zTbu < -1.5
+      balita.zTbu < -2.0
     );
   };
 
@@ -785,7 +821,7 @@ export default function PuskesmasTab() {
     return (
       gizi.includes("rujukan") ||
       gizi.includes("gizi buruk") ||
-      rujukan.includes("rujuk") ||
+      rujukan.includes("rujukan aktif") ||
       paket.includes("paket c") ||
       balita.zTbu <= -3.0
     );
@@ -2137,35 +2173,52 @@ export default function PuskesmasTab() {
             </span>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {displayPosyanduList
+          {(() => {
+            const rujukanList = displayPosyanduList
               .flatMap((p) => p.balitaList.map((b) => ({ balita: b, posyandu: p })))
-              .filter(({ balita }) => isBalitaStuntingOrFaltering(balita))
-              .map(({ balita: b, posyandu: p }) => {
-                const existingJadwal = jadwalList.find(
-                  (j) =>
-                    (j.namaBalita.toLowerCase().trim() === b.nama.toLowerCase().trim() ||
-                      (j.nikBalita && b.nik && j.nikBalita === b.nik)) &&
-                    j.status !== "Dibatalkan"
-                );
+              .filter(({ balita }) => isBalitaStuntingOrFaltering(balita));
 
-                return (
-                  <div key={b.id} className="rounded-2xl border border-red-200 bg-red-50/40 p-4 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-sans text-sm font-black text-zinc-950">{b.nama} ({b.usiaBulan} Bulan)</h4>
-                          <span className="font-mono text-[10px] text-zinc-500 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
-                            {p.posyandu}
-                          </span>
+            if (rujukanList.length === 0) {
+              return (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-8 text-center space-y-2">
+                  <span className="text-3xl">🎉</span>
+                  <h4 className="font-sans text-base font-black text-emerald-950">
+                    Tidak Ada Kasus Balita Garis Merah / Rujukan Aktif Saat Ini
+                  </h4>
+                  <p className="font-mono text-xs text-emerald-800 max-w-lg mx-auto">
+                    Seluruh balita binaan di wilayah kerja Puskesmas {selectedKecamatan} terpantau dalam batas kurva hijau normal (Z-Score &ge; -2 SD).
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {rujukanList.map(({ balita: b, posyandu: p }) => {
+                  const existingJadwal = jadwalList.find(
+                    (j) =>
+                      (j.namaBalita.toLowerCase().trim() === b.nama.toLowerCase().trim() ||
+                        (j.nikBalita && b.nik && j.nikBalita === b.nik)) &&
+                      j.status !== "Dibatalkan"
+                  );
+
+                  return (
+                    <div key={b.id} className="rounded-2xl border border-red-200 bg-red-50/40 p-4 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-sans text-sm font-black text-zinc-950">{b.nama} ({b.usiaBulan} Bulan)</h4>
+                            <span className="font-mono text-[10px] text-zinc-500 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
+                              {p.posyandu}
+                            </span>
+                          </div>
+                          <p className="font-mono text-xs text-zinc-500 mt-0.5">NIK: {b.nik} · Ibu {b.namaIbu}</p>
+                          <p className="text-xs text-rose-900 font-bold mt-1">Status: {b.statusGizi} · {b.alokasiPaket}</p>
                         </div>
-                        <p className="font-mono text-xs text-zinc-500 mt-0.5">NIK: {b.nik} · Ibu {b.namaIbu}</p>
-                        <p className="text-xs text-rose-900 font-bold mt-1">Status: {b.statusGizi} · {b.alokasiPaket}</p>
+                        <span className="rounded-lg bg-red-600 text-white font-mono text-[10px] font-black px-2 py-0.5">
+                          TB/U: {b.zTbu > 0 ? `+${b.zTbu}` : b.zTbu} SD
+                        </span>
                       </div>
-                      <span className="rounded-lg bg-red-600 text-white font-mono text-[10px] font-black px-2 py-0.5">
-                        TB/U: {b.zTbu} SD
-                      </span>
-                    </div>
                     <div className="text-xs text-red-900 bg-white p-2.5 rounded-xl border border-red-200 font-medium">
                       <strong>Catatan Klinis:</strong> {b.catatanKlinis}
                     </div>
@@ -2214,7 +2267,9 @@ export default function PuskesmasTab() {
                   </div>
                 );
               })}
-          </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
