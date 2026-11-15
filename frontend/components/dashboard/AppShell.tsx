@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { authRoles, jatimRegions, type AuthRole } from "@/lib/auth-data";
+import { authRoles, jatimRegions, DEMO_ACCOUNTS, type AuthRole } from "@/lib/auth-data";
 import OverviewTab from "./OverviewTab";
 import ModulAKmsTab from "./ModulAKmsTab";
 import ModulBDapurTab from "./ModulBDapurTab";
@@ -82,11 +82,32 @@ export default function AppShell() {
           const raw = localStorage.getItem("nt_current_session");
           if (raw) {
             const parsed = JSON.parse(raw);
-            setSession(parsed);
-            if (parsed.wilayah && parsed.wilayah.includes("Kab.")) {
-              const matchedKab = jatimRegions.find((k) => parsed.wilayah.includes(k));
-              if (matchedKab) setSelectedRegion(matchedKab);
+            if (parsed && (parsed.role === activeRole || (activeRole === "posyandu" && parsed.role === "kader"))) {
+              setSession(parsed);
+              if (parsed.wilayah && parsed.wilayah.includes("Kab.")) {
+                const matchedKab = jatimRegions.find((k) => parsed.wilayah.includes(k));
+                if (matchedKab) setSelectedRegion(matchedKab);
+              }
+              return;
             }
+          }
+          // Fallback otomatis ke akun resmi peran yang sedang aktif
+          const demo = DEMO_ACCOUNTS.find((d) => d.role === activeRole) || DEMO_ACCOUNTS[0];
+          const defaultSession = {
+            role: activeRole,
+            name: demo.name,
+            email: demo.email,
+            unit: demo.unit,
+            wilayah: demo.wilayah,
+            puskesmasPembina: demo.puskesmasPembina || "Puskesmas Socah",
+            faskesCode: demo.faskesCode || "P3526010101",
+            sppgId: demo.sppgId || "SPPG-BKL-01",
+          };
+          setSession(defaultSession);
+          localStorage.setItem("nt_current_session", JSON.stringify(defaultSession));
+          if (defaultSession.wilayah.includes("Kab.")) {
+            const matchedKab = jatimRegions.find((k) => defaultSession.wilayah.includes(k));
+            if (matchedKab) setSelectedRegion(matchedKab);
           }
         }
       } catch (e) {}
@@ -677,7 +698,7 @@ export default function AppShell() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.2 }}
               >
-                <ProfilAkunTab />
+                <ProfilAkunTab role={activeRole} />
               </motion.div>
             )}
           </AnimatePresence>

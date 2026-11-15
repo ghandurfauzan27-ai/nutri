@@ -8,6 +8,7 @@ import {
   setAccountPassword,
   getPasswordLastUpdated,
   DEFAULT_UNIVERSAL_PASSWORD,
+  DEMO_ACCOUNTS,
   MASTER_PUSKESMAS_ACCOUNTS,
   MASTER_SPPG_ACCOUNTS,
 } from "@/lib/auth-data";
@@ -27,7 +28,11 @@ interface ActiveSession {
   sppgId?: string;
 }
 
-export default function ProfilAkunTab() {
+interface ProfilAkunTabProps {
+  role?: AuthRole;
+}
+
+export default function ProfilAkunTab({ role }: ProfilAkunTabProps) {
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [activePassword, setActivePassword] = useState<string>(DEFAULT_UNIVERSAL_PASSWORD);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -67,15 +72,70 @@ export default function ProfilAkunTab() {
     };
 
     window.addEventListener("nt_password_changed", handlePwChange);
-    return () => window.removeEventListener("nt_password_changed", handlePwChange);
+    window.addEventListener("nt_session_updated", handlePwChange);
+    return () => {
+      window.removeEventListener("nt_password_changed", handlePwChange);
+      window.removeEventListener("nt_session_updated", handlePwChange);
+    };
   }, []);
 
+  const effectiveRole: AuthRole =
+    role ||
+    (session?.role === "kader" ? "posyandu" : session?.role) ||
+    "posyandu";
+
+  const defaultAccount =
+    DEMO_ACCOUNTS.find((d) => d.role === effectiveRole) || DEMO_ACCOUNTS[0];
+
+  // Helper cek apakah nilai masih template generic bawaan
+  const isGeneric = (val?: string) =>
+    !val ||
+    val.includes("Petugas Terdaftar") ||
+    val.includes("Unit Faskes NutriTrack") ||
+    val.includes("email@jatim.go.id") ||
+    val.trim() === "Jawa Timur";
+
+  // Data profil faskes terperinci & langsung
+  const profile = {
+    role: effectiveRole,
+    name:
+      !isGeneric(session?.name) && session?.role === effectiveRole
+        ? session!.name
+        : effectiveRole === "posyandu"
+        ? "Siti Rahmawati, S.Pd"
+        : defaultAccount.name,
+    title:
+      effectiveRole === "posyandu"
+        ? "Penanggung Jawab Operasional Posyandu"
+        : effectiveRole === "puskesmas"
+        ? "Kepala Puskesmas & Pembina Klinis"
+        : effectiveRole === "dapur"
+        ? "Koordinator Dapur & Logistik SPPG"
+        : "Kepala Dinas Kesehatan Provinsi Jawa Timur",
+    unit:
+      !isGeneric(session?.unit) && session?.role === effectiveRole
+        ? session!.unit
+        : effectiveRole === "posyandu"
+        ? "Posyandu Mawar 01 (Desa Bilaporah)"
+        : defaultAccount.unit,
+    email:
+      !isGeneric(session?.email) && session?.role === effectiveRole
+        ? session!.email
+        : defaultAccount.email,
+    wilayah:
+      !isGeneric(session?.wilayah) && session?.role === effectiveRole
+        ? session!.wilayah
+        : defaultAccount.wilayah,
+    faskesCode:
+      session?.faskesCode || defaultAccount.faskesCode || "P3526010101",
+    puskesmasPembina:
+      session?.puskesmasPembina || defaultAccount.puskesmasPembina || "Puskesmas Socah",
+    sppgId:
+      session?.sppgId || defaultAccount.sppgId || "SPPG-BKL-01",
+  };
+
   const roleInfo =
-    authRoles.find(
-      (r) =>
-        r.key === session?.role ||
-        ((session?.role as string) === "kader" && r.key === "posyandu")
-    ) || authRoles[0];
+    authRoles.find((r) => r.key === effectiveRole) || authRoles[0];
 
   // Hitung perkiraan kekuatan password baru
   const getPasswordStrength = (pw: string) => {
@@ -97,8 +157,8 @@ export default function ProfilAkunTab() {
   const strength = getPasswordStrength(newPw);
 
   const handleCopyEmail = () => {
-    if (session?.email) {
-      navigator.clipboard.writeText(session.email);
+    if (profile.email) {
+      navigator.clipboard.writeText(profile.email);
       setCopiedEmail(true);
       setTimeout(() => setCopiedEmail(false), 2000);
     }
@@ -109,10 +169,7 @@ export default function ProfilAkunTab() {
     setFormError(null);
     setFormSuccess(null);
 
-    if (!session?.email) {
-      setFormError("Sesi akun tidak valid. Silakan login kembali.");
-      return;
-    }
+    const targetEmail = profile.email;
 
     if (!oldPw) {
       setFormError("Harap masukkan Kata Sandi Saat Ini.");
@@ -120,9 +177,9 @@ export default function ProfilAkunTab() {
     }
 
     // Verifikasi kata sandi lama
-    const realPw = getAccountPassword(session.email);
+    const realPw = getAccountPassword(targetEmail);
     if (oldPw !== realPw) {
-      setFormError("Kata Sandi Saat Ini salah. Periksa kembali kata sandi akun Anda.");
+      setFormError("Kata Sandi Saat Ini salah. Periksa kembali kata sandi akun Anda (kata sandi awal: Password123!).");
       return;
     }
 
@@ -149,15 +206,31 @@ export default function ProfilAkunTab() {
     setIsSubmitting(true);
 
     setTimeout(() => {
-      const ok = setAccountPassword(session.email, newPw);
+      const ok = setAccountPassword(targetEmail, newPw);
       setIsSubmitting(false);
 
       if (ok) {
         setActivePassword(newPw);
-        setLastUpdated(getPasswordLastUpdated(session.email));
+        setLastUpdated(getPasswordLastUpdated(targetEmail));
         setFormSuccess(
           "Kata sandi akun Anda berhasil diperbarui! Gunakan kata sandi baru ini saat Anda login kembali."
         );
+        // Sinkronisasi sesi aktif
+        const updatedSession: ActiveSession = {
+          role: profile.role,
+          name: profile.name,
+          email: profile.email,
+          unit: profile.unit,
+          wilayah: profile.wilayah,
+          faskesCode: profile.faskesCode,
+          puskesmasPembina: profile.puskesmasPembina,
+          sppgId: profile.sppgId,
+        };
+        try {
+          localStorage.setItem("nt_current_session", JSON.stringify(updatedSession));
+          window.dispatchEvent(new Event("nt_session_updated"));
+        } catch (e) {}
+
         setOldPw("");
         setNewPw("");
         setConfirmPw("");
@@ -168,8 +241,8 @@ export default function ProfilAkunTab() {
   };
 
   // Cari faskes dan dapur terkait berdasarkan wilayah
-  const wilayahStr = session?.wilayah || "";
-  const autoPuskesmas = session?.puskesmasPembina || getPuskesmasNameByKecamatan(wilayahStr);
+  const wilayahStr = profile.wilayah || "";
+  const autoPuskesmas = profile.puskesmasPembina || getPuskesmasNameByKecamatan(wilayahStr);
   const sppgObj = getClosestSppgForWilayah("Kab. Bangkalan", wilayahStr);
   const autoSppgName = sppgObj?.namaDapur || "SPPG Dapur Sehat Socah Mandiri";
 
@@ -218,11 +291,11 @@ export default function ProfilAkunTab() {
             <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#18140B] text-[#38E8F5] font-mono text-base font-black shadow-md">
-                  {session?.role === "puskesmas"
+                  {profile.role === "puskesmas"
                     ? "PUS"
-                    : session?.role === "dapur"
+                    : profile.role === "dapur"
                     ? "MBG"
-                    : session?.role === "dinkes"
+                    : profile.role === "dinkes"
                     ? "DNK"
                     : "POS"}
                 </div>
@@ -249,10 +322,10 @@ export default function ProfilAkunTab() {
                   Nama Petugas / Pimpinan
                 </span>
                 <span className="text-sm font-black text-zinc-950 block mt-1">
-                  {session?.name || "Petugas Terdaftar"}
+                  {profile.name}
                 </span>
                 <span className="text-[11px] text-zinc-500 font-mono block mt-0.5">
-                  Penanggung Jawab Operasional
+                  {profile.title}
                 </span>
               </div>
 
@@ -265,11 +338,11 @@ export default function ProfilAkunTab() {
                   {roleInfo.name}
                 </span>
                 <span className="text-[11px] text-sky-700 font-mono block mt-0.5">
-                  {session?.role === "dinkes"
+                  {profile.role === "dinkes"
                     ? "Otoritas Pengawasan 38 Kab/Kota"
-                    : session?.role === "puskesmas"
+                    : profile.role === "puskesmas"
                     ? "Pembina Klinis Kecamatan"
-                    : session?.role === "dapur"
+                    : profile.role === "dapur"
                     ? "Unit Rantai Pasok MBG"
                     : "Pencatat & Pengukur Lapangan"}
                 </span>
@@ -281,7 +354,7 @@ export default function ProfilAkunTab() {
                   Nama Unit Faskes / Pos Pelayanan
                 </span>
                 <span className="text-sm font-black text-zinc-950 block mt-1">
-                  {session?.unit || "Unit Faskes NutriTrack"}
+                  {profile.unit}
                 </span>
               </div>
 
@@ -301,7 +374,7 @@ export default function ProfilAkunTab() {
                 </div>
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <span className="font-mono text-sm font-bold text-zinc-900 break-all">
-                    {session?.email || "email@jatim.go.id"}
+                    {profile.email}
                   </span>
                   <span className="rounded-md bg-emerald-100 border border-emerald-200 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-800 shrink-0">
                     Terenkripsi
@@ -315,19 +388,19 @@ export default function ProfilAkunTab() {
                   Wilayah Kerja & Koordinasi Teritorial
                 </span>
                 <span className="text-sm font-bold text-zinc-900 block mt-1">
-                  📍 {session?.wilayah || "Jawa Timur"}
+                  📍 {profile.wilayah}
                 </span>
               </div>
 
               {/* Faskes Terdekat / Pembina / Dapur MBG */}
-              {session?.role === "posyandu" && (
+              {profile.role === "posyandu" && (
                 <>
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
                     <span className="font-mono text-[10px] uppercase font-bold text-emerald-800 block">
                       Puskesmas Pembina Terdekat
                     </span>
                     <span className="text-xs font-black text-emerald-950 block mt-1">
-                      🏥 {autoPuskesmas}
+                      🏥 {profile.puskesmasPembina || autoPuskesmas}
                     </span>
                     <span className="text-[10px] font-mono text-emerald-700 block mt-0.5">
                       Rujukan medis & verifikasi stunting
@@ -348,14 +421,14 @@ export default function ProfilAkunTab() {
                 </>
               )}
 
-              {session?.role === "puskesmas" && (
+              {profile.role === "puskesmas" && (
                 <>
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
                     <span className="font-mono text-[10px] uppercase font-bold text-emerald-800 block">
                       Kode Faskes Kemenkes
                     </span>
                     <span className="text-xs font-mono font-black text-emerald-950 block mt-1">
-                      {session?.faskesCode || "P3526010101"}
+                      {profile.faskesCode}
                     </span>
                     <span className="text-[10px] font-mono text-emerald-700 block mt-0.5">
                       Registrasi resmi Kementerian Kesehatan
@@ -376,14 +449,14 @@ export default function ProfilAkunTab() {
                 </>
               )}
 
-              {session?.role === "dapur" && (
+              {profile.role === "dapur" && (
                 <>
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
                     <span className="font-mono text-[10px] uppercase font-bold text-emerald-800 block">
                       ID Unit SPPG
                     </span>
                     <span className="text-xs font-mono font-black text-emerald-950 block mt-1">
-                      {session?.sppgId || "SPPG-BKL-01"}
+                      {profile.sppgId}
                     </span>
                     <span className="text-[10px] font-mono text-emerald-700 block mt-0.5">
                       Sentra Dapur Mandiri Jatim
@@ -404,7 +477,7 @@ export default function ProfilAkunTab() {
                 </>
               )}
 
-              {session?.role === "dinkes" && (
+              {profile.role === "dinkes" && (
                 <div className="sm:col-span-2 rounded-2xl border border-indigo-200 bg-indigo-50/50 p-4">
                   <span className="font-mono text-[10px] uppercase font-bold text-indigo-800 block">
                     Cakupan Pengawasan & Audit Data

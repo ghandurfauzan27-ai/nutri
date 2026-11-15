@@ -523,10 +523,12 @@ export const DEMO_ACCOUNTS: PredefinedAccount[] = [
   {
     role: "posyandu",
     email: "posyandu.bilaporah@jatim.go.id",
-    name: "Siti Rahmawati (Kader Utama)",
-    unit: "Posyandu Mawar 01 — Desa Bilaporah",
-    wilayah: "Kecamatan Socah, Kab. Bangkalan",
+    name: "Siti Rahmawati, S.Pd (Kader Utama)",
+    unit: "Posyandu Mawar 01 (Desa Bilaporah)",
+    wilayah: "Desa Bilaporah, Kec. Socah, Kab. Bangkalan",
     puskesmasPembina: "Puskesmas Socah",
+    faskesCode: "POS-3526-01",
+    sppgId: "SPPG-BKL-01",
   },
   {
     role: "puskesmas",
@@ -535,20 +537,23 @@ export const DEMO_ACCOUNTS: PredefinedAccount[] = [
     unit: "Puskesmas Socah",
     wilayah: "Kecamatan Socah, Kab. Bangkalan",
     faskesCode: "P3526010101",
+    sppgId: "SPPG-BKL-01",
   },
   {
     role: "dapur",
-    email: "dapur.sppg@jatim.go.id",
+    email: "sppg.socah@jatim.go.id",
     name: "H. Mustofa Kamal (Kepala Dapur)",
     unit: "SPPG Dapur Sehat Socah Mandiri",
-    wilayah: "Wilayah Layanan: 9 Posyandu Kec. Socah, Bangkalan",
+    wilayah: "Wilayah Layanan: 9 Posyandu Kec. Socah, Kab. Bangkalan",
+    sppgId: "SPPG-BKL-01",
   },
   {
     role: "dinkes",
     email: "dinkes.jatim@jatimprov.go.id",
     name: "dr. Erwin Astha Triyono, Sp.PD (Kadinkes Jatim)",
     unit: "Dinas Kesehatan Provinsi Jawa Timur",
-    wilayah: "Wilayah Kerja: 38 Kabupaten / Kota se-Jawa Timur",
+    wilayah: "Wilayah Pengawasan: 38 Kabupaten / Kota se-Jawa Timur",
+    sppgId: "SPPG-PROV-01",
   },
 ];
 
