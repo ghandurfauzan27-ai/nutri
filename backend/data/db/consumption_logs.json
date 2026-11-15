@@ -1,46 +1,46 @@
 [
   {
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-PRO-005-FB3A4F",
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-B-CHD-PRO-005-FD23C4",
     "childId": "CHD-PRO-005",
     "namaAnak": "Zahra Cantika",
     "dayaTerima": "Habis (100%)",
     "verifiedAt": "2026-11-13T08:35:00+07:00",
     "verifiedBy": "Kader Fitria (Posyandu Teratai 01)",
     "catatan": "Asupan terpantau baik di tingkat posyandu.",
-    "createdAt": "2026-11-13T16:05:08.622Z",
-    "updatedAt": "2026-11-13T16:05:08.622Z"
+    "createdAt": "2026-11-15T16:56:07.205Z",
+    "updatedAt": "2026-11-15T16:56:07.205Z"
   },
   {
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-SMP-003-FFFA3C",
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-B-CHD-SMP-003-4753BE",
     "childId": "CHD-SMP-003",
     "namaAnak": "Budi Santoso",
     "dayaTerima": "Tersisa Sebagian (50%)",
     "verifiedAt": "2026-11-13T08:40:00+07:00",
     "verifiedBy": "Kader Dewi (Posyandu Melati 03)",
     "catatan": "Asupan terpantau baik di tingkat posyandu.",
-    "createdAt": "2026-11-13T16:05:08.609Z",
-    "updatedAt": "2026-11-13T16:05:08.609Z"
+    "createdAt": "2026-11-15T16:56:07.196Z",
+    "updatedAt": "2026-11-15T16:56:07.196Z"
   },
   {
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-A-CHD-BKL-002-1C8F0C",
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-A-CHD-BKL-002-852F74",
     "childId": "CHD-BKL-002",
     "namaAnak": "Siti Nur Aisyah",
     "dayaTerima": "Habis (100%)",
     "verifiedAt": "2026-11-13T08:22:00+07:00",
     "verifiedBy": "Ibu Nurul Chotimah (Orang Tua)",
     "catatan": "Asupan terpantau baik di tingkat posyandu.",
-    "createdAt": "2026-11-13T16:05:08.600Z",
-    "updatedAt": "2026-11-13T16:05:08.600Z"
+    "createdAt": "2026-11-15T16:56:07.194Z",
+    "updatedAt": "2026-11-15T16:56:07.194Z"
   },
   {
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-BKL-001-34BEBE",
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-B-CHD-BKL-001-0AB765",
     "childId": "CHD-BKL-001",
     "namaAnak": "Ahmad Fauzi",
     "dayaTerima": "Habis (100%)",
     "verifiedAt": "2026-11-13T08:15:00+07:00",
     "verifiedBy": "Kader Siti (Posyandu Mawar 01)",
     "catatan": "Asupan terpantau baik di tingkat posyandu.",
-    "createdAt": "2026-11-13T16:05:08.594Z",
-    "updatedAt": "2026-11-13T16:05:08.594Z"
+    "createdAt": "2026-11-15T16:56:07.191Z",
+    "updatedAt": "2026-11-15T16:56:07.191Z"
   }
 ]

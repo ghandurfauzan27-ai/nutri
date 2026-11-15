@@ -1,33 +1,5 @@
 [
   {
-    "id": "CHD-JTM-E2B7D8",
-    "nik": "303030303030303",
-    "nama": "argi",
-    "tglLahir": "2025-09-10",
-    "usiaBulan": 14,
-    "jenisKelamin": "L",
-    "namaIbu": "macha",
-    "kabupaten": "Kab. Bangkalan",
-    "kecamatan": "Socah",
-    "desa": "Desa Bilaporah",
-    "posyandu": "Posyandu Mawar 01",
-    "alamat": "",
-    "noHpOrtu": "",
-    "bbKg": 8.5,
-    "tbCm": 73,
-    "lingkarKepalaCm": 45,
-    "zBBU": -1.47,
-    "zTBU": -1.82,
-    "zBBTB": -0.79,
-    "kurvaKIA": "kuning",
-    "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
-    "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "isFaltering": false,
-    "catatan": "Pendaftaran balita baru oleh kader posyandu.",
-    "createdAt": "2026-11-14T02:35:22.297Z",
-    "updatedAt": "2026-11-14T02:35:22.297Z"
-  },
-  {
     "id": "CHD-BLT-006",
     "nik": "3505145501250004",
     "nama": "Kevin Pratama",
@@ -52,8 +24,8 @@
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
     "isFaltering": false,
     "catatan": "Gizi normal, mengonsumsi menu reguler sehat.",
-    "createdAt": "2026-11-13T16:05:08.590Z",
-    "updatedAt": "2026-11-13T16:05:08.590Z"
+    "createdAt": "2026-11-15T16:56:07.182Z",
+    "updatedAt": "2026-11-15T16:56:07.182Z"
   },
   {
     "id": "CHD-PRO-005",
@@ -80,8 +52,8 @@
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
     "isFaltering": true,
     "catatan": "Growth faltering terdeteksi, porsi ekstra protein lele & telur Blitar.",
-    "createdAt": "2026-11-13T16:05:08.562Z",
-    "updatedAt": "2026-11-13T16:05:08.562Z"
+    "createdAt": "2026-11-15T16:56:07.177Z",
+    "updatedAt": "2026-11-15T16:56:07.177Z"
   },
   {
     "id": "CHD-JBR-004",
@@ -108,8 +80,8 @@
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
     "isFaltering": false,
     "catatan": "Pernah mengalami diare, butuh pemulihan BB dengan telur kukus Blitar.",
-    "createdAt": "2026-11-13T16:05:08.545Z",
-    "updatedAt": "2026-11-13T16:05:08.545Z"
+    "createdAt": "2026-11-15T16:56:07.157Z",
+    "updatedAt": "2026-11-15T16:56:07.157Z"
   },
   {
     "id": "CHD-SMP-003",
@@ -136,8 +108,8 @@
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
     "isFaltering": true,
     "catatan": "Zona Merah: Rujukan terjadwal ke Dokter Spesialis Anak Puskesmas Kedungdung.",
-    "createdAt": "2026-11-13T16:05:08.529Z",
-    "updatedAt": "2026-11-13T16:05:08.529Z"
+    "createdAt": "2026-11-15T16:56:07.146Z",
+    "updatedAt": "2026-11-15T16:56:07.146Z"
   },
   {
     "id": "CHD-BKL-002",
@@ -164,8 +136,8 @@
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
     "isFaltering": false,
     "catatan": "Pertumbuhan sangat baik di zona hijau KIA.",
-    "createdAt": "2026-11-13T16:05:08.515Z",
-    "updatedAt": "2026-11-13T16:05:08.515Z"
+    "createdAt": "2026-11-15T16:56:07.138Z",
+    "updatedAt": "2026-11-15T16:56:07.138Z"
   },
   {
     "id": "CHD-BKL-001",
@@ -192,7 +164,7 @@
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
     "isFaltering": true,
     "catatan": "BB stagnan 2 bulan berurutan. Perlu intervensi Paket B ganda protein hewani (Telur Blitar & Lele Lamongan).",
-    "createdAt": "2026-11-13T16:05:08.499Z",
-    "updatedAt": "2026-11-13T16:05:08.499Z"
+    "createdAt": "2026-11-15T16:56:07.128Z",
+    "updatedAt": "2026-11-15T16:56:07.128Z"
   }
 ]

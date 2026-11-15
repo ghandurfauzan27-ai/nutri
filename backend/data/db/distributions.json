@@ -11,10 +11,10 @@
     "dayaTerima": null,
     "menuId": "RCP-JTM-003",
     "menuNama": "Nasi Tim Beras Lokal Jatim + Kuah Bayam + Tempe Mendoan + Suwir Ayam",
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-A-CHD-BLT-006-1FA746",
-    "tanggal": "2026-11-13",
-    "createdAt": "2026-11-13T16:05:08.625Z",
-    "updatedAt": "2026-11-13T16:05:08.625Z"
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-A-CHD-BLT-006-CAAF4E",
+    "tanggal": "2026-11-15",
+    "createdAt": "2026-11-15T16:56:07.207Z",
+    "updatedAt": "2026-11-15T16:56:07.207Z"
   },
   {
     "childId": "CHD-PRO-005",
@@ -30,10 +30,10 @@
     "verifiedBy": "Kader Fitria (Posyandu Teratai 01)",
     "menuId": "RCP-JTM-001",
     "menuNama": "Nasi Tim Hati Ayam & Lele Asap Lamongan + Porsi Dobel Telur Blitar",
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-PRO-005-FB3A4F",
-    "tanggal": "2026-11-13",
-    "createdAt": "2026-11-13T16:05:08.619Z",
-    "updatedAt": "2026-11-13T16:05:08.619Z"
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-B-CHD-PRO-005-FD23C4",
+    "tanggal": "2026-11-15",
+    "createdAt": "2026-11-15T16:56:07.199Z",
+    "updatedAt": "2026-11-15T16:56:07.199Z"
   },
   {
     "childId": "CHD-JBR-004",
@@ -47,10 +47,10 @@
     "dayaTerima": null,
     "menuId": "RCP-JTM-002",
     "menuNama": "Puree Lembut Ikan Kembung Tulungagung & Telur Kukus Blitar Sayur Kelor",
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-JBR-004-40B16C",
-    "tanggal": "2026-11-13",
-    "createdAt": "2026-11-13T16:05:08.613Z",
-    "updatedAt": "2026-11-13T16:05:08.613Z"
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-B-CHD-JBR-004-BD1559",
+    "tanggal": "2026-11-15",
+    "createdAt": "2026-11-15T16:56:07.198Z",
+    "updatedAt": "2026-11-15T16:56:07.198Z"
   },
   {
     "childId": "CHD-SMP-003",
@@ -66,10 +66,10 @@
     "verifiedBy": "Kader Dewi (Posyandu Melati 03)",
     "menuId": "RCP-JTM-001",
     "menuNama": "Nasi Tim Hati Ayam & Lele Asap Lamongan + Porsi Dobel Telur Blitar",
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-SMP-003-FFFA3C",
-    "tanggal": "2026-11-13",
-    "createdAt": "2026-11-13T16:05:08.604Z",
-    "updatedAt": "2026-11-13T16:05:08.604Z"
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-B-CHD-SMP-003-4753BE",
+    "tanggal": "2026-11-15",
+    "createdAt": "2026-11-15T16:56:07.195Z",
+    "updatedAt": "2026-11-15T16:56:07.195Z"
   },
   {
     "childId": "CHD-BKL-002",
@@ -85,10 +85,10 @@
     "verifiedBy": "Ibu Nurul Chotimah (Orang Tua)",
     "menuId": "RCP-JTM-003",
     "menuNama": "Nasi Tim Beras Lokal Jatim + Kuah Bayam + Tempe Mendoan + Suwir Ayam",
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-A-CHD-BKL-002-1C8F0C",
-    "tanggal": "2026-11-13",
-    "createdAt": "2026-11-13T16:05:08.597Z",
-    "updatedAt": "2026-11-13T16:05:08.597Z"
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-A-CHD-BKL-002-852F74",
+    "tanggal": "2026-11-15",
+    "createdAt": "2026-11-15T16:56:07.192Z",
+    "updatedAt": "2026-11-15T16:56:07.192Z"
   },
   {
     "childId": "CHD-BKL-001",
@@ -104,9 +104,9 @@
     "verifiedBy": "Kader Siti (Posyandu Mawar 01)",
     "menuId": "RCP-JTM-001",
     "menuNama": "Nasi Tim Hati Ayam & Lele Asap Lamongan + Porsi Dobel Telur Blitar",
-    "qrToken": "NT-JTM-20261113-SPPG-JTM-01-B-CHD-BKL-001-34BEBE",
-    "tanggal": "2026-11-13",
-    "createdAt": "2026-11-13T16:05:08.593Z",
-    "updatedAt": "2026-11-13T16:05:08.593Z"
+    "qrToken": "NT-JTM-20261115-SPPG-JTM-01-B-CHD-BKL-001-0AB765",
+    "tanggal": "2026-11-15",
+    "createdAt": "2026-11-15T16:56:07.187Z",
+    "updatedAt": "2026-11-15T16:56:07.187Z"
   }
 ]

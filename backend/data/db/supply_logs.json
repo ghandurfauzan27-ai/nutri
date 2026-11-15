@@ -9,8 +9,8 @@
     "hargaTotalRp": 5250000,
     "statusMutu": "Tersertifikasi Segar",
     "catatan": "Kandungan DHA setara salmon dengan harga lokal terjangkau.",
-    "createdAt": "2026-11-13T16:05:08.641Z",
-    "updatedAt": "2026-11-13T16:05:08.641Z"
+    "createdAt": "2026-11-15T16:56:07.212Z",
+    "updatedAt": "2026-11-15T16:56:07.212Z"
   },
   {
     "id": "SP-004",
@@ -22,8 +22,8 @@
     "hargaTotalRp": 2700000,
     "statusMutu": "Tersertifikasi Segar",
     "catatan": "Protein nabati probiotik alami untuk kesehatan usus anak.",
-    "createdAt": "2026-11-13T16:05:08.638Z",
-    "updatedAt": "2026-11-13T16:05:08.638Z"
+    "createdAt": "2026-11-15T16:56:07.211Z",
+    "updatedAt": "2026-11-15T16:56:07.211Z"
   },
   {
     "id": "SP-003",
@@ -35,8 +35,8 @@
     "hargaTotalRp": 2160000,
     "statusMutu": "Lolos Uji BPOM/Dinkes",
     "catatan": "Superfood kaya zat besi dan beta-karoten.",
-    "createdAt": "2026-11-13T16:05:08.635Z",
-    "updatedAt": "2026-11-13T16:05:08.635Z"
+    "createdAt": "2026-11-15T16:56:07.210Z",
+    "updatedAt": "2026-11-15T16:56:07.210Z"
   },
   {
     "id": "SP-002",
@@ -48,8 +48,8 @@
     "hargaTotalRp": 6160000,
     "statusMutu": "Tersertifikasi Segar",
     "catatan": "Pasokan protein hewani lokal kaya kalsium dan fosfor.",
-    "createdAt": "2026-11-13T16:05:08.632Z",
-    "updatedAt": "2026-11-13T16:05:08.632Z"
+    "createdAt": "2026-11-15T16:56:07.209Z",
+    "updatedAt": "2026-11-15T16:56:07.209Z"
   },
   {
     "id": "SP-001",
@@ -61,7 +61,7 @@
     "hargaTotalRp": 9450000,
     "statusMutu": "Tersertifikasi Segar",
     "catatan": "Pengiriman langsung ke Dapur SPPG Socah & Kedungdung.",
-    "createdAt": "2026-11-13T16:05:08.627Z",
-    "updatedAt": "2026-11-13T16:05:08.627Z"
+    "createdAt": "2026-11-15T16:56:07.208Z",
+    "updatedAt": "2026-11-15T16:56:07.208Z"
   }
 ]

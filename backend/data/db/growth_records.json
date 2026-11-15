@@ -1,22 +1,5 @@
 [
   {
-    "childId": "CHD-JTM-E2B7D8",
-    "recordDate": "2026-11-14",
-    "ageMonths": 14,
-    "weightKg": 8.5,
-    "heightCm": 73,
-    "headCircumferenceCm": 45,
-    "zBBU": -1.47,
-    "zTBU": -1.82,
-    "zBBTB": -0.79,
-    "kurvaKIA": "kuning",
-    "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
-    "isFaltering": false,
-    "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-14T02:35:22.656Z",
-    "updatedAt": "2026-11-14T02:35:22.656Z"
-  },
-  {
     "childId": "CHD-BLT-006",
     "recordDate": "2026-10-18",
     "ageMonths": 20,
@@ -30,8 +13,8 @@
     "statusNutrisi": "Normal (Zona Hijau KIA)",
     "isFaltering": false,
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
-    "createdAt": "2026-11-13T16:05:08.578Z",
-    "updatedAt": "2026-11-13T16:05:08.578Z"
+    "createdAt": "2026-11-15T16:56:07.180Z",
+    "updatedAt": "2026-11-15T16:56:07.180Z"
   },
   {
     "childId": "CHD-BLT-006",
@@ -47,8 +30,8 @@
     "statusNutrisi": "Normal (Zona Hijau KIA)",
     "isFaltering": false,
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
-    "createdAt": "2026-11-13T16:05:08.567Z",
-    "updatedAt": "2026-11-13T16:05:08.567Z"
+    "createdAt": "2026-11-15T16:56:07.179Z",
+    "updatedAt": "2026-11-15T16:56:07.179Z"
   },
   {
     "childId": "CHD-BLT-006",
@@ -64,8 +47,8 @@
     "statusNutrisi": "Normal (Zona Hijau KIA)",
     "isFaltering": false,
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
-    "createdAt": "2026-11-13T16:05:08.565Z",
-    "updatedAt": "2026-11-13T16:05:08.565Z"
+    "createdAt": "2026-11-15T16:56:07.178Z",
+    "updatedAt": "2026-11-15T16:56:07.178Z"
   },
   {
     "childId": "CHD-PRO-005",
@@ -81,8 +64,8 @@
     "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
     "isFaltering": true,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.556Z",
-    "updatedAt": "2026-11-13T16:05:08.556Z"
+    "createdAt": "2026-11-15T16:56:07.175Z",
+    "updatedAt": "2026-11-15T16:56:07.175Z"
   },
   {
     "childId": "CHD-PRO-005",
@@ -98,8 +81,8 @@
     "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
     "isFaltering": true,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.553Z",
-    "updatedAt": "2026-11-13T16:05:08.553Z"
+    "createdAt": "2026-11-15T16:56:07.160Z",
+    "updatedAt": "2026-11-15T16:56:07.160Z"
   },
   {
     "childId": "CHD-PRO-005",
@@ -115,8 +98,8 @@
     "statusNutrisi": "Normal (Zona Hijau KIA)",
     "isFaltering": false,
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
-    "createdAt": "2026-11-13T16:05:08.550Z",
-    "updatedAt": "2026-11-13T16:05:08.550Z"
+    "createdAt": "2026-11-15T16:56:07.159Z",
+    "updatedAt": "2026-11-15T16:56:07.159Z"
   },
   {
     "childId": "CHD-JBR-004",
@@ -132,8 +115,8 @@
     "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
     "isFaltering": false,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.543Z",
-    "updatedAt": "2026-11-13T16:05:08.543Z"
+    "createdAt": "2026-11-15T16:56:07.152Z",
+    "updatedAt": "2026-11-15T16:56:07.152Z"
   },
   {
     "childId": "CHD-JBR-004",
@@ -149,8 +132,8 @@
     "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
     "isFaltering": true,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.537Z",
-    "updatedAt": "2026-11-13T16:05:08.537Z"
+    "createdAt": "2026-11-15T16:56:07.149Z",
+    "updatedAt": "2026-11-15T16:56:07.149Z"
   },
   {
     "childId": "CHD-JBR-004",
@@ -166,8 +149,8 @@
     "statusNutrisi": "Normal (Zona Hijau KIA)",
     "isFaltering": false,
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
-    "createdAt": "2026-11-13T16:05:08.533Z",
-    "updatedAt": "2026-11-13T16:05:08.533Z"
+    "createdAt": "2026-11-15T16:56:07.147Z",
+    "updatedAt": "2026-11-15T16:56:07.147Z"
   },
   {
     "childId": "CHD-SMP-003",
@@ -183,8 +166,8 @@
     "statusNutrisi": "Stunting / Gizi Buruk (Zona Merah KIA)",
     "isFaltering": true,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.527Z",
-    "updatedAt": "2026-11-13T16:05:08.527Z"
+    "createdAt": "2026-11-15T16:56:07.144Z",
+    "updatedAt": "2026-11-15T16:56:07.144Z"
   },
   {
     "childId": "CHD-SMP-003",
@@ -200,8 +183,8 @@
     "statusNutrisi": "Stunting / Gizi Buruk (Zona Merah KIA)",
     "isFaltering": true,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.523Z",
-    "updatedAt": "2026-11-13T16:05:08.523Z"
+    "createdAt": "2026-11-15T16:56:07.142Z",
+    "updatedAt": "2026-11-15T16:56:07.142Z"
   },
   {
     "childId": "CHD-SMP-003",
@@ -217,8 +200,8 @@
     "statusNutrisi": "Stunting / Gizi Buruk (Zona Merah KIA)",
     "isFaltering": false,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.520Z",
-    "updatedAt": "2026-11-13T16:05:08.520Z"
+    "createdAt": "2026-11-15T16:56:07.141Z",
+    "updatedAt": "2026-11-15T16:56:07.141Z"
   },
   {
     "childId": "CHD-BKL-002",
@@ -234,8 +217,8 @@
     "statusNutrisi": "Normal (Zona Hijau KIA)",
     "isFaltering": false,
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
-    "createdAt": "2026-11-13T16:05:08.511Z",
-    "updatedAt": "2026-11-13T16:05:08.511Z"
+    "createdAt": "2026-11-15T16:56:07.131Z",
+    "updatedAt": "2026-11-15T16:56:07.131Z"
   },
   {
     "childId": "CHD-BKL-002",
@@ -251,8 +234,8 @@
     "statusNutrisi": "Normal (Zona Hijau KIA)",
     "isFaltering": false,
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
-    "createdAt": "2026-11-13T16:05:08.508Z",
-    "updatedAt": "2026-11-13T16:05:08.508Z"
+    "createdAt": "2026-11-15T16:56:07.130Z",
+    "updatedAt": "2026-11-15T16:56:07.130Z"
   },
   {
     "childId": "CHD-BKL-002",
@@ -268,8 +251,8 @@
     "statusNutrisi": "Normal (Zona Hijau KIA)",
     "isFaltering": false,
     "paketMBG": "Paket A (Gizi Seimbang Reguler Jatim)",
-    "createdAt": "2026-11-13T16:05:08.504Z",
-    "updatedAt": "2026-11-13T16:05:08.504Z"
+    "createdAt": "2026-11-15T16:56:07.129Z",
+    "updatedAt": "2026-11-15T16:56:07.129Z"
   },
   {
     "childId": "CHD-BKL-001",
@@ -285,8 +268,8 @@
     "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
     "isFaltering": true,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.497Z",
-    "updatedAt": "2026-11-13T16:05:08.497Z"
+    "createdAt": "2026-11-15T16:56:07.127Z",
+    "updatedAt": "2026-11-15T16:56:07.127Z"
   },
   {
     "childId": "CHD-BKL-001",
@@ -302,8 +285,8 @@
     "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
     "isFaltering": true,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.484Z",
-    "updatedAt": "2026-11-13T16:05:08.484Z"
+    "createdAt": "2026-11-15T16:56:07.126Z",
+    "updatedAt": "2026-11-15T16:56:07.126Z"
   },
   {
     "childId": "CHD-BKL-001",
@@ -319,7 +302,7 @@
     "statusNutrisi": "Waspada / Growth Faltering (Zona Kuning KIA)",
     "isFaltering": false,
     "paketMBG": "Paket B (Intervensi Protein Hewani Ganda Jatim)",
-    "createdAt": "2026-11-13T16:05:08.474Z",
-    "updatedAt": "2026-11-13T16:05:08.474Z"
+    "createdAt": "2026-11-15T16:56:07.115Z",
+    "updatedAt": "2026-11-15T16:56:07.115Z"
   }
 ]
