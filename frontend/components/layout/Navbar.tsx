@@ -139,12 +139,6 @@ export default function Navbar() {
         {/* Right Action Buttons */}
         <div className="hidden items-center gap-4 md:flex">
           <Link
-            href="/dashboard"
-            className="rounded-xl border-2 border-zinc-900 bg-zinc-950 px-4 py-2 font-sans text-xs font-black text-white hover:bg-zinc-800 transition-all shadow-sm flex items-center gap-1.5"
-          >
-            <span>🚀 Buka Dasbor</span>
-          </Link>
-          <Link
             href="/login"
             className="text-sm font-bold uppercase tracking-wider text-zinc-700 hover:text-zinc-950 transition-colors px-2 py-1"
           >
@@ -203,13 +197,6 @@ export default function Navbar() {
             </a>
             <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Link
-                  href="/app"
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-lg bg-zinc-100 px-2.5 py-1 text-xs font-bold text-[#7866FF]"
-                >
-                  Dasbor
-                </Link>
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
