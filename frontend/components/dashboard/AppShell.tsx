@@ -23,6 +23,7 @@ export type DashboardTab =
   | "konsumsi"
   | "analitik"
   | "puskesmas"
+  | "posyandu_binaan"
   | "kelola_faskes"
   | "carakerja"
   | "profil";
@@ -73,6 +74,32 @@ export default function AppShell() {
   const [selectedRegion, setSelectedRegion] = useState<string>("Kab. Bangkalan");
   const [currentTime, setCurrentTime] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendingPosCount, setPendingPosCount] = useState<number>(0);
+
+  // Pantau jumlah registrasi Posyandu Baru yang butuh konfirmasi Puskesmas
+  useEffect(() => {
+    const checkPending = () => {
+      try {
+        if (typeof window !== "undefined") {
+          const raw = localStorage.getItem("nt_registered_posyandu");
+          if (raw) {
+            const list = JSON.parse(raw);
+            const count = list.filter(
+              (p: any) => p.statusAkun === "Menunggu Verifikasi" || p.statusAkun === "Menunggu Konfirmasi"
+            ).length;
+            setPendingPosCount(count);
+          }
+        }
+      } catch (e) {}
+    };
+    checkPending();
+    window.addEventListener("nt_posyandu_registered", checkPending);
+    window.addEventListener("nt_posyandu_verified", checkPending);
+    return () => {
+      window.removeEventListener("nt_posyandu_registered", checkPending);
+      window.removeEventListener("nt_posyandu_verified", checkPending);
+    };
+  }, []);
 
   // Baca sesi otentikasi login dari localStorage
   useEffect(() => {
@@ -226,6 +253,21 @@ export default function AppShell() {
       },
 
       // 3. PUSKESMAS PEMBINA (WILAYAH BINAAN, JADWAL PERTEMUAN STUNTING & VERIFIKASI)
+      {
+        key: "posyandu_binaan" as DashboardTab,
+        label: "Posyandu Binaan & Verifikasi",
+        desc: "Pantau Jejaring & Konfirmasi Akun Baru",
+        roles: ["puskesmas"],
+        icon: (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        ),
+        badge: pendingPosCount > 0 ? `${pendingPosCount} Konfirmasi` : "Jejaring",
+      },
       {
         key: "puskesmas" as DashboardTab,
         label: "Wilayah Binaan & Jadwal",
@@ -642,15 +684,15 @@ export default function AppShell() {
               </motion.div>
             )}
 
-            {activeTab === "puskesmas" && (
+            {(activeTab === "puskesmas" || activeTab === "posyandu_binaan") && (
               <motion.div
-                key="puskesmas"
+                key={activeTab}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.2 }}
               >
-                <PuskesmasTab />
+                <PuskesmasTab initialSubTab={activeTab === "posyandu_binaan" ? "posyandu_binaan" : "posyandu_desa"} />
               </motion.div>
             )}
 

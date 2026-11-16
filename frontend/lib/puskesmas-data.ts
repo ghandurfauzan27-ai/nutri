@@ -33,7 +33,7 @@ export interface PosyanduMikro {
   kaderPenanggungJawab: string;
   noHpKader: string;
   emailAkun: string;
-  statusAkun: "Disetujui" | "Menunggu Verifikasi" | "Ditolak";
+  statusAkun: "Disetujui" | "Menunggu Verifikasi" | "Menunggu Konfirmasi" | "Ditolak";
   tglDaftar: string;
   totalBalita: number;
   sehatCount: number;
@@ -861,6 +861,22 @@ export function getPuskesmasAddressByKecamatan(kecamatan: string): string {
     return MASTER_PUSKESMAS_INFO[kecamatan].alamat;
   }
   return `Jl. Raya Kecamatan ${kecamatan}, Jawa Timur`;
+}
+
+// Helper: Ambil seluruh data identitas Puskesmas resmi berdasarkan Kecamatan
+export function getPuskesmasInfoByKecamatan(kecamatan: string): PuskesmasInfo {
+  if (MASTER_PUSKESMAS_INFO[kecamatan]) {
+    return MASTER_PUSKESMAS_INFO[kecamatan];
+  }
+  return {
+    namaPuskesmas: `Puskesmas ${kecamatan}`,
+    kecamatan: kecamatan,
+    kabupaten: "Jawa Timur",
+    alamat: `Jl. Raya Kecamatan ${kecamatan}, Jawa Timur`,
+    kepalaPuskesmas: "dr. Kepala Puskesmas",
+    nutrisionisPJ: "PJ Program Gizi Faskes",
+    telepon: "(031) 3090001",
+  };
 }
 
 // -------------------------------------------------------------

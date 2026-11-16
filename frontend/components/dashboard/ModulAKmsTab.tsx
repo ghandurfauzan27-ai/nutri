@@ -135,11 +135,35 @@ export default function ModulAKmsTab({
               }
               if (parsed.wilayah) setPosyanduWilayah(parsed.wilayah);
               if (parsed.puskesmasPembina) setPuskesmasPembina(parsed.puskesmasPembina);
+              if (parsed.alamatPuskesmas) setAlamatPuskesmas(parsed.alamatPuskesmas);
+              if (parsed.statusVerifikasi) setPosyanduStatusVerifikasi(parsed.statusVerifikasi);
+
+              // Periksa juga status dari nt_registered_posyandu
+              const rawReg = localStorage.getItem("nt_registered_posyandu");
+              if (rawReg) {
+                const regList = JSON.parse(rawReg);
+                const matched = regList.find(
+                  (r: any) =>
+                    r.emailAkun === parsed.email ||
+                    (parsed.unit && r.posyandu && parsed.unit.includes(r.posyandu)) ||
+                    r.id === parsed.posyanduId
+                );
+                if (matched) {
+                  setPosyanduStatusVerifikasi(matched.statusAkun || "Disetujui");
+                  if (matched.alamatPuskesmas) setAlamatPuskesmas(matched.alamatPuskesmas);
+                  if (matched.puskesmas) setPuskesmasPembina(matched.puskesmas);
+                }
+              }
             } catch (e) {}
           }
         };
         syncSession();
         window.addEventListener("nt_session_updated", syncSession);
+        window.addEventListener("nt_posyandu_verified", syncSession);
+        return () => {
+          window.removeEventListener("nt_session_updated", syncSession);
+          window.removeEventListener("nt_posyandu_verified", syncSession);
+        };
       }
     } catch (e) {}
   }, []);
@@ -169,6 +193,9 @@ export default function ModulAKmsTab({
   const [posyanduUnit, setPosyanduUnit] = useState("Posyandu Mawar 01 — Desa Bilaporah");
   const [posyanduWilayah, setPosyanduWilayah] = useState("Kecamatan Socah, Kab. Bangkalan · Alamat: Balai RW 01, Dusun Krajan");
   const [puskesmasPembina, setPuskesmasPembina] = useState("Puskesmas Socah");
+  const [alamatPuskesmas, setAlamatPuskesmas] = useState("Jl. Raya Socah No. 45, Socah, Bangkalan 69161");
+  const [posyanduStatusVerifikasi, setPosyanduStatusVerifikasi] = useState<string>("Disetujui");
+  const [isModalPuskesmasOpen, setIsModalPuskesmasOpen] = useState(false);
   const [newSex, setNewSex] = useState<"L" | "P">("L");
   const [newBb, setNewBb] = useState<number>(8.5);
   const [newTb, setNewTb] = useState<number>(73.0);
@@ -767,6 +794,39 @@ export default function ModulAKmsTab({
 
   return (
     <div className="space-y-6 font-sans">
+      {/* Banner Status Pendaftaran Baru Menunggu Konfirmasi Puskesmas */}
+      {posyanduStatusVerifikasi.toLowerCase().includes("menunggu") && (
+        <div className="rounded-3xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-amber-50/70 to-yellow-50/90 p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-amber-500 text-white font-mono text-base font-black shadow-sm animate-pulse">
+                ⏳
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-sans text-sm font-black text-amber-950 uppercase tracking-tight">
+                    Pendaftaran Posyandu Baru · Menunggu Konfirmasi Puskesmas Pembina
+                  </h4>
+                  <span className="rounded-full bg-amber-200 text-amber-950 font-mono text-[9px] font-black px-2 py-0.5">
+                    Pending Verifikasi
+                  </span>
+                </div>
+                <p className="text-xs text-amber-900 mt-1 leading-relaxed">
+                  Akun <strong>{posyanduUnit}</strong> telah otomatis terhubung ke <strong>{puskesmasPembina}</strong>. Pimpinan Puskesmas dapat memvalidasi dan mengesahkan naungan faskes melalui halaman pantau binaan.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsModalPuskesmasOpen(true)}
+              className="shrink-0 flex items-center gap-2 rounded-2xl bg-amber-900 text-amber-50 px-4 py-2.5 font-sans text-xs font-black shadow hover:bg-black transition-all"
+            >
+              <span>📍 Lihat Alamat & Info Puskesmas</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Banner Identitas Posyandu Desa & Naungan Puskesmas Pembina */}
       <div className="rounded-3xl border border-sky-200 bg-gradient-to-r from-sky-50/90 via-sky-50/50 to-emerald-50/70 p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
@@ -778,9 +838,15 @@ export default function ModulAKmsTab({
               <h3 className="font-sans text-base font-black text-zinc-950">
                 {posyanduUnit}
               </h3>
-              <span className="rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 font-mono text-[10px] font-black text-emerald-900">
-                ● Akun Posyandu Desa Aktif
-              </span>
+              {posyanduStatusVerifikasi.toLowerCase().includes("menunggu") ? (
+                <span className="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 font-mono text-[10px] font-black text-amber-900 animate-pulse">
+                  ⏳ Menunggu Konfirmasi Puskesmas
+                </span>
+              ) : (
+                <span className="rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 font-mono text-[10px] font-black text-emerald-900">
+                  ● Resmi Dinaungi & Terverifikasi
+                </span>
+              )}
             </div>
             <p className="font-mono text-xs text-zinc-600 mt-0.5">
               {posyanduWilayah}
@@ -788,13 +854,25 @@ export default function ModulAKmsTab({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-emerald-300 bg-white/95 px-4 py-2.5 font-mono text-xs text-emerald-950 flex items-center gap-3 shadow-xs">
-          <span className="text-xl">🏥</span>
-          <div>
-            <span className="text-zinc-400 text-[10px] block font-bold uppercase">Naungan Puskesmas Pembina:</span>
-            <strong className="text-emerald-900 font-sans font-black text-sm">{puskesmasPembina}</strong>
-            <span className="text-[10px] text-zinc-500 block">Faskes Pembina Wilayah Desa</span>
+        {/* Kartu Puskesmas Pembina Terdekat & Navigasi Alamat */}
+        <div className="rounded-2xl border border-emerald-300 bg-white/95 px-4 py-2.5 font-mono text-xs text-emerald-950 flex flex-col sm:flex-row sm:items-center gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🏥</span>
+            <div>
+              <span className="text-zinc-400 text-[10px] block font-bold uppercase">Puskesmas Pembina Terdekat:</span>
+              <strong className="text-emerald-900 font-sans font-black text-sm">{puskesmasPembina}</strong>
+              <span className="text-[11px] text-zinc-600 block line-clamp-1 max-w-[260px] font-sans">
+                {alamatPuskesmas}
+              </span>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsModalPuskesmasOpen(true)}
+            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-sans text-[11px] font-black px-3 py-2 flex items-center gap-1.5 transition-all shadow-xs shrink-0 self-start sm:self-center"
+          >
+            <span>📍 Arahkan ke Puskesmas</span>
+          </button>
         </div>
       </div>
 
@@ -2025,6 +2103,92 @@ export default function ModulAKmsTab({
           isOpen={!!printReportData}
           onClose={() => setPrintReportData(null)}
         />
+      )}
+
+      {/* Modal Arah & Detail Puskesmas Pembina Terdekat */}
+      {isModalPuskesmasOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200 font-sans">
+            <div className="flex items-start justify-between border-b border-zinc-100 pb-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-600 text-white text-lg">
+                  🏥
+                </span>
+                <div>
+                  <h3 className="font-sans text-base font-black text-zinc-950">
+                    Puskesmas Pembina Terdekat
+                  </h3>
+                  <p className="font-mono text-xs text-zinc-500">
+                    Pusat Rujukan Medis & Pembina Wilayah Kerja Desa
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalPuskesmasOpen(false)}
+                className="h-8 w-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-bold flex items-center justify-center transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-2">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-800">
+                  Nama Faskes & Yurisdiksi
+                </span>
+                <h4 className="font-sans text-lg font-black text-emerald-950">
+                  {puskesmasPembina}
+                </h4>
+                <div className="flex items-start gap-2 text-xs text-emerald-900">
+                  <span className="mt-0.5">📍</span>
+                  <span className="font-medium leading-relaxed">{alamatPuskesmas}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3.5 space-y-1">
+                  <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase">Jam Buka Pelayanan</span>
+                  <p className="font-black text-zinc-900">Senin – Sabtu</p>
+                  <p className="text-[11px] text-zinc-600">08:00 – 14:00 WIB</p>
+                </div>
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3.5 space-y-1">
+                  <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase">Poli Spesifik</span>
+                  <p className="font-black text-zinc-900">Poli Gizi & KIA</p>
+                  <p className="text-[11px] text-zinc-600">Konseling & Terapi F100</p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-sky-200 bg-sky-50/60 p-3.5 text-xs text-sky-950 space-y-1">
+                <div className="font-bold flex items-center gap-1.5">
+                  <span>ℹ️</span>
+                  <span>Alur Pengarahan Balita dari Posyandu:</span>
+                </div>
+                <p className="text-[11px] text-sky-900 leading-relaxed">
+                  Balita yang mengalami <em>growth faltering</em> atau Z-score TB/U &lt; -2 SD wajib diarahkan ke poli gizi {puskesmasPembina} membawa Buku KIA untuk evaluasi medis dan preskripsi Paket B protein ganda Jawa Timur.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(puskesmasPembina + " " + alamatPuskesmas)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:flex-1 h-11 rounded-2xl bg-[#18140B] text-white hover:bg-zinc-800 font-sans text-xs font-black flex items-center justify-center gap-2 transition shadow-md"
+              >
+                <span>🗺️ Buka Rute di Google Maps</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsModalPuskesmasOpen(false)}
+                className="w-full sm:w-auto h-11 px-5 rounded-2xl border border-zinc-200 bg-white hover:bg-zinc-100 font-sans text-xs font-bold text-zinc-700 transition"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

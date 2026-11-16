@@ -135,8 +135,8 @@ export default function RegisterForm({ delay }: { delay: number }) {
           kaderPenanggungJawab: name,
           noHpKader: contact,
           emailAkun: `${posyanduName.toLowerCase().replace(/[^a-z0-9]/g, "")}@posyandu.id`,
-          statusAkun: "Disetujui",
-          tglDaftar: "Hari ini (Baru Daftar)",
+          statusAkun: "Menunggu Konfirmasi",
+          tglDaftar: "Hari ini (Menunggu Konfirmasi)",
           totalBalita: 0,
           sehatCount: 0,
           sehatPersen: 0,
@@ -163,9 +163,13 @@ export default function RegisterForm({ delay }: { delay: number }) {
             unit: `${posyanduName} — ${desa}`,
             wilayah: `Kecamatan ${kecamatan}, ${region}`,
             puskesmasPembina: puskesmasPembina,
+            alamatPuskesmas: getPuskesmasAddressByKecamatan(kecamatan),
             sppgDituju: closestSppg.namaDapur,
             sppgId: closestSppg.id,
             alamatPosyandu: alamatPosyandu,
+            posyanduId: newPosyanduEntry.id,
+            statusVerifikasi: "Menunggu Konfirmasi",
+            tglDaftar: newPosyanduEntry.tglDaftar,
           })
         );
         window.dispatchEvent(new Event("nt_session_updated"));
