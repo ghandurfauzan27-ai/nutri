@@ -49,6 +49,7 @@ test_screenshot.png
 manual_screenshots/
 generate_*.py
 capture_*.py
+create_*.py
 
 # System & IDE
 .DS_Store
