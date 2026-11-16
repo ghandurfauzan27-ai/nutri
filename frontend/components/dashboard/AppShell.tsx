@@ -13,6 +13,7 @@ import ModulCKonsumsiTab from "./ModulCKonsumsiTab";
 import ModulDAnalitikTab from "./ModulDAnalitikTab";
 import PuskesmasTab from "./PuskesmasTab";
 import CaraKerjaRoleTab from "./CaraKerjaRoleTab";
+import PanduanWebTab from "./PanduanWebTab";
 import DinkesKelolaFaskesTab from "./DinkesKelolaFaskesTab";
 import ProfilAkunTab from "./ProfilAkunTab";
 
@@ -26,6 +27,7 @@ export type DashboardTab =
   | "posyandu_binaan"
   | "kelola_faskes"
   | "carakerja"
+  | "panduan"
   | "profil";
 
 interface ActiveSession {
@@ -296,20 +298,20 @@ export default function AppShell() {
         badge: "Operasional",
       },
 
-      // PANDUAN CARA KERJA RESMI PER PERAN
+      // PANDUAN CARA KERJA & PENGOPERASIAN WEB LENGKAP DENGAN GAMBAR
       {
-        key: "carakerja" as DashboardTab,
-        label: `Cara Kerja ${currentRoleInfo.name}`,
-        desc: "Panduan SOP & Alur Kerja Resmi",
+        key: "panduan" as DashboardTab,
+        label: "Buku Panduan Web",
+        desc: "Tutorial Visual Pengoperasian & Alur Kerja",
         roles: ["posyandu", "kader", "dapur", "puskesmas", "dinkes"],
         icon: (
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-            <line x1="12" x2="12.01" y1="17" y2="17" />
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+            <path d="M6 6h10" />
+            <path d="M6 10h10" />
           </svg>
         ),
-        badge: "SOP Resmi",
+        badge: "Panduan",
       },
 
       // LIHAT DETAIL AKUN & UBAH KATA SANDI (UNTUK SEMUA PERAN)
@@ -488,6 +490,18 @@ export default function AppShell() {
           <span className="text-emerald-700 font-bold">● Sesi Terenkripsi</span>
         </div>
 
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab("panduan");
+            setMobileMenuOpen(false);
+          }}
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 font-sans text-xs font-bold text-blue-900 shadow-xs transition-all hover:bg-blue-100"
+        >
+          <span>📖</span>
+          <span>Buku Panduan Web Bergambar</span>
+        </button>
+
         <Link
           href="/landing"
           className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white font-sans text-xs font-bold text-zinc-700 shadow-xs transition-all hover:bg-zinc-100"
@@ -635,6 +649,19 @@ export default function AppShell() {
               </Link>
               <button
                 type="button"
+                onClick={() => setActiveTab("panduan")}
+                className={`rounded-xl border px-3 py-1.5 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs ${
+                  activeTab === "panduan" || activeTab === "carakerja"
+                    ? "bg-[#38E8F5] text-[#032D30] border-[#38E8F5]"
+                    : "border-blue-200 bg-blue-50/80 text-blue-900 hover:bg-blue-100"
+                }`}
+                title="Buka Buku Panduan Pengoperasian Web Bergambar"
+              >
+                <span>📖</span>
+                <span>Panduan Web</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveTab("profil")}
                 className={`rounded-xl border px-3 py-1.5 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs ${
                   activeTab === "profil"
@@ -742,15 +769,15 @@ export default function AppShell() {
               </motion.div>
             )}
 
-            {activeTab === "carakerja" && (
+            {(activeTab === "panduan" || activeTab === "carakerja") && (
               <motion.div
-                key="carakerja"
+                key="panduan"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.2 }}
               >
-                <CaraKerjaRoleTab role={activeRole} />
+                <PanduanWebTab onNavigateTab={(t) => setActiveTab(t as DashboardTab)} />
               </motion.div>
             )}
 
