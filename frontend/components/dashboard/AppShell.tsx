@@ -481,17 +481,25 @@ export default function AppShell() {
         </div>
       </div>
 
-      {/* Bagian Bawah: Tombol Logout / Keluar Resmi (Bukan ke beranda acak) */}
-      <div className="pt-4 border-t border-zinc-100 space-y-2.5">
+      {/* Bagian Bawah: Tombol Navigasi Landing Web & Logout */}
+      <div className="pt-4 border-t border-zinc-100 space-y-2">
         <div className="flex items-center justify-between font-mono text-[10px] text-zinc-400 px-1">
           <span>{currentTime || "Online"}</span>
           <span className="text-emerald-700 font-bold">● Sesi Terenkripsi</span>
         </div>
 
+        <Link
+          href="/landing"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white font-sans text-xs font-bold text-zinc-700 shadow-xs transition-all hover:bg-zinc-100"
+        >
+          <span>🌐</span>
+          <span>Halaman Awal Web (Landing)</span>
+        </Link>
+
         <button
           type="button"
           onClick={handleLogout}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 font-sans text-xs font-bold text-rose-700 shadow-xs transition-all hover:bg-rose-100 hover:text-rose-900"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 font-sans text-xs font-bold text-rose-700 shadow-xs transition-all hover:bg-rose-100 hover:text-rose-900"
         >
           <span>🚪</span>
           <span>Keluar dari Akun (Logout)</span>
@@ -533,6 +541,12 @@ export default function AppShell() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/landing"
+            className="rounded-lg bg-zinc-100 border border-zinc-200 px-2.5 py-1.5 font-mono text-[10px] font-bold text-zinc-700 hover:bg-zinc-200 transition"
+          >
+            🌐 Web
+          </Link>
           <button
             type="button"
             onClick={handleLogout}
@@ -611,6 +625,14 @@ export default function AppShell() {
                 <span className="text-xs font-black text-zinc-900 block">{displayName}</span>
                 <span className="text-[10px] font-mono text-zinc-500">{displayUnit}</span>
               </div>
+              <Link
+                href="/landing"
+                className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 font-mono text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-colors flex items-center gap-1.5 shadow-xs"
+                title="Buka Halaman Awal Web / Landing Publik"
+              >
+                <span>🌐</span>
+                <span className="hidden lg:inline">Beranda Web</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setActiveTab("profil")}

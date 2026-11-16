@@ -67,11 +67,11 @@ export default function AuthShell({ children }: { children?: ReactNode }) {
             </span>
           </Link>
           <Link
-            href="/"
+            href="/landing"
             className="group inline-flex min-h-[44px] shrink-0 items-center gap-2 font-mono text-xs font-bold text-zinc-600 transition-colors hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38E8F5] rounded-lg px-2"
           >
             <span className="transition-transform group-hover:-translate-x-1">←</span>{" "}
-            <span className="hidden sm:inline">Kembali ke</span> beranda
+            <span className="hidden sm:inline">Kembali ke</span> beranda web
           </Link>
         </header>
 

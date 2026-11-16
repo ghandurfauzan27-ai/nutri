@@ -1,39 +1,23 @@
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import Hero from "@/components/sections/Hero";
-import YellowPrideBanner from "@/components/sections/YellowPrideBanner";
-import Ticker from "@/components/sections/Ticker";
-import Problem from "@/components/sections/Problem";
-import HowItWorks from "@/components/sections/HowItWorks";
-import KmsSimulator from "@/components/sections/KmsSimulator";
-import Pillars from "@/components/sections/Pillars";
-import Roles from "@/components/sections/Roles";
-import Commodities from "@/components/sections/Commodities";
-import Impact from "@/components/sections/Impact";
-import Triad from "@/components/sections/Triad";
-import ClosingCta from "@/components/sections/ClosingCta";
-import StudioChatWidget from "@/components/ui/StudioChatWidget";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import AppShell from "@/components/dashboard/AppShell";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "NutriTrack | Portal Intervensi Stunting & MBG Presisi",
+  description:
+    "Dasbor operasional terpadu kader posyandu, dapur SPPG, dan pimpinan dinas kesehatan.",
+};
+
+export default function RootPage() {
   return (
-    <>
-      <Navbar />
-      <main className="bg-[#F7F8F8]">
-        <Hero />
-        <YellowPrideBanner />
-        <Ticker />
-        <Problem />
-        <HowItWorks />
-        <KmsSimulator />
-        <Pillars />
-        <Roles />
-        <Commodities />
-        <Impact />
-        <Triad />
-        <ClosingCta />
-      </main>
-      <Footer />
-      <StudioChatWidget />
-    </>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F7F8F8] flex items-center justify-center font-mono text-sm text-zinc-500">
+          Memuat NutriTrack Dasbor...
+        </div>
+      }
+    >
+      <AppShell />
+    </Suspense>
   );
 }

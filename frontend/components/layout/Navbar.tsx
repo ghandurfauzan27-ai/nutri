@@ -101,7 +101,7 @@ export default function Navbar() {
         aria-label="Utama"
       >
         {/* Brand Logo NutriTrack */}
-        <Link href="/" className="flex items-center gap-3 font-black text-zinc-950 tracking-tight text-lg group">
+        <Link href="/landing" className="flex items-center gap-3 font-black text-zinc-950 tracking-tight text-lg group">
           <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-black shadow-sm transition-transform group-hover:scale-105">
             <Image
               src="/logo.png"
