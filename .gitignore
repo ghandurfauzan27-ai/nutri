@@ -32,20 +32,22 @@ yarn-error.log*
 # Raw uploaded assets
 WhatsApp Image*
 
-# Proposal & Dokumen Lomba Lokal (Word & Docs)
+# Proposal & Dokumen Lomba Lokal
 *.docx
 *.doc
-*PROPOSAL*.pdf
-*proposal*.pdf
-*PROPOSAL*.md
-*proposal*.md
+*PROPOSAL*
+*proposal*
+*PANDUAN*
+*panduan*
+docs/*PROPOSAL*
+docs/*proposal*
+docs/*PANDUAN*
+docs/*panduan*
 ~$*
 scratch/
 test_screenshot.png
 manual_screenshots/
 generate_*.py
-capture_*.py
-create_*.py
 capture_*.py
 create_*.py
 

@@ -134,13 +134,6 @@ export default function Navbar() {
           >
             Simulasi
           </a>
-          <Link
-            href="/panduan"
-            className="text-xs font-bold uppercase tracking-wider text-blue-900 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-xs"
-          >
-            <span>📖</span>
-            <span>Panduan Web</span>
-          </Link>
         </div>
 
         {/* Right Action Buttons */}
@@ -202,14 +195,6 @@ export default function Navbar() {
             >
               Simulasi
             </a>
-            <Link
-              href="/panduan"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 text-base font-bold text-blue-900 bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl"
-            >
-              <span>📖</span>
-              <span>Buku Panduan Web</span>
-            </Link>
             <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Link
